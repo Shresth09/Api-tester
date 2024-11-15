@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        textarea {
+            height: 100px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .response-group {
+            margin-top: 20px;
+        }
+        .response-code, .response-body {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>API Tester</h2>
+        <div class="form-group">
+            <label for="requestType">Request Type</label>
+            <select id="requestType">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="apiUrl">API URL</label>
+            <input type="text" id="apiUrl" placeholder="Enter API URL">
+        </div>
+        <div class="form-group">
+            <label for="requestBody">Request Body</label>
+            <textarea id="requestBody" placeholder="Enter request body (JSON format)"></textarea>
+        </div>
+        <button onclick="sendRequest()">Send Request</button>
+        <div class="response-group">
+            <h3>Response</h3>
+            <div class="response-code">
+                <strong>Response Code:</strong> <span id="responseCode"></span>
+            </div>
+            <div class="response-body">
+                <strong>Response Body:</strong>
+                <pre id="responseBody"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function sendRequest() {
+            const requestType = document.getElementById('requestType').value;
+            const apiUrl = document.getElementById('apiUrl').value;
+            const requestBody = document.getElementById('requestBody').value;
+
+            let options = {
+                method: requestType,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            if (requestType !== 'GET' && requestBody) {
+                options.body = requestBody;
+            }
+
+            fetch(apiUrl, options)
+                .then(response => {
+                    document.getElementById('responseCode').textContent = response.status;
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('responseBody').textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    document.getElementById('responseBody').textContent = `Error: ${error}`;
+                });
+        }
+    </script>
+</body>
+</html>
