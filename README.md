@@ -66,3 +66,5 @@ We plan to add the following features to the application in the future:
 - Support for additional Jira APIs (e.g., agile boards, components)
 - Improved error handling and logging
 - Enhanced security measures for authentication and authorization# Api-tester
+
+mvn install:install-file -Dfile=/path/to/your/jarfile.jar -DgroupId=com.atlassian.maven.plugins -DartifactId=jira-maven-plugin -Dversion=8.0.0 -Dpackaging=jar
