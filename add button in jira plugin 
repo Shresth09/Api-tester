@@ -1,0 +1,46 @@
+Button.vm
+<button id="fetch-description-btn">Fetch Description</button>
+<div id="popup-result" style="display:none; border:1px solid black; padding:10px; background-color:#f9f9f9;"></div> 
+
+
+Discription.js
+AJS.toInit(function () {
+    AJS.$("#fetch-description-btn").click(function () {
+        var issueKey = AJS.Meta.get("issue-key");
+        AJS.$.ajax({
+            url: '/rest/api/latest/issue/' + issueKey,
+            type: 'GET',
+            success: function (data) {
+                var description = data.fields.description;
+                sendDescription(description);
+            }
+        });
+    });
+});
+
+function sendDescription(description) {
+    AJS.$.ajax({
+        url: 'YOUR_ENDPOINT_URL',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ description: description }),
+        success: function (result) {
+            AJS.$("#popup-result").text(result).show();
+        }
+    });
+} 
+
+
+
+Xml code
+<web-resource key="my-custom-web-resource" name="My Custom Web Resource">
+    <dependency>com.atlassian.auiplugin:ajs</dependency>
+    <resource type="velocity" name="my-custom-button" location="web-resources/my-custom-button.vm"/>
+    <resource type="download" name="fetch-description.js" location="web-resources/fetch-description.js"/>
+    <context>atl.jira.view.issue</context>
+    <context>jira.page</context>
+</web-resource> 
+
+
+
+
