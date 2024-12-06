@@ -164,7 +164,120 @@ Finally, add JavaScript to open the servlet when the button is clicked.
 2. **Click the Button**:
    - Ensure it fetches the description, sends it to the endpoint, and displays the result in a popup.
 
-This should set up your custom button using a web item, and the servlet will handle the functionality. Let me know if you need any more help![](https://github.com/HEDMU-2014/GS-Project/tree/df309ba65041106ecd99f32e2558f6132dc9596d/gs.web%2Fsrc%2Fgs%2Fweb%2FTestRest.java "1")[](https://github.com/ISCAS-VDI/zaqar/tree/5c1aedbef1930565a46cc60b1a9d5d5e238f174d/samples%2Fjaxrs%2Fsend_message%2FSampleZaqarServlet.java "2")[](https://github.com/secure-sign/securesign-cds/tree/a6a0c1505003865f5f99497caf59f6d31cebf660/service%2Fsrc%2Fmain%2Fjava%2Forg%2Fwhispersystems%2Fcontactdiscovery%2Fclient%2FIntelClient.java "3") 
 
+
+
+
+
+
+==========================
+==========================
+
+Certainly! If you're unable to use AJAX for some reason, there are alternative methods you can use to achieve similar functionality. Here are a few alternatives:
+
+### 1. **Form Submission to Servlet**
+You can create a form that submits to your servlet. This is more of a traditional approach but works well when you cannot use AJAX.
+
+1. **Create the Button and Form**:
+   - Update your `my-custom-button.vm` to include a form.
+     ```html
+     <form id="fetch-description-form" method="get" action="${baseUrl}/plugins/servlet/fetch-description">
+         <input type="hidden" name="issueKey" value="${issue.key}" />
+         <button type="submit">Fetch Description</button>
+     </form>
+     <div id="popup-result" style="display:none; border:1px solid black; padding:10px; background-color:#f9f9f9;"></div>
+     ```
+
+2. **Modify the Servlet to Handle Form Data**:
+   - Ensure your servlet can handle the form submission and respond with HTML that includes a script to show the result.
+     ```java
+     package com.example.plugin;
+
+     import com.atlassian.jira.component.ComponentAccessor;
+     import com.atlassian.jira.issue.Issue;
+
+     import javax.servlet.http.HttpServlet;
+     import javax.servlet.http.HttpServletRequest;
+     import javax.servlet.http.HttpServletResponse;
+     import javax.ws.rs.client.Client;
+     import javax.ws.rs.client.ClientBuilder;
+     import javax.ws.rs.client.Entity;
+     import javax.ws.rs.core.MediaType;
+     import javax.ws.rs.core.Response;
+     import java.io.IOException;
+
+     public class FetchDescriptionServlet extends HttpServlet {
+         @Override
+         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+             String issueKey = req.getParameter("issueKey");
+             Issue issue = ComponentAccessor.getIssueManager().getIssueObject(issueKey);
+             String description = issue.getDescription();
+
+             Client client = ClientBuilder.newClient();
+             Response response = client.target("YOUR_ENDPOINT_URL")
+                                       .request(MediaType.APPLICATION_JSON)
+                                       .post(Entity.entity(description, MediaType.APPLICATION_JSON));
+             String result = response.readEntity(String.class);
+
+             resp.setContentType("text/html");
+             resp.getWriter().write("<html><body><script>window.onload = function() { "
+                   + "document.getElementById('popup-result').style.display = 'block'; "
+                   + "document.getElementById('popup-result').innerText = '" + result + "'; "
+                   + "};</script></body></html>");
+         }
+     }
+     ```
+
+### 2. **Server-Side Rendering**
+You can handle everything server-side and just refresh the page or navigate to a new page after processing.
+
+1. **Create the Button and Redirect**:
+   - Modify your button to link directly to the servlet.
+     ```html
+     <a href="${baseUrl}/plugins/servlet/fetch-description?issueKey=${issue.key}">Fetch Description</a>
+     ```
+
+2. **Modify the Servlet to Render Full Page**:
+   - Adjust the servlet to return a full HTML page.
+     ```java
+     package com.example.plugin;
+
+     import com.atlassian.jira.component.ComponentAccessor;
+     import com.atlassian.jira.issue.Issue;
+
+     import javax.servlet.http.HttpServlet;
+     import javax.servlet.http.HttpServletRequest;
+     import javax.servlet.http.HttpServletResponse;
+     import javax.ws.rs.client.Client;
+     import javax.ws.rs.client.ClientBuilder;
+     import javax.ws.rs.client.Entity;
+     import javax.ws.rs.core.MediaType;
+     import javax.ws.rs.core.Response;
+     import java.io.IOException;
+
+     public class FetchDescriptionServlet extends HttpServlet {
+         @Override
+         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+             String issueKey = req.getParameter("issueKey");
+             Issue issue = ComponentAccessor.getIssueManager().getIssueObject(issueKey);
+             String description = issue.getDescription();
+
+             Client client = ClientBuilder.newClient();
+             Response response = client.target("YOUR_ENDPOINT_URL")
+                                       .request(MediaType.APPLICATION_JSON)
+                                       .post(Entity.entity(description, MediaType.APPLICATION_JSON));
+             String result = response.readEntity(String.class);
+
+             resp.setContentType("text/html");
+             resp.getWriter().write("<html><body><h2>Result</h2><p>" + result + "</p></body></html>");
+         }
+     }
+     ```
+
+### Expected Workflow and Output
+
+1. **Form Submission**: When the button is clicked, it submits the form to the servlet.
+2. **Data Processing**: The servlet processes the request, fetches the description, sends it to the endpoint, and receives the result.
+3. **Response Handling**: The servlet responds with HTML that either updates a part of the current page or navigates to a new page displaying the result. 
 
 
