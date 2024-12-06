@@ -400,3 +400,62 @@ If you want to add custom styles or scripts without using AJAX, you can still cr
 
 By following these steps, you should have a functioning JIRA plugin that uses form submission and page refresh instead of AJAX. Let me know if you need further assistance or if there are specific parts you'd like to refine![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/HEDMU-2014/GS-Project/tree/df309ba65041106ecd99f32e2558f6132dc9596d/gs.web%2Fsrc%2Fgs%2Fweb%2FTestRest.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/ISCAS-VDI/zaqar/tree/5c1aedbef1930565a46cc60b1a9d5d5e238f174d/samples%2Fjaxrs%2Fsend_message%2FSampleZaqarServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/secure-sign/securesign-cds/tree/a6a0c1505003865f5f99497caf59f6d31cebf660/service%2Fsrc%2Fmain%2Fjava%2Forg%2Fwhispersystems%2Fcontactdiscovery%2Fclient%2FIntelClient.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3") 
 
+
+
+
+
+package com.citi.cate.stash.servlet;
+
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.issue.Issue;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.util.logging.Logger;
+
+public class FetchDescriptionServlet extends HttpServlet {
+    private static final Logger logger = Logger.getLogger(FetchDescriptionServlet.class.getName());
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        logger.info("FetchDescriptionServlet accessed");
+
+        String issueKey = req.getParameter("issueKey");
+        if (issueKey == null || issueKey.isEmpty()) {
+            logger.warning("Missing issueKey parameter");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing issueKey parameter");
+            return;
+        }
+
+        Issue issue = ComponentAccessor.getIssueManager().getIssueObject(issueKey);
+        if (issue == null) {
+            logger.warning("Issue not found: " + issueKey);
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Issue not found: " + issueKey);
+            return;
+        }
+
+        String description = issue.getDescription();
+        logger.info("Fetched description: " + description);
+
+        Client client = ClientBuilder.newClient();
+        Response response = client.target("YOUR_ENDPOINT_URL")
+                                  .request(MediaType.APPLICATION_JSON)
+                                  .post(Entity.entity(description, MediaType.APPLICATION_JSON));
+        String result = response.readEntity(String.class);
+        logger.info("Received result from endpoint: " + result);
+
+        resp.setContentType("text/html");
+        resp.getWriter().write("<html><body><h2>Servlet Response</h2><p>" + result + "</p>"
+            + "<script>window.onload = function() {"
+            + "alert('Result: " + result + "');"
+            + "};</script></body></html>");
+        logger.info("FetchDescriptionServlet response sent");
+    }
+}
