@@ -1,461 +1,87 @@
-Button.vm
-<button id="fetch-description-btn">Fetch Description</button>
-<div id="popup-result" style="display:none; border:1px solid black; padding:10px; background-color:#f9f9f9;"></div> 
+Certainly! Here's a complete example of how to create a Jira plugin that adds a button to the issue page. When clicked, this button fetches the issue description and sends it to an API endpoint, then displays the response in a popup.
 
+First, ensure you have the Atlassian Plugin SDK installed. Then, you can use the following files and code snippets as a guideline for your plugin.
 
-Discription.js
-AJS.toInit(function () {
-    AJS.$("#fetch-description-btn").click(function () {
-        var issueKey = AJS.Meta.get("issue-key");
+1. **atlassian-plugin.xml** - Define your plugin module:
+
+```xml
+<atlassian-plugin key="my-jira-plugin" name="My Jira Plugin" pluginsVersion="2">
+    <plugin-info>
+        <description>A plugin that fetches issue descriptions and sends them to an API.</description>
+        <version>1.0</version>
+        <vendor name="Your Company" url="http://example.com"/>
+    </plugin-info>
+
+    <web-resource key="my-jira-plugin-resources" name="My Jira Plugin Web Resources">
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <resource type="download" name="my-jira-plugin.js" location="/js/my-jira-plugin.js"/>
+    </web-resource>
+
+    <web-panel key="my-jira-plugin-panel" location="atl.jira.view.issue.right.context" weight="100">
+        <resource type="velocity" name="my-jira-plugin-panel" location="templates/my-jira-plugin-panel.vm"/>
+    </web-panel>
+</atlassian-plugin>
+```
+
+2. **templates/my-jira-plugin-panel.vm** - Create a Velocity template for the button:
+
+```html
+<div id="my-jira-plugin-container">
+    <button id="fetch-description-btn" class="aui-button aui-button-primary">Send Description</button>
+</div>
+```
+
+3. **src/main/resources/js/my-jira-plugin.js** - Add your JavaScript logic:
+
+```javascript
+AJS.$(document).ready(function() {
+    AJS.$("#fetch-description-btn").click(function() {
+        // Fetch the issue description
+        var issueId = JIRA.Issue.getIssueId();
+        var issueKey = JIRA.Issue.getIssueKey();
+        var issueDescription = JIRA.Issue.getFieldText("description");
+
+        // Prepare the JSON payload
+        var payload = JSON.stringify({
+            "user_story": issueDescription
+        });
+
+        // Send the payload to the API endpoint
         AJS.$.ajax({
-            url: '/rest/api/latest/issue/' + issueKey,
-            type: 'GET',
-            success: function (data) {
-                var description = data.fields.description;
-                sendDescription(description);
+            url: 'https://your-api-endpoint.com/endpoint',
+            type: 'POST',
+            data: payload,
+            contentType: 'application/json',
+            success: function(response) {
+                // Display the response in a popup
+                alert("Response from API: " + response);
+            },
+            error: function(xhr, status, error) {
+                // Handle errors
+                alert("Failed to send the request: " + error);
             }
         });
     });
 });
-
-function sendDescription(description) {
-    AJS.$.ajax({
-        url: 'YOUR_ENDPOINT_URL',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ description: description }),
-        success: function (result) {
-            AJS.$("#popup-result").text(result).show();
-        }
-    });
-} 
-
-
-
-Xml code
-<web-resource key="my-custom-web-resource" name="My Custom Web Resource">
-    <dependency>com.atlassian.auiplugin:ajs</dependency>
-    <resource type="velocity" name="my-custom-button" location="web-resources/my-custom-button.vm"/>
-    <resource type="download" name="fetch-description.js" location="web-resources/fetch-description.js"/>
-    <context>atl.jira.view.issue</context>
-    <context>jira.page</context>
-</web-resource> 
-
-
-
-
-
-
-================================
-=================================
-
-Absolutely, you can use a Web Item to add custom functionality directly to JIRA. Here’s a step-by-step guide on how to create a Web Item that adds a button to a JIRA issue and implements the desired functionality:
-
-### Step 1: Define the Web Item in `atlassian-plugin.xml`
-First, you need to define the web item in your `atlassian-plugin.xml` file.
-
-1. **Open `atlassian-plugin.xml`**:
-   - Navigate to your plugin directory and open `atlassian-plugin.xml`.
-
-2. **Add the Web Item Definition**:
-   ```xml
-   <web-item key="fetch-description-button" name="Fetch Description Button" section="jira.issue.tools" weight="100">
-       <description>Button to fetch description and send to endpoint</description>
-       <label key="fetch.description.button.label">Fetch Description</label>
-       <link linkId="fetch-description-link">/plugins/servlet/fetch-description</link>
-   </web-item>
-
-   <servlet key="fetchDescriptionServlet" name="FetchDescriptionServlet" class="com.example.plugin.FetchDescriptionServlet">
-       <description>Fetch Description Servlet</description>
-       <url-pattern>/plugins/servlet/fetch-description</url-pattern>
-   </servlet>
-   ```
-
-### Step 2: Implement the Servlet
-Next, create a servlet that will handle the button click event, fetch the issue description, send it to an endpoint, and display the result in a popup.
-
-1. **Create the Servlet Class**:
-   - In your `src/main/java/com/example/plugin` directory, create a new Java class called `FetchDescriptionServlet.java`.
-
-2. **Implement the Servlet Logic**:
-   ```java
-   package com.example.plugin;
-
-   import com.atlassian.jira.component.ComponentAccessor;
-   import com.atlassian.jira.issue.Issue;
-   import com.atlassian.jira.web.action.JiraWebActionSupport;
-
-   import javax.servlet.http.HttpServlet;
-   import javax.servlet.http.HttpServletRequest;
-   import javax.servlet.http.HttpServletResponse;
-   import javax.ws.rs.client.Client;
-   import javax.ws.rs.client.ClientBuilder;
-   import javax.ws.rs.client.Entity;
-   import javax.ws.rs.core.MediaType;
-   import javax.ws.rs.core.Response;
-   import java.io.IOException;
-
-   public class FetchDescriptionServlet extends HttpServlet {
-       @Override
-       protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-           String issueKey = req.getParameter("issueKey");
-           Issue issue = ComponentAccessor.getIssueManager().getIssueObject(issueKey);
-           String description = issue.getDescription();
-
-           Client client = ClientBuilder.newClient();
-           Response response = client.target("YOUR_ENDPOINT_URL")
-                                     .request(MediaType.APPLICATION_JSON)
-                                     .post(Entity.entity(description, MediaType.APPLICATION_JSON));
-           String result = response.readEntity(String.class);
-
-           resp.setContentType("text/html");
-           resp.getWriter().write("<html><body><script>alert('" + result + "');</script></body></html>");
-       }
-   }
-   ```
-
-### Step 3: Add JavaScript to Open the Servlet
-Finally, add JavaScript to open the servlet when the button is clicked.
-
-1. **Create JavaScript File**:
-   - In your `src/main/resources/web-resources` directory, create a new JavaScript file called `fetch-description.js`.
-
-2. **Implement JavaScript Logic**:
-   ```javascript
-   AJS.toInit(function () {
-       AJS.$("#fetch-description-button").click(function (e) {
-           e.preventDefault();
-           var issueKey = AJS.Meta.get("issue-key");
-           AJS.$.ajax({
-               url: AJS.contextPath() + "/plugins/servlet/fetch-description?issueKey=" + issueKey,
-               type: 'GET',
-               success: function (data) {
-                   AJS.$('body').append(data);
-               }
-           });
-       });
-   });
-   ```
-
-3. **Include the JavaScript in `atlassian-plugin.xml`**:
-   ```xml
-   <web-resource key="my-custom-web-resource" name="My Custom Web Resource">
-       <dependency>com.atlassian.auiplugin:ajs</dependency>
-       <resource type="download" name="fetch-description.js" location="web-resources/fetch-description.js"/>
-       <context>atl.general</context>
-       <context>jira.issue.tools</context>
-   </web-resource>
-   ```
-
-### Step 4: Build and Deploy the Plugin
-1. **Build the Plugin**:
-   - In your command prompt, navigate to your plugin directory and run:
-     ```shell
-     atlas-package
-     ```
-
-2. **Deploy the Plugin**:
-   - Upload the generated `JAR` file to your JIRA instance via the plugin management screen.
-
-### Step 5: Test the Plugin
-1. **Open a JIRA Issue**:
-   - Verify that the custom button appears in the issue tools section.
-   
-2. **Click the Button**:
-   - Ensure it fetches the description, sends it to the endpoint, and displays the result in a popup.
-
-
-
-
-
-
-
-==========================
-==========================
-
-Certainly! If you're unable to use AJAX for some reason, there are alternative methods you can use to achieve similar functionality. Here are a few alternatives:
-
-### 1. **Form Submission to Servlet**
-You can create a form that submits to your servlet. This is more of a traditional approach but works well when you cannot use AJAX.
-
-1. **Create the Button and Form**:
-   - Update your `my-custom-button.vm` to include a form.
-     ```html
-     <form id="fetch-description-form" method="get" action="${baseUrl}/plugins/servlet/fetch-description">
-         <input type="hidden" name="issueKey" value="${issue.key}" />
-         <button type="submit">Fetch Description</button>
-     </form>
-     <div id="popup-result" style="display:none; border:1px solid black; padding:10px; background-color:#f9f9f9;"></div>
-     ```
-
-2. **Modify the Servlet to Handle Form Data**:
-   - Ensure your servlet can handle the form submission and respond with HTML that includes a script to show the result.
-     ```java
-     package com.example.plugin;
-
-     import com.atlassian.jira.component.ComponentAccessor;
-     import com.atlassian.jira.issue.Issue;
-
-     import javax.servlet.http.HttpServlet;
-     import javax.servlet.http.HttpServletRequest;
-     import javax.servlet.http.HttpServletResponse;
-     import javax.ws.rs.client.Client;
-     import javax.ws.rs.client.ClientBuilder;
-     import javax.ws.rs.client.Entity;
-     import javax.ws.rs.core.MediaType;
-     import javax.ws.rs.core.Response;
-     import java.io.IOException;
-
-     public class FetchDescriptionServlet extends HttpServlet {
-         @Override
-         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-             String issueKey = req.getParameter("issueKey");
-             Issue issue = ComponentAccessor.getIssueManager().getIssueObject(issueKey);
-             String description = issue.getDescription();
-
-             Client client = ClientBuilder.newClient();
-             Response response = client.target("YOUR_ENDPOINT_URL")
-                                       .request(MediaType.APPLICATION_JSON)
-                                       .post(Entity.entity(description, MediaType.APPLICATION_JSON));
-             String result = response.readEntity(String.class);
-
-             resp.setContentType("text/html");
-             resp.getWriter().write("<html><body><script>window.onload = function() { "
-                   + "document.getElementById('popup-result').style.display = 'block'; "
-                   + "document.getElementById('popup-result').innerText = '" + result + "'; "
-                   + "};</script></body></html>");
-         }
-     }
-     ```
-
-### 2. **Server-Side Rendering**
-You can handle everything server-side and just refresh the page or navigate to a new page after processing.
-
-1. **Create the Button and Redirect**:
-   - Modify your button to link directly to the servlet.
-     ```html
-     <a href="${baseUrl}/plugins/servlet/fetch-description?issueKey=${issue.key}">Fetch Description</a>
-     ```
-
-2. **Modify the Servlet to Render Full Page**:
-   - Adjust the servlet to return a full HTML page.
-     ```java
-     package com.example.plugin;
-
-     import com.atlassian.jira.component.ComponentAccessor;
-     import com.atlassian.jira.issue.Issue;
-
-     import javax.servlet.http.HttpServlet;
-     import javax.servlet.http.HttpServletRequest;
-     import javax.servlet.http.HttpServletResponse;
-     import javax.ws.rs.client.Client;
-     import javax.ws.rs.client.ClientBuilder;
-     import javax.ws.rs.client.Entity;
-     import javax.ws.rs.core.MediaType;
-     import javax.ws.rs.core.Response;
-     import java.io.IOException;
-
-     public class FetchDescriptionServlet extends HttpServlet {
-         @Override
-         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-             String issueKey = req.getParameter("issueKey");
-             Issue issue = ComponentAccessor.getIssueManager().getIssueObject(issueKey);
-             String description = issue.getDescription();
-
-             Client client = ClientBuilder.newClient();
-             Response response = client.target("YOUR_ENDPOINT_URL")
-                                       .request(MediaType.APPLICATION_JSON)
-                                       .post(Entity.entity(description, MediaType.APPLICATION_JSON));
-             String result = response.readEntity(String.class);
-
-             resp.setContentType("text/html");
-             resp.getWriter().write("<html><body><h2>Result</h2><p>" + result + "</p></body></html>");
-         }
-     }
-     ```
-
-### Expected Workflow and Output
-
-1. **Form Submission**: When the button is clicked, it submits the form to the servlet.
-2. **Data Processing**: The servlet processes the request, fetches the description, sends it to the endpoint, and receives the result.
-3. **Response Handling**: The servlet responds with HTML that either updates a part of the current page or navigates to a new page displaying the result. 
-
-
-
-
-
-
-
-===========================
-===========================
-Understood! Let's create a JIRA plugin that avoids using AJAX and instead relies on traditional form submission and page refresh to achieve the desired functionality.
-
-### Step 1: Set Up Your Development Environment
-
-1. **Install the Atlassian Plugin SDK**: Follow the instructions on the Atlassian Developer website to install the SDK.
-2. **Install Java Development Kit (JDK)**: Ensure you have JDK 8 or higher installed on your system.
-
-### Step 2: Create a Plugin Project
-
-1. **Open Command Prompt**:
-   - Navigate to the directory where you want to create your plugin.
-2. **Run the Command**:
-   ```shell
-   atlas-create-jira-plugin
-   ```
-3. **Provide Information**:
-   - You will be prompted to provide details about your plugin, such as `groupId`, `artifactId`, `version`, and `package`. Enter the appropriate values.
-
-### Step 3: Define the Web Item and Servlet
-
-1. **Open `atlassian-plugin.xml`**:
-   - Navigate to your plugin directory and open `atlassian-plugin.xml`.
-2. **Add the Web Item and Servlet Definition**:
-   ```xml
-   <atlassian-plugin key="my-jira-plugin" name="My JIRA Plugin" plugins-version="2">
-       <plugin-info>
-           <description>This is my JIRA plugin</description>
-           <version>1.0.0</version>
-           <vendor name="Your Name" url="http://yourwebsite.com"/>
-       </plugin-info>
-
-       <web-item key="fetch-description-button" name="Fetch Description Button" section="jira.issue.tools" weight="100">
-           <description>Button to fetch description and send to endpoint</description>
-           <label key="fetch.description.button.label">Fetch Description</label>
-           <link>/plugins/servlet/fetch-description?issueKey=${issue.key}</link>
-       </web-item>
-
-       <servlet key="fetchDescriptionServlet" name="FetchDescriptionServlet" class="com.citi.cate.stash.servlet.FetchDescriptionServlet">
-           <description>Fetch Description Servlet</description>
-           <url-pattern>/plugins/servlet/fetch-description</url-pattern>
-       </servlet>
-   </atlassian-plugin>
-   ```
-
-### Step 4: Implement the Servlet
-
-1. **Create the Servlet Class**:
-   - In your `src/main/java/com/citi/cate/stash/servlet` directory, create a new Java class called `FetchDescriptionServlet.java`.
-2. **Implement the Servlet Logic**:
-   ```java
-   package com.citi.cate.stash.servlet;
-
-   import com.atlassian.jira.component.ComponentAccessor;
-   import com.atlassian.jira.issue.Issue;
-
-   import javax.servlet.http.HttpServlet;
-   import javax.servlet.http.HttpServletRequest;
-   import javax.servlet.http.HttpServletResponse;
-   import javax.ws.rs.client.Client;
-   import javax.ws.rs.client.ClientBuilder;
-   import javax.ws.rs.client.Entity;
-   import javax.ws.rs.core.MediaType;
-   import javax.ws.rs.core.Response;
-   import java.io.IOException;
-
-   public class FetchDescriptionServlet extends HttpServlet {
-       @Override
-       protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-           String issueKey = req.getParameter("issueKey");
-           Issue issue = ComponentAccessor.getIssueManager().getIssueObject(issueKey);
-           String description = issue.getDescription();
-
-           Client client = ClientBuilder.newClient();
-           Response response = client.target("YOUR_ENDPOINT_URL")
-                                     .request(MediaType.APPLICATION_JSON)
-                                     .post(Entity.entity(description, MediaType.APPLICATION_JSON));
-           String result = response.readEntity(String.class);
-
-           resp.setContentType("text/html");
-           resp.getWriter().write("<html><body><h2>Result</h2><p>" + result + "</p>"
-               + "<script>window.onload = function() {"
-               + "alert('Result: " + result + "');"
-               + "};</script></body></html>");
-       }
-   }
-   ```
-
-### Step 5: Create a Web Resource for Custom Styles (Optional)
-
-If you want to add custom styles or scripts without using AJAX, you can still create a web resource for other enhancements.
-
-### Step 6: Build and Deploy the Plugin
-
-1. **Build the Plugin**:
-   - In your command prompt, navigate to your plugin directory and run:
-     ```shell
-     atlas-package
-     ```
-
-2. **Deploy the Plugin**:
-   - Upload the generated `JAR` file to your JIRA instance via the plugin management screen.
-
-### Step 7: Test the Plugin
-
-1. **Open a JIRA Issue**:
-   - Verify that the custom button appears in the issue tools section.
-
-2. **Click the Button**:
-   - Ensure it fetches the description, sends it to the endpoint, and displays the result in an alert and on the new page.
-
-By following these steps, you should have a functioning JIRA plugin that uses form submission and page refresh instead of AJAX. Let me know if you need further assistance or if there are specific parts you'd like to refine![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/HEDMU-2014/GS-Project/tree/df309ba65041106ecd99f32e2558f6132dc9596d/gs.web%2Fsrc%2Fgs%2Fweb%2FTestRest.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/ISCAS-VDI/zaqar/tree/5c1aedbef1930565a46cc60b1a9d5d5e238f174d/samples%2Fjaxrs%2Fsend_message%2FSampleZaqarServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/secure-sign/securesign-cds/tree/a6a0c1505003865f5f99497caf59f6d31cebf660/service%2Fsrc%2Fmain%2Fjava%2Forg%2Fwhispersystems%2Fcontactdiscovery%2Fclient%2FIntelClient.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3") 
-
-
-
-
-
-package com.citi.cate.stash.servlet;
-
-import com.atlassian.jira.component.ComponentAccessor;
-import com.atlassian.jira.issue.Issue;
-
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.logging.Logger;
-
-public class FetchDescriptionServlet extends HttpServlet {
-    private static final Logger logger = Logger.getLogger(FetchDescriptionServlet.class.getName());
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        logger.info("FetchDescriptionServlet accessed");
-
-        String issueKey = req.getParameter("issueKey");
-        if (issueKey == null || issueKey.isEmpty()) {
-            logger.warning("Missing issueKey parameter");
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing issueKey parameter");
-            return;
-        }
-
-        Issue issue = ComponentAccessor.getIssueManager().getIssueObject(issueKey);
-        if (issue == null) {
-            logger.warning("Issue not found: " + issueKey);
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Issue not found: " + issueKey);
-            return;
-        }
-
-        String description = issue.getDescription();
-        logger.info("Fetched description: " + description);
-
-        Client client = ClientBuilder.newClient();
-        Response response = client.target("YOUR_ENDPOINT_URL")
-                                  .request(MediaType.APPLICATION_JSON)
-                                  .post(Entity.entity(description, MediaType.APPLICATION_JSON));
-        String result = response.readEntity(String.class);
-        logger.info("Received result from endpoint: " + result);
-
-        resp.setContentType("text/html");
-        resp.getWriter().write("<html><body><h2>Servlet Response</h2><p>" + result + "</p>"
-            + "<script>window.onload = function() {"
-            + "alert('Result: " + result + "');"
-            + "};</script></body></html>");
-        logger.info("FetchDescriptionServlet response sent");
-    }
-}
+```
+
+4. **pom.xml** - Make sure your `pom.xml` includes the necessary dependencies:
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>com.atlassian.plugin</groupId>
+        <artifactId>atlassian-spring</artifactId>
+        <version>2.0.0</version>
+    </dependency>
+    <dependency>
+        <groupId>com.atlassian.plugins</groupId>
+        <artifactId>atlassian-plugins-webresource-api</artifactId>
+        <version>2.12.0</version>
+    </dependency>
+</dependencies>
+```
+
+After creating these files and configuring them as shown, package your plugin using the Atlassian Plugin SDK commands and install it on your Jira instance.
+
+Let me know if you need further assistance or additional features!
