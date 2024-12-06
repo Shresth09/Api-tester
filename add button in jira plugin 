@@ -44,3 +44,127 @@ Xml code
 
 
 
+
+
+================================
+=================================
+
+Absolutely, you can use a Web Item to add custom functionality directly to JIRA. Here’s a step-by-step guide on how to create a Web Item that adds a button to a JIRA issue and implements the desired functionality:
+
+### Step 1: Define the Web Item in `atlassian-plugin.xml`
+First, you need to define the web item in your `atlassian-plugin.xml` file.
+
+1. **Open `atlassian-plugin.xml`**:
+   - Navigate to your plugin directory and open `atlassian-plugin.xml`.
+
+2. **Add the Web Item Definition**:
+   ```xml
+   <web-item key="fetch-description-button" name="Fetch Description Button" section="jira.issue.tools" weight="100">
+       <description>Button to fetch description and send to endpoint</description>
+       <label key="fetch.description.button.label">Fetch Description</label>
+       <link linkId="fetch-description-link">/plugins/servlet/fetch-description</link>
+   </web-item>
+
+   <servlet key="fetchDescriptionServlet" name="FetchDescriptionServlet" class="com.example.plugin.FetchDescriptionServlet">
+       <description>Fetch Description Servlet</description>
+       <url-pattern>/plugins/servlet/fetch-description</url-pattern>
+   </servlet>
+   ```
+
+### Step 2: Implement the Servlet
+Next, create a servlet that will handle the button click event, fetch the issue description, send it to an endpoint, and display the result in a popup.
+
+1. **Create the Servlet Class**:
+   - In your `src/main/java/com/example/plugin` directory, create a new Java class called `FetchDescriptionServlet.java`.
+
+2. **Implement the Servlet Logic**:
+   ```java
+   package com.example.plugin;
+
+   import com.atlassian.jira.component.ComponentAccessor;
+   import com.atlassian.jira.issue.Issue;
+   import com.atlassian.jira.web.action.JiraWebActionSupport;
+
+   import javax.servlet.http.HttpServlet;
+   import javax.servlet.http.HttpServletRequest;
+   import javax.servlet.http.HttpServletResponse;
+   import javax.ws.rs.client.Client;
+   import javax.ws.rs.client.ClientBuilder;
+   import javax.ws.rs.client.Entity;
+   import javax.ws.rs.core.MediaType;
+   import javax.ws.rs.core.Response;
+   import java.io.IOException;
+
+   public class FetchDescriptionServlet extends HttpServlet {
+       @Override
+       protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+           String issueKey = req.getParameter("issueKey");
+           Issue issue = ComponentAccessor.getIssueManager().getIssueObject(issueKey);
+           String description = issue.getDescription();
+
+           Client client = ClientBuilder.newClient();
+           Response response = client.target("YOUR_ENDPOINT_URL")
+                                     .request(MediaType.APPLICATION_JSON)
+                                     .post(Entity.entity(description, MediaType.APPLICATION_JSON));
+           String result = response.readEntity(String.class);
+
+           resp.setContentType("text/html");
+           resp.getWriter().write("<html><body><script>alert('" + result + "');</script></body></html>");
+       }
+   }
+   ```
+
+### Step 3: Add JavaScript to Open the Servlet
+Finally, add JavaScript to open the servlet when the button is clicked.
+
+1. **Create JavaScript File**:
+   - In your `src/main/resources/web-resources` directory, create a new JavaScript file called `fetch-description.js`.
+
+2. **Implement JavaScript Logic**:
+   ```javascript
+   AJS.toInit(function () {
+       AJS.$("#fetch-description-button").click(function (e) {
+           e.preventDefault();
+           var issueKey = AJS.Meta.get("issue-key");
+           AJS.$.ajax({
+               url: AJS.contextPath() + "/plugins/servlet/fetch-description?issueKey=" + issueKey,
+               type: 'GET',
+               success: function (data) {
+                   AJS.$('body').append(data);
+               }
+           });
+       });
+   });
+   ```
+
+3. **Include the JavaScript in `atlassian-plugin.xml`**:
+   ```xml
+   <web-resource key="my-custom-web-resource" name="My Custom Web Resource">
+       <dependency>com.atlassian.auiplugin:ajs</dependency>
+       <resource type="download" name="fetch-description.js" location="web-resources/fetch-description.js"/>
+       <context>atl.general</context>
+       <context>jira.issue.tools</context>
+   </web-resource>
+   ```
+
+### Step 4: Build and Deploy the Plugin
+1. **Build the Plugin**:
+   - In your command prompt, navigate to your plugin directory and run:
+     ```shell
+     atlas-package
+     ```
+
+2. **Deploy the Plugin**:
+   - Upload the generated `JAR` file to your JIRA instance via the plugin management screen.
+
+### Step 5: Test the Plugin
+1. **Open a JIRA Issue**:
+   - Verify that the custom button appears in the issue tools section.
+   
+2. **Click the Button**:
+   - Ensure it fetches the description, sends it to the endpoint, and displays the result in a popup.
+
+This should set up your custom button using a web item, and the servlet will handle the functionality. Let me know if you need any more help![](https://github.com/HEDMU-2014/GS-Project/tree/df309ba65041106ecd99f32e2558f6132dc9596d/gs.web%2Fsrc%2Fgs%2Fweb%2FTestRest.java "1")[](https://github.com/ISCAS-VDI/zaqar/tree/5c1aedbef1930565a46cc60b1a9d5d5e238f174d/samples%2Fjaxrs%2Fsend_message%2FSampleZaqarServlet.java "2")[](https://github.com/secure-sign/securesign-cds/tree/a6a0c1505003865f5f99497caf59f6d31cebf660/service%2Fsrc%2Fmain%2Fjava%2Forg%2Fwhispersystems%2Fcontactdiscovery%2Fclient%2FIntelClient.java "3") 
+
+
+
