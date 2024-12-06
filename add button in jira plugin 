@@ -1,6 +1,8 @@
-No worries! We can use plain HTML and JavaScript for this task. Here's a revised version that removes the dependency on Velocity templates.
+Great, you've made a good start by adding the web item. Let’s complete the implementation by creating the necessary servlet, JavaScript, and HTML for handling the button click, sending the issue description to the API, and displaying the response in a popup.
 
-1. **atlassian-plugin.xml** - Define your plugin module:
+Here’s the complete code:
+
+1. **atlassian-plugin.xml** - Add the web item and the servlet definition:
 
 ```xml
 <atlassian-plugin key="my-jira-plugin" name="My Jira Plugin" pluginsVersion="2">
@@ -10,68 +12,110 @@ No worries! We can use plain HTML and JavaScript for this task. Here's a revised
         <vendor name="Your Company" url="http://example.com"/>
     </plugin-info>
 
+    <web-item key="send-description-button" section="jira.issue.tools" weight="100" name="send description button">
+        <label key="hello-world.label">send description</label>
+        <link linkId="send-description-link">#</link>
+    </web-item>
+
+    <servlet key="my-jira-plugin-action" class="com.example.MyJiraPluginServlet">
+        <description>Servlet to handle button click</description>
+        <url-pattern>/plugins/servlet/my-jira-plugin-action</url-pattern>
+    </servlet>
+
     <web-resource key="my-jira-plugin-resources" name="My Jira Plugin Web Resources">
         <dependency>com.atlassian.auiplugin:ajs</dependency>
         <resource type="download" name="my-jira-plugin.js" location="/js/my-jira-plugin.js"/>
         <resource type="download" name="my-jira-plugin.css" location="/css/my-jira-plugin.css"/>
+        <resource type="download" name="response-dialog.html" location="/templates/response-dialog.html"/>
+        <context>atl.general</context>
     </web-resource>
-
-    <web-panel key="my-jira-plugin-panel" location="atl.jira.view.issue.right.context" weight="100">
-        <resource type="download" name="my-jira-plugin-panel.html" location="/templates/my-jira-plugin-panel.html"/>
-    </web-panel>
 </atlassian-plugin>
 ```
 
-2. **templates/my-jira-plugin-panel.html** - Create a simple HTML file for the button:
+2. **src/main/java/com/example/MyJiraPluginServlet.java** - Create the servlet to handle the button click and fetch the issue description:
 
-```html
-<div id="my-jira-plugin-container">
-    <button id="fetch-description-btn" class="aui-button aui-button-primary">Send Description</button>
-</div>
+```java
+package com.example;
+
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.issue.IssueManager;
+import com.atlassian.jira.issue.Issue;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class MyJiraPluginServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String issueKey = req.getParameter("issueKey");
+
+        IssueManager issueManager = ComponentAccessor.getIssueManager();
+        Issue issue = issueManager.getIssueByCurrentKey(issueKey);
+
+        if (issue != null) {
+            String description = issue.getDescription();
+            // Here you can handle the description and send it to your API endpoint
+
+            resp.setContentType("application/json");
+            resp.getWriter().write("{\"description\": \"" + description + "\"}");
+        } else {
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Issue not found");
+        }
+    }
+}
 ```
 
-3. **src/main/resources/js/my-jira-plugin.js** - Add your JavaScript logic:
+3. **src/main/resources/js/my-jira-plugin.js** - Add the JavaScript to handle the button click and display the response:
 
 ```javascript
-AJS.$(document).ready(function() {
-    AJS.$("#fetch-description-btn").click(function() {
-        // Fetch the issue description
-        var issueId = JIRA.Issue.getIssueId();
+AJS.toInit(function() {
+    AJS.$("#send-description-link").click(function(e) {
+        e.preventDefault();
+
         var issueKey = JIRA.Issue.getIssueKey();
         var issueDescription = JIRA.Issue.getFieldText("description");
 
-        // Prepare the JSON payload
         var payload = JSON.stringify({
             "user_story": issueDescription
         });
 
-        // Send the payload to the API endpoint
         AJS.$.ajax({
-            url: 'https://your-api-endpoint.com/endpoint',
-            type: 'POST',
-            data: payload,
-            contentType: 'application/json',
+            url: AJS.contextPath() + '/plugins/servlet/my-jira-plugin-action',
+            type: 'GET',
+            data: { issueKey: issueKey },
             success: function(response) {
-                // Display the response in a popup
                 AJS.dialog2("#response-dialog").show();
-                AJS.$("#response-dialog .aui-dialog2-content").text(response);
+                AJS.$("#response-dialog .aui-dialog2-content").text(response.description);
+
+                // Send the payload to the API endpoint
+                AJS.$.ajax({
+                    url: 'https://your-api-endpoint.com/endpoint',
+                    type: 'POST',
+                    data: payload,
+                    contentType: 'application/json',
+                    success: function(apiResponse) {
+                        // Display the API response in the popup
+                        AJS.$("#response-dialog .aui-dialog2-content").text(apiResponse);
+                    },
+                    error: function(xhr, status, error) {
+                        alert("Failed to send the request: " + error);
+                    }
+                });
             },
             error: function(xhr, status, error) {
-                // Handle errors
-                alert("Failed to send the request: " + error);
+                alert("Failed to fetch the description: " + error);
             }
         });
     });
 });
 ```
 
-4. **src/main/resources/css/my-jira-plugin.css** - Add a CSS file for any custom styling (optional):
+4. **src/main/resources/css/my-jira-plugin.css** - Add any necessary custom styles (optional):
 
 ```css
-#my-jira-plugin-container {
-    margin-top: 10px;
-}
-
 #response-dialog {
     display: none;
 }
@@ -98,6 +142,6 @@ AJS.$(document).ready(function() {
 </section>
 ```
 
-In this setup, the button click will trigger an AJAX request to the API endpoint. The response will be displayed in a popup dialog. This approach doesn't rely on Velocity templates and keeps everything in plain HTML and JavaScript.
+With these files, your plugin should now add a button to the Jira issue page. Clicking the button will fetch the issue description, send it to the API endpoint as a JSON payload, and display the response in a popup on the same issue page.
 
-Let me know if you need further modifications or assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
+Let me know if you need any further assistance or modifications![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
