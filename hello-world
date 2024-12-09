@@ -1,0 +1,35 @@
+<atlassian-plugin key="hello-world-plugin" name="Hello World Plugin" pluginsVersion="2">
+    <plugin-info>
+        <description>A simple plugin that displays a Hello World popup.</description>
+        <version>1.0</version>
+        <vendor name="Your Company" url="http://example.com"/>
+    </plugin-info>
+
+    <web-item key="hello-world-button" section="jira.issue.tools" weight="100" name="Hello World Button">
+        <label>Hello World</label>
+        <link linkId="hello-world-link">#</link>
+    </web-item>
+
+    <web-resource key="hello-world-plugin-resources" name="Hello World Plugin Web Resources">
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <resource type="download" name="hello-world.js" location="/js/hello-world.js"/>
+        <context>atl.general</context>
+    </web-resource>
+</atlassian-plugin>
+
+
+
+
+
+
+
+
+
+
+
+AJS.toInit(function() {
+    AJS.$("#hello-world-link").click(function(e) {
+        e.preventDefault();
+        alert("Hello World");
+    });
+});
