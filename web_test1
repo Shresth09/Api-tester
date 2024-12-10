@@ -1,28 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Popup Window</title>
-  <style>
-    /* Basic popup styling */
-    body {
-      background-color: #fff;
-      border: 1px solid #ccc;
-      padding: 20px;
-    }
-  </style>
+    <title>Popup Message</title>
+    <style>
+        /* Style the popup */
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 20px;
+            z-index: 9999;
+        }
+
+        /* Style the close button */
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-  <button onclick="openPopup()">Open Popup</button>
+    <div class="popup">
+        <p>This is a popup message.</p>
+        <button class="close-button">Close</button>
+    </div>
 
-  <script>
-    function openPopup() {
-      window.open("about:blank", "PopupWindow", "width=400,height=300");
-      let popup = window.open("", "PopupWindow");
-      popup.document.write(`
-        <p>This is a popup window.</p>
-        <button onclick="window.close()">Close</button>
-      `);
-    }
-  </script>
+    <script>
+        // Close the popup when the close button is clicked
+        const closeButton = document.querySelector('.close-button');
+        closeButton.addEventListener('click', () => {
+            window.close();
+        });
+    </script>
 </body>
 </html>
