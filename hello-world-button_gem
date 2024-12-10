@@ -1,18 +1,56 @@
-<atlassian-webpanel key="your-plugin-webpanel" name="Your Plugin Web Panel">
-    <location>jira.issue.tools:mytool</location>
-    <webresource>your-plugin-resource</webresource>
-</atlassian-webpanel>
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://atlassian.com/plugins/plugin"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://atlassian.com/plugins/plugin plugin.xsd">
+
+    <key>your-plugin-key</key>
+    <name>Your Plugin Name</name>
+    <version>1.0.0</version>
+
+    <atlassian-plugin-version>8.20.11</atlassian-plugin-version>
+
+    <extensions>
+        <atlassian-webresource>
+            <key>your-plugin-resource</key>
+            <name>Your Plugin Resources</name>
+            <location>atlassian-plugin.xml</location>
+            <dependencies>
+                <dependency>com.atlassian.jira:atlassian-jira-web:8.20.11</dependency>
+            </dependencies>
+            <resource>
+                <name>hello-world.js</name>
+                <location>resources/hello-world.js</location>
+            </resource>
+        </atlassian-webresource>
+        <web-item key="hello-world-button" section="jira.issue.tools" weight="100" name="Hello World Button">
+            <label>Hello World</label>
+            <link linkId="hello-world-link" />
+        </web-item>
+    </extensions>
+
+    <module>
+        <key>your-plugin-module</key>
+        <value>com.example.yourplugin</value>
+    </module>
+</plugin>
+
+
+
+
+
+
+
 
 
 AJS.$document.ready(function() {
-    // Find the web panel element
-    var webPanel = AJS.$('#your-plugin-webpanel');
+    // Find the link element by ID (created in the plugin manifest)
+    var link = AJS.$('#hello-world-link');
 
-    // Create the button element
-    var button = AJS.$('<button>Hello World!</button>');
+    // Add click event handler to the link (acts as the button)
+    link.on('click', function(e) {
+        // Prevent default link behavior
+        e.preventDefault();
 
-    // Add click event handler to the button
-    button.on('click', function() {
         // Create the popup content
         var popupContent = AJS.$('<div>Hello World!</div>');
 
@@ -28,7 +66,4 @@ AJS.$document.ready(function() {
         // Open the popup
         dialog.show();
     });
-
-    // Append the button to the web panel
-    webPanel.append(button);
 });
