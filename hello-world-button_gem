@@ -1,0 +1,34 @@
+<atlassian-webpanel key="your-plugin-webpanel" name="Your Plugin Web Panel">
+    <location>jira.issue.tools:mytool</location>
+    <webresource>your-plugin-resource</webresource>
+</atlassian-webpanel>
+
+
+AJS.$document.ready(function() {
+    // Find the web panel element
+    var webPanel = AJS.$('#your-plugin-webpanel');
+
+    // Create the button element
+    var button = AJS.$('<button>Hello World!</button>');
+
+    // Add click event handler to the button
+    button.on('click', function() {
+        // Create the popup content
+        var popupContent = AJS.$('<div>Hello World!</div>');
+
+        // Create the AUI Dialog instance
+        var dialog = new AUI.Dialog({
+            content: popupContent,
+            modal: true,
+            closeOnEscape: true,
+            width: 300,
+            height: 100
+        });
+
+        // Open the popup
+        dialog.show();
+    });
+
+    // Append the button to the web panel
+    webPanel.append(button);
+});
