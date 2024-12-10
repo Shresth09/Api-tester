@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Popup Window</title>
+  <style>
+    /* Basic popup styling */
+    body {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <button onclick="openPopup()">Open Popup</button>
+
+  <script>
+    function openPopup() {
+      window.open("about:blank", "PopupWindow", "width=400,height=300");
+      let popup = window.open("", "PopupWindow");
+      popup.document.write(`
+        <p>This is a popup window.</p>
+        <button onclick="window.close()">Close</button>
+      `);
+    }
+  </script>
+</body>
+</html>
