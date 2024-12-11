@@ -6,6 +6,17 @@ I'd be glad to help you create a Jira plugin that displays a "Hello world! What 
  * Create a New Class: Within your plugin's src/main/java directory, create a new class (HelloWorldPopupButton.java) to handle the button logic and popup display.
  * Extend AbstractJiraIssuePanel: Make this class extend AbstractJiraIssuePanel from the Jira plugin framework. This base class provides essential functionality for interacting with the Jira issue view.
  * Override getActions Method: Override the getActions method to define the button that will trigger the popup. Here's an example implementation:
+
+import com.atlassian.jira.plugin.issueview.AbstractIssuePanel;
+import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.IssueAction;
+import com.atlassian.jira.util.JiraVelocityManager;
+import com.atlassian.jira.web.action.util.DefaultVelocityManager; // Optional, if using UI templating
+
+// Optional imports for using AUI Popup:
+import com.atlassian.jira.web.action.util.PopupWindow; // If using AUI Popup
+
+
 public class HelloWorldPopupButton extends AbstractJiraIssuePanel {
 
     @Override
