@@ -1,0 +1,75 @@
+I'd be glad to help you create a Jira plugin that displays a "Hello world! What are you working on?" message in a popup upon clicking a button within the jira.issue.tools section. Here's a detailed breakdown of the steps involved:
+1. Set up the Development Environment:
+ * Install Atlassian SDK: Download and install the Atlassian SDK for your operating system from [invalid URL removed]. This provides the necessary tools and libraries for creating Jira plugins.
+ * Create a Plugin Project: Use the Atlassian Plugin SDK to create a new plugin project. You can either use the command line or an IDE like IntelliJ IDEA with the Atlassian Plugin Development plugin.
+2. Develop the Plugin Code:
+ * Create a New Class: Within your plugin's src/main/java directory, create a new class (HelloWorldPopupButton.java) to handle the button logic and popup display.
+ * Extend AbstractJiraIssuePanel: Make this class extend AbstractJiraIssuePanel from the Jira plugin framework. This base class provides essential functionality for interacting with the Jira issue view.
+ * Override getActions Method: Override the getActions method to define the button that will trigger the popup. Here's an example implementation:
+public class HelloWorldPopupButton extends AbstractJiraIssuePanel {
+
+    @Override
+    public List<IssueAction> getActions(Issue issue) {
+        List<IssueAction> actions = new ArrayList<>();
+
+        // Create a new button action
+        IssueAction helloWorldAction = new IssueAction(
+                getText("helloworld.button.label"), // Text displayed on the button
+                "helloworld-popup", // Unique identifier for the button
+                null, // Icon (optional)
+                null // Disabled condition (optional)
+        ) {
+            @Override
+            public String handleClick(Issue issue) {
+                // Code to display the popup on button click (explained below)
+                return "redirect-to-popup"; // Optional redirect URL for the button
+            }
+        };
+
+        actions.add(helloWorldAction);
+        return actions;
+    }
+}
+
+ * Implement handleClick Method: Inside the handleClick method of the IssueAction, you'll implement the logic to display the popup. There are two main approaches:
+   a) Using AUI Popup (Atlassian User Interface):
+@Override
+public String handleClick(Issue issue) {
+    String popupHtml = "<div>Hello world! What are you working on?</div>"; // Your popup content
+    Popup popup = new Popup("hello-world-popup", popupHtml);
+    popup.setWidth(400);
+    popup.setHeight(100);
+    popup.setResizable(false);
+    popup.show();
+    return null;
+}
+
+b) Using UI Templating:
+ * Create a UI template file (e.g., helloworld-popup.vm) within your plugin's src/main/resources directory.
+ * Define the HTML content for the popup in the template file.
+ * In the handleClick method, use the JiraVelocityManager to render the template and display the popup:
+@Override
+public String handleClick(Issue issue) {
+    Map<String, Object> context = new HashMap<>();
+    context.put("message", "Hello world! What are you working on?"); // Data for the template
+    String popupHtml = getJiraVelocityManager().getBody("helloworld-popup.vm", context);
+    Popup popup = new Popup("hello-world-popup", popupHtml);
+    popup.setWidth(400);
+    popup.setHeight(100);
+    popup.setResizable(false);
+    popup.show();
+    return null;
+}
+
+3. Register the Plugin (Optional):
+ * If you want to automatically register the plugin when Jira starts, create an atlassian-plugin.xml file in your plugin's root directory.
+ * Include the necessary configuration details within the XML file:
+<atlassian-plugin name="Hello World Popup Button" key="helloworld-popup-button">
+  <extension point="jira.issue.tools">
+    <class name="com.yourcompany.plugin.HelloWorldPopupButton" />
+  </extension-point>
+</atlassian-plugin>
+
+4. Build and Deploy the Plugin:
+ * Use the Atlassian Plugin SDK to build the plugin (usually a command like mvn package).
+ * Deploy the JAR file generated in the target directory to your Jira instance's plugin directory.
