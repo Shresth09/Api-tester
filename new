@@ -84,3 +84,84 @@ public String handleClick(Issue issue) {
 4. Build and Deploy the Plugin:
  * Use the Atlassian Plugin SDK to build the plugin (usually a command like mvn package).
  * Deploy the JAR file generated in the target directory to your Jira instance's plugin directory.
+
+
+
+
+
+
+
+
+
+
+
+========================
+========================
+Creating a Jira plugin can be a fun project! Here's a step-by-step guide to help you set up a plugin that adds a button in the `jira.issue.tools` section. When clicked, this button will open a popup with the message "Hello, World!".
+
+### Steps to Create a Jira Plugin
+
+1. **Set Up Your Development Environment:**
+    - Install Java Development Kit (JDK).
+    - Set up Apache Maven.
+    - Install Atlassian SDK.
+
+2. **Create a New Plugin Project:**
+    - Use the Atlassian SDK to generate a new plugin project:
+      ```bash
+      atlas-create-jira-plugin
+      ```
+
+3. **Edit `atlassian-plugin.xml`:**
+    - Navigate to `src/main/resources` and edit `atlassian-plugin.xml` to define your plugin module. Add the following `<web-item>` element:
+      ```xml
+      <web-item key="my-plugin-button" name="My Plugin Button" section="jira.issue.tools" weight="100">
+          <label>Click Me</label>
+          <link linkId="my-popup">/hello-world-popup</link>
+      </web-item>
+      ```
+
+4. **Create a Servlet to Handle the Popup:**
+    - Define a servlet that will handle the popup. Add the following to `atlassian-plugin.xml`:
+      ```xml
+      <servlet key="helloWorldServlet" name="Hello World Servlet" class="com.example.MyHelloWorldServlet">
+          <url-pattern>/hello-world-popup</url-pattern>
+      </servlet>
+      ```
+
+5. **Implement the Servlet:**
+    - Create the servlet class in `src/main/java/com/example/`. Here’s a basic implementation:
+      ```java
+      package com.example;
+
+      import javax.servlet.http.HttpServlet;
+      import javax.servlet.http.HttpServletRequest;
+      import javax.servlet.http.HttpServletResponse;
+      import java.io.IOException;
+
+      public class MyHelloWorldServlet extends HttpServlet {
+          protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+              response.setContentType("text/html");
+              response.getWriter().write("<html><body><h1>Hello, World!</h1></body></html>");
+          }
+      }
+      ```
+
+6. **Package and Deploy Your Plugin:**
+    - Package your plugin using Maven:
+      ```bash
+      atlas-package
+      ```
+    - Deploy the plugin to your Jira instance:
+      ```bash
+      atlas-run
+      ```
+
+7. **Test Your Plugin:**
+    - Open an issue in Jira.
+    - Click the button in the `jira.issue.tools` section.
+    - Verify that the popup appears with the message "Hello, World!".
+
+And there you go! You've now created a Jira plugin that adds a button to the issue toolbar, which opens a popup with a friendly message.
+
+If you have any questions or need further assistance, feel free to ask! 
