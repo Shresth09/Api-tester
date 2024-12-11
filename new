@@ -60,3 +60,28 @@
 
 
 
+
+----------====-=-=-=-=-=-=-=-=+--+-+-=-=-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-=-=-=-=-+-+-+-+-+-
+
+<web-item key="my-button" name="My Button" section="jira.issue.tools" weight="100">
+    <label>Click Me</label>
+    <link linkId="my-popup">#</link>
+</web-item>
+
+<web-resource key="my-resources" name="My Resources">
+    <context>jira.view.issue</context>
+    <resource type="velocity" name="view" location="templates/popup.vm"/>
+</web-resource>
+
+
+<div>
+    <button id="my-button">Click Me</button>
+</div>
+
+<script type="text/javascript">
+    AJS.$(document).ready(function() {
+        AJS.$("#my-button").on("click", function() {
+            alert("Hello, World!");
+        });
+    });
+</script>
