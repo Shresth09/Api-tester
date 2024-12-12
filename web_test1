@@ -1,41 +1,64 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Popup Message</title>
-    <style>
-        /* Style the popup */
-        .popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #fff;
-            border: 1px solid #ccc;
-            padding: 20px;
-            z-index: 9999;
-        }
+<div>
+    <button id="walkme-button">WalkMe</button>
+</div>
 
-        /* Style the close button */
-        .close-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-    <div class="popup">
-        <p>This is a popup message.</p>
-        <button class="close-button">Close</button>
+<!-- Modal Structure -->
+<div id="walkme-modal" class="aui-dialog2 aui-dialog2-medium aui-dialog2-centered" role="dialog" aria-hidden="true" style="display:none;">
+    <header class="aui-dialog2-header">
+        <h2 class="aui-dialog2-header-main">API Response</h2>
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
+    </header>
+    <div class="aui-dialog2-content">
+        <p id="api-response"></p>
     </div>
+    <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+            <button id="close-button" class="aui-button aui-button-primary">Close</button>
+        </div>
+    </footer>
+</div>
 
-    <script>
-        // Close the popup when the close button is clicked
-        const closeButton = document.querySelector('.close-button');
-        closeButton.addEventListener('click', () => {
-            window.close();
+<script type="text/javascript">
+    AJS.$(document).ready(function() {
+        // Attach click event to the button
+        AJS.$("#walkme-button").on("click", function() {
+            // Fetch the issue description
+            var issueDescription = "$!issue.description";
+            
+            // Prepare the payload
+            var payload = {
+                user_story: issueDescription
+            };
+            
+            // Make the AJAX POST request
+            AJS.$.ajax({
+                url: 'YOUR_API_ENDPOINT',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function(response) {
+                    // Set the response in the modal
+                    AJS.$("#api-response").text(JSON.stringify(response));
+                    
+                    // Show the modal
+                    AJS.dialog2("#walkme-modal").show();
+                },
+                error: function(error) {
+                    // Handle any errors
+                    AJS.$("#api-response").text('Error: ' + error.statusText);
+                    
+                    // Show the modal
+                    AJS.dialog2("#walkme-modal").show();
+                }
+            });
         });
-    </script>
-</body>
-</html>
+
+        // Attach click event to the modal close button
+        AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
+            // Hide the modal
+            AJS.dialog2("#walkme-modal").hide();
+        });
+    });
+</script>
