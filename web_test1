@@ -22,39 +22,24 @@
 
 <script type="text/javascript">
     AJS.$(document).ready(function() {
-        // Fetch the issue description
-        var issueDescription = "$!issue.description";
-        
         // Attach click event to the button
         AJS.$("#walkme-button").on("click", function() {
-            // Prepare the payload
-            var payload = JSON.stringify({
-                user_story: issueDescription
-            });
-            
-            // Make the AJAX POST request
-            AJS.$.ajax({
-                url: 'YOUR_API_ENDPOINT', // Replace with your actual API endpoint
-                type: 'POST',
-                contentType: 'application/json',
-                headers: {
-                    'cookie': '93ce0dc32dd041571a37ccb416a63f2e=a571c5921f6e3ea9ea5aa3b6f34ad39b'
-                },
-                data: payload,
-                success: function(response) {
-                    // Set the response in the modal
-                    AJS.$("#api-response").text(JSON.stringify(response));
-                    
-                    // Show the modal
-                    AJS.dialog2("#walkme-modal").show();
-                },
-                error: function(error) {
-                    // Handle any errors
-                    AJS.$("#api-response").text('Error: ' + error.statusText);
-                    
-                    // Show the modal
-                    AJS.dialog2("#walkme-modal").show();
-                }
+            // Prepare the URL for the API request
+            var apiUrl = 'https://jsonplaceholder.typicode.com/posts/1'; // Test API endpoint
+
+            // Make the AJAX GET request
+            AJS.$.get(apiUrl, function(response) {
+                // Set the response in the modal
+                AJS.$("#api-response").text(JSON.stringify(response));
+                
+                // Show the modal
+                AJS.dialog2("#walkme-modal").show();
+            }).fail(function(error) {
+                // Handle any errors
+                AJS.$("#api-response").text('Error: ' + error.statusText);
+                
+                // Show the modal
+                AJS.dialog2("#walkme-modal").show();
             });
         });
 
