@@ -1,70 +1,39 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Hello World Popup</title>
-    <style>
-        #hello-world-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 20px;
-            border: 1px solid #ccc;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-        }
-    </style>
-</head>
-<body>
-    <div id="hello-world-popup">
-        <h1>Hello World!</h1>
-        <p>This is a popup window.</p>
+<div>
+    <button id="walkme-button">WalkMe</button>
+</div>
+
+<!-- Modal Structure -->
+<div id="walkme-modal" class="aui-dialog2 aui-dialog2-medium aui-dialog2-centered" role="dialog">
+    <header class="aui-dialog2-header">
+        <h2 class="aui-dialog2-header-main">Issue Description</h2>
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
+    </header>
+    <div class="aui-dialog2-content">
+        <p id="issue-description"></p>
     </div>
-</body>
-</html>
+    <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+            <button id="close-button" class="aui-button aui-button-primary">Close</button>
+        </div>
+    </footer>
+</div>
 
+<script type="text/javascript">
+    AJS.$(document).ready(function() {
+        // Fetch the issue description
+        var issueDescription = "$!issue.description";
 
-
-
-
-
-AJS.$document.ready(function() {
-    // Find the link element by ID
-    var link = AJS.$('#hello-world-link');
-
-    // Add click event handler to the link
-    link.on('click', function(e) {
-        e.preventDefault(); // Prevent default link behavior
-
-        // Create the popup container element
-        var popupContainer = AJS.$('<div id="hello-world-popup"></div>');
-
-        // Append the popup content to the container
-        popupContainer.append('<h1>Hello World!</h1><p>This is a popup window.</p>');
-
-        // Add CSS styles to the popup container
-        popupContainer.css({
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'white',
-            padding: '20px',
-            border: '1px solid #ccc',
-            boxShadow: '0 0 5px rgba(0, 0, 0, 0.3)',
-            zIndex: '9999'
+        // Attach click event to the button
+        AJS.$("#walkme-button").on("click", function() {
+            AJS.$("#issue-description").text(issueDescription);
+            AJS.dialog2("#walkme-modal").show();
         });
 
-        // Add a close button to the popup
-        var closeButton = AJS.$('<button>Close</button>');
-        closeButton.on('click', function() {
-            popupContainer.remove();
+        // Attach click event to the modal close button
+        AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
+            AJS.dialog2("#walkme-modal").hide();
         });
-        popupContainer.append(closeButton);
-
-        // Append the popup container to the body
-        AJS.$('body').append(popupContainer);
     });
-});
-
+</script>
