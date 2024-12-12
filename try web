@@ -1,3 +1,13 @@
+<web-resource key="walkme-resources" name="WalkMe Resources">
+    <dependency>com.atlassian.auiplugin:ajs</dependency>
+    <context>jira.view.issue</context>
+    <resource type="velocity" name="view" location="templates/popup.vm"/>
+</web-resource>
+
+
+=================================
+
+
 <div>
     <button id="walkme-button">WalkMe</button>
 </div>
