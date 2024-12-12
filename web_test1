@@ -34,13 +34,13 @@
             
             // Make the AJAX POST request
             AJS.$.ajax({
-                url: 'YOUR_API_ENDPOINT',
+                url: 'YOUR_API_ENDPOINT', // Replace with your API endpoint
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(payload),
                 success: function(response) {
                     // Set the response in the modal
-                    AJS.$("#api-response").text(JSON.stringify(response));
+                    AJS.$("#api-response").text(response); // Adjust based on response format
                     
                     // Show the modal
                     AJS.dialog2("#walkme-modal").show();
