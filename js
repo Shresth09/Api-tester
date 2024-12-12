@@ -67,3 +67,25 @@ AJS.$("#my-jira-button").on("click", function() {
     });
 });
 
+
+
+
+
+################
+################
+
+<div>
+    <button id="walkme-button">WalkMe</button>
+</div>
+
+<script type="text/javascript">
+    AJS.$(document).ready(function() {
+        // Fetch the issue description
+        var issueDescription = "$!issue.description";
+        
+        // Attach click event to the button
+        AJS.$("#walkme-button").on("click", function() {
+            alert(issueDescription);
+        });
+    });
+</script> 
