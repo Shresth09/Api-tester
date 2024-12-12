@@ -3,7 +3,7 @@
 </div>
 
 <!-- Modal Structure -->
-<div id="walkme-modal" class="aui-dialog2 aui-dialog2-medium aui-dialog2-centered" role="dialog">
+<div id="walkme-modal" class="aui-dialog2 aui-dialog2-medium aui-dialog2-centered" role="dialog" aria-hidden="true">
     <header class="aui-dialog2-header">
         <h2 class="aui-dialog2-header-main">Issue Description</h2>
         <a class="aui-dialog2-header-close">
@@ -27,12 +27,16 @@
 
         // Attach click event to the button
         AJS.$("#walkme-button").on("click", function() {
+            // Set the description in the modal
             AJS.$("#issue-description").text(issueDescription);
+
+            // Show the modal
             AJS.dialog2("#walkme-modal").show();
         });
 
         // Attach click event to the modal close button
         AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
+            // Hide the modal
             AJS.dialog2("#walkme-modal").hide();
         });
     });
