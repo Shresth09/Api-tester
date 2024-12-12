@@ -37,3 +37,8 @@ AJS.$("#walkme-button").on("click", function() {
         });
     </script>
 </div>
+
+
+
+
+curl -u your_username:your_password -H "Accept: application/json" http://localhost:2990/jira/rest/api/3/issue/NEW-1
