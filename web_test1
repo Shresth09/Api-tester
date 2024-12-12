@@ -1,17 +1,44 @@
 <div>
-    <button id="walkme-button">WalkMe</button>
+    <button id="walkme-button">Show Issue Description</button>
+
+    <script>
+        AJS.$("#walkme-button").on("click", function() {
+            var issueKey = AJS.context().issueKey;
+            var apiUrl = "YOUR_API_URL"; // Replace with your actual API URL
+
+            var payload = {
+                "user_story": "$!issue.description"
+            };
+
+            AJS.$.ajax({
+                url: apiUrl,
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(payload),
+                success: function(response) {
+                    AJS.$("#issue-description").text(response.message || response);
+                    AJS.dialog2("#walkme-modal").show();
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error sending request:", error);
+                    alert("Error sending request. Please try again later.");
+                }
+            });
+        });
+
+        // ... (rest of the JavaScript code for the modal, as shown in your previous response)
+    </script>
 </div>
 
-<!-- Modal Structure -->
 <div id="walkme-modal" class="aui-dialog2 aui-dialog2-medium aui-dialog2-centered" role="dialog" aria-hidden="true" style="display:none;">
     <header class="aui-dialog2-header">
-        <h2 class="aui-dialog2-header-main">API Response</h2>
+        <h2 class="aui-dialog2-header-main">Issue Description</h2>
         <a class="aui-dialog2-header-close">
             <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
         </a>
     </header>
     <div class="aui-dialog2-content">
-        <p id="api-response"></p>
+        <p id="issue-description"></p>
     </div>
     <footer class="aui-dialog2-footer">
         <div class="aui-dialog2-footer-actions">
@@ -19,46 +46,3 @@
         </div>
     </footer>
 </div>
-
-<script type="text/javascript">
-    AJS.$(document).ready(function() {
-        // Attach click event to the button
-        AJS.$("#walkme-button").on("click", function() {
-            // Fetch the issue description
-            var issueDescription = "$!issue.description";
-            
-            // Prepare the payload
-            var payload = {
-                user_story: issueDescription
-            };
-            
-            // Make the AJAX POST request
-            AJS.$.ajax({
-                url: 'YOUR_API_ENDPOINT', // Replace with your API endpoint
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(payload),
-                success: function(response) {
-                    // Set the response in the modal
-                    AJS.$("#api-response").text(response); // Adjust based on response format
-                    
-                    // Show the modal
-                    AJS.dialog2("#walkme-modal").show();
-                },
-                error: function(error) {
-                    // Handle any errors
-                    AJS.$("#api-response").text('Error: ' + error.statusText);
-                    
-                    // Show the modal
-                    AJS.dialog2("#walkme-modal").show();
-                }
-            });
-        });
-
-        // Attach click event to the modal close button
-        AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
-            // Hide the modal
-            AJS.dialog2("#walkme-modal").hide();
-        });
-    });
-</script>
