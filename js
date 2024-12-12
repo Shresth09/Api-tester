@@ -42,3 +42,28 @@ AJS.$("#walkme-button").on("click", function() {
 
 
 curl -u your_username:your_password -H "Accept: application/json" http://localhost:2990/jira/rest/api/3/issue/NEW-1
+
+
+AJS.$("#my-jira-button").on("click", function() {
+    var issueKey = AJS.context().issueKey;
+    var token = "YOUR_API_TOKEN"; // Replace with your actual API token
+
+    AJS.$.ajax({
+        url: "/rest/api/3/issue/" + issueKey,
+        type: "GET",
+        headers: {
+            "Accept": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        success: function(data) {
+            var description = data.fields.description;
+            // Display the description in a modal, alert, or update the web panel content
+            alert(description); // Replace with your desired display method
+        },
+        error: function(xhr, status, error) {
+            console.error("Error fetching issue description:", error);
+            alert("Error fetching issue description. Please try again later.");
+        }
+    });
+});
+
