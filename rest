@@ -1,0 +1,123 @@
+Certainly! Creating a REST endpoint in your Jira plugin to call an external API is a structured way to handle such tasks. Below are the steps to achieve this:
+
+### Step 1: Create the REST Resource
+
+**`MyRestResource.java`**
+```java
+package com.example;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import org.apache.commons.io.IOUtils;
+
+@Path("/myapi")
+public class MyRestResource {
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getExternalApiData() {
+        String externalApiUrl = "https://jsonplaceholder.typicode.com/posts/1"; // External API endpoint
+        try {
+            URL url = new URL(externalApiUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Accept", "application/json");
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                String responseBody = IOUtils.toString(connection.getInputStream(), "UTF-8");
+                return Response.ok(responseBody).build();
+            } else {
+                return Response.status(responseCode).entity("Error calling external API: " + responseCode).build();
+            }
+        } catch (IOException e) {
+            return Response.serverError().entity("Error: " + e.getMessage()).build();
+        }
+    }
+}
+```
+
+### Step 2: Register the REST Resource in `atlassian-plugin.xml`
+
+```xml
+<rest name="My Rest API" i18n-name-key="my-rest-api.name" key="my-rest-api" path="/myapi">
+    <description key="my-rest-api.description">The My Rest API Plugin</description>
+    <resource name="myapi" type="servlet" location="com.example.MyRestResource"/>
+</rest>
+```
+
+### Step 3: Update Your `popup.vm` to Call Your REST Endpoint
+
+```html
+<div>
+    <button id="api-button">Call API</button>
+</div>
+
+<!-- Modal Structure -->
+<div id="api-modal" class="aui-dialog2 aui-dialog2-medium aui-dialog2-centered" role="dialog" aria-hidden="true" style="display:none;">
+    <header class="aui-dialog2-header">
+        <h2 class="aui-dialog2-header-main">API Response</h2>
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
+    </header>
+    <div class="aui-dialog2-content">
+        <p id="api-response"></p>
+    </div>
+    <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+            <button id="close-button" class="aui-button aui-button-primary">Close</button>
+        </div>
+    </footer>
+</div>
+
+<script type="text/javascript">
+    AJS.$(document).ready(function() {
+        AJS.$("#api-button").on("click", function() {
+            var apiUrl = '/rest/myapi/1.0/myapi'; // Local REST endpoint
+
+            AJS.$.ajax({
+                url: apiUrl,
+                type: 'GET',
+                success: function(response) {
+                    AJS.$("#api-response").text(JSON.stringify(response));
+                    AJS.dialog2("#api-modal").show();
+                },
+                error: function(error) {
+                    AJS.$("#api-response").text('Error: ' + error.statusText);
+                    AJS.dialog2("#api-modal").show();
+                }
+            });
+        });
+
+        AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
+            AJS.dialog2("#api-modal").hide();
+        });
+    });
+</script>
+```
+
+### Key Points:
+- **Creating the REST Resource:** The `MyRestResource` class handles the GET request to an external API.
+- **Registering the REST Resource:** This is done in the `atlassian-plugin.xml` file to make the endpoint available.
+- **Calling the REST Endpoint:** The client-side JavaScript makes a GET request to the local REST endpoint and displays the response.
+
+### Steps to Implement:
+1. **Create the REST Resource:** Add `MyRestResource.java` to your project.
+2. **Update `atlassian-plugin.xml`:** Register the REST resource.
+3. **Update `popup.vm`:** Make sure the template is correctly calling the local REST endpoint.
+4. **Package and Deploy:** Rebuild and redeploy your plugin:
+   ```bash
+   atlas-package
+   atlas-run
+   ```
+
+This setup ensures that your Jira plugin can call an external API through a server-side REST endpoint and handle the response in the client-side code.
+
+If you encounter any issues or need further assistance, feel free to ask![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/jusales/EngineeringEssentials_3/tree/244454e2f8b36224810cce1d315afa9e387aa198/techCurriculum%2Fservices%2FEngineeringEssentialsServices%2Fsrc%2Fmain%2Fjava%2Fexamples%2FExample3Resource.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/pkukielka/dropwizard-app/tree/057ca31760a4903292913d7ec94dfc997f61da8f/src%2Fmain%2Fjava%2Fcom%2Fpkukielka%2Fdropwizardapp%2Fresources%2FServerResource.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
