@@ -55,3 +55,83 @@
         });
     });
 </script>
+
+
+
+
+
+
+
+
+
+
+============================
+============================
+
+<div>
+    <button id="show-popup">Show API Data</button>
+</div>
+
+<!-- Modal Structure -->
+<div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+    <header class="aui-dialog2-header">
+        <h2 class="aui-dialog2-header-main">API Response</h2>
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
+    </header>
+    <div class="aui-dialog2-content">
+        <pre id="api-response">Loading data...</pre>
+    </div>
+    <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+            <button id="close-button" class="aui-button aui-button-primary aui-dialog2-hide">Close</button>
+        </div>
+    </footer>
+</div>
+
+<script type="text/javascript">
+    AJS.$(document).ready(function() {
+        // Show the modal and fetch API data on button click
+        AJS.$("#show-popup").click(function() {
+            var description = "$!issue.description"; // Fetch description from the page
+            var apiUrl = '/rest/external-api/1.0/myapi'; // Replace with your actual API endpoint
+
+            // Payload in JSON format
+            var payload = JSON.stringify({ user_story: description });
+
+            // Show the modal and set loading text
+            AJS.$("#api-modal").show();
+            AJS.$("#api-response").text("Loading data...");
+
+            // Make the AJAX POST request
+            jQuery.ajax({
+                url: apiUrl,
+                type: 'POST',
+                contentType: 'application/json',
+                data: payload,
+                success: function(response) {
+                    // Format JSON data for better readability
+                    var formattedData = JSON.stringify(response, null, 2);
+                    
+                    // Set the response in the modal
+                    AJS.$("#api-response").text(formattedData);
+                    
+                    // Show the modal
+                    AJS.dialog2("#api-modal").show();
+                },
+                error: function(error) {
+                    AJS.$("#api-response").text("Failed to fetch data.");
+                    
+                    // Show the modal
+                    AJS.dialog2("#api-modal").show();
+                }
+            });
+        });
+
+        // Attach click event to the modal close button
+        AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
+            AJS.dialog2("#api-modal").hide();
+        });
+    });
+</script> 
