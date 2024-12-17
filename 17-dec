@@ -22,19 +22,37 @@
 
 <script type="text/javascript">
     AJS.$(document).ready(function() {
-        // Function to extract the issue key from the URL
-        function getIssueKeyFromUrl() {
+        // Function to extract the issue key from the URL or other elements
+        function getIssueKey() {
+            // Attempt to get the issue key from the URL
             var url = window.location.href;
             var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
             var match = url.match(issueKeyPattern);
-            return match ? match[1] : null;
+            if (match) {
+                return match[1];
+            }
+
+            // If the issue key is not in the URL, try to find it in other elements
+            var issueKeyElement = AJS.$("#key-val"); // Element with issue key on the issue page
+            if (issueKeyElement.length) {
+                return issueKeyElement.text().trim();
+            }
+
+            // Attempt to find the issue key in Open Issues section or other contexts
+            var selectedIssueKey = AJS.$(".selected-issue-key").text(); // Adjust the selector as needed
+            if (selectedIssueKey) {
+                return selectedIssueKey.trim();
+            }
+
+            // If issue key is not found
+            return null;
         }
 
         // Show the modal and fetch API data on button click
         AJS.$("#show-popup").click(function() {
-            var issueKey = getIssueKeyFromUrl();
+            var issueKey = getIssueKey();
             if (!issueKey) {
-                AJS.$("#api-response").text("Issue key not found in the URL.");
+                AJS.$("#api-response").text("Issue key not found.");
                 AJS.dialog2("#api-modal").show();
                 return;
             }
@@ -52,39 +70,10 @@
                     // Prepare payload
                     var payload = JSON.stringify({ user_story: description });
 
-                    var apiUrl = '/rest/proxy/1.0/api'; // Your proxy endpoint
+                    var apiUrl = 'http://localhost:2990/jira/rest/external-api/1.0/myapi'; // Your actual API endpoint
 
                     // Show loading text in the modal
                     AJS.$("#api-modal").show();
                     AJS.$("#api-response").text("Loading data...");
 
                     // Make the POST request to your API with the description
-                    jQuery.ajax({
-                        url: apiUrl,
-                        type: 'POST',
-                        contentType: 'application/json',
-                        data: payload,
-                        success: function(apiResponse) {
-                            var formattedData = JSON.stringify(apiResponse, null, 2);
-                            AJS.$("#api-response").text(formattedData);
-                            AJS.dialog2("#api-modal").show();
-                        },
-                        error: function(xhr, status, error) {
-                            AJS.$("#api-response").text("Failed to fetch data. Status: " + xhr.status + ", Error: " + error);
-                            AJS.dialog2("#api-modal").show();
-                        }
-                    });
-                },
-                error: function(xhr, status, error) {
-                    AJS.$("#api-response").text("Failed to fetch Jira issue data. Status: " + xhr.status + ", Error: " + error);
-                    AJS.dialog2("#api-modal").show();
-                }
-            });
-        });
-
-        // Attach click event to the modal close button
-        AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
-            AJS.dialog2("#api-modal").hide();
-        });
-    });
-</script>
