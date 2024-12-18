@@ -1,0 +1,140 @@
+<div>
+    <button id="show-popup">Show API Data</button>
+</div>
+
+<!-- Modal Structure -->
+<div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+    <header class="aui-dialog2-header">
+        <h2 class="aui-dialog2-header-main">API Response</h2>
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
+    </header>
+    <div class="aui-dialog2-content">
+        <div id="api-response"></div>
+    </div>
+    <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+            <button id="close-button" class="aui-button aui-button-primary">Close</button>
+        </div>
+    </footer>
+</div>
+
+<script type="text/javascript">
+    AJS.$(document).ready(function() {
+        // Function to extract the issue key from the URL or other elements
+        function getIssueKey() {
+            // Attempt to get the issue key from the URL
+            var url = window.location.href;
+            var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
+            var match = url.match(issueKeyPattern);
+            if (match) {
+                return match[1];
+            }
+
+            // If the issue key is not in the URL, try to find it in other elements
+            var issueKeyElement = AJS.$("#key-val"); // Element with issue key on the issue page
+            if (issueKeyElement.length) {
+                return issueKeyElement.text().trim();
+            }
+
+            // Attempt to find the issue key in Open Issues section or other contexts
+            var selectedIssueKey = AJS.$(".selected-issue-key").text(); // Adjust the selector as needed
+            if (selectedIssueKey) {
+                return selectedIssueKey.trim();
+            }
+
+            // If issue key is not found
+            return null;
+        }
+
+        // Show the modal and fetch API data on button click
+        AJS.$("#show-popup").click(function() {
+            var issueKey = getIssueKey();
+            if (!issueKey) {
+                AJS.$("#api-response").text("Issue key not found.");
+                AJS.dialog2("#api-modal").show();
+                return;
+            }
+
+            var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+
+            // Fetch the issue description from Jira REST API
+            jQuery.ajax({
+                url: jiraApiUrl,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    var description = response.fields.description; // Get the description field
+
+                    // Prepare payload
+                    var payload = JSON.stringify({ user_story: description });
+
+                    var apiUrl = 'http://localhost:2990/jira/rest/external-api/1.0/myapi'; // Your actual API endpoint
+
+                    // Show loading text in the modal
+                    AJS.$("#api-modal").show();
+                    AJS.$("#api-response").html("<pre>Loading data...</pre>");
+
+                    // Make the POST request to your API with the description
+                    jQuery.ajax({
+                        url: apiUrl,
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: payload,
+                        success: function(apiResponse) {
+                            // Parse the API response
+                            var cscore = apiResponse.NA.cscore;
+                            var messages = apiResponse.NA.message;
+
+                            // Format the response for display
+                            var formattedData = "SCORE: " + cscore + "<br>" +
+                                                "MESSAGE: " + messages.join(", ");
+
+                            // Set the response in the modal
+                            AJS.$("#api-response").html(formattedData);
+                            AJS.dialog2("#api-modal").show();
+                        },
+                        error: function(xhr, status, error) {
+                            AJS.$("#api-response").text("Failed to fetch data. Status: " + xhr.status + ", Error: " + error);
+                            AJS.dialog2("#api-modal").show();
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    AJS.$("#api-response").text("Failed to fetch Jira issue data. Status: " + xhr.status + ", Error: " + error);
+                    AJS.dialog2("#api-modal").show();
+                }
+            });
+        });
+
+        // Attach click event to the modal close button
+        AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
+            AJS.dialog2("#api-modal").hide();
+            // Remove the modal from the DOM to prevent white box issue
+            setTimeout(function() {
+                AJS.$("#api-modal").remove();
+                // Recreate modal structure for future use
+                var modalHTML = `
+                    <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+                        <header class="aui-dialog2-header">
+                            <h2 class="aui-dialog2-header-main">API Response</h2>
+                            <a class="aui-dialog2-header-close">
+                                <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+                            </a>
+                        </header>
+                        <div class="aui-dialog2-content">
+                            <div id="api-response"></div>
+                        </div>
+                        <footer class="aui-dialog2-footer">
+                            <div class="aui-dialog2-footer-actions">
+                                <button id="close-button" class="aui-button aui-button-primary">Close</button>
+                            </div>
+                        </footer>
+                    </div>
+                `;
+                AJS.$("body").append(modalHTML);
+            }, 300);
+        });
+    });
+</script>
