@@ -11,11 +11,11 @@
         </a>
     </header>
     <div class="aui-dialog2-content">
-        <div id="api-response"></div>
+        <div id="api-response">Loading data...</div>
     </div>
     <footer class="aui-dialog2-footer">
         <div class="aui-dialog2-footer-actions">
-            <button id="close-button" class="aui-button aui-button-primary">Close</button>
+            <button id="close-button" class="aui-button aui-button-primary aui-dialog2-hide">Close</button>
         </div>
     </footer>
 </div>
@@ -111,30 +111,8 @@
         // Attach click event to the modal close button
         AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
             AJS.dialog2("#api-modal").hide();
-            // Remove the modal from the DOM to prevent white box issue
-            setTimeout(function() {
-                AJS.$("#api-modal").remove();
-                // Recreate modal structure for future use
-                var modalHTML = `
-                    <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
-                        <header class="aui-dialog2-header">
-                            <h2 class="aui-dialog2-header-main">API Response</h2>
-                            <a class="aui-dialog2-header-close">
-                                <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-                            </a>
-                        </header>
-                        <div class="aui-dialog2-content">
-                            <div id="api-response"></div>
-                        </div>
-                        <footer class="aui-dialog2-footer">
-                            <div class="aui-dialog2-footer-actions">
-                                <button id="close-button" class="aui-button aui-button-primary">Close</button>
-                            </div>
-                        </footer>
-                    </div>
-                `;
-                AJS.$("body").append(modalHTML);
-            }, 300);
+            // Clear the response content to reset modal state
+            AJS.$("#api-response").html("Loading data...");
         });
     });
 </script>
