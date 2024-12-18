@@ -1,0 +1,29 @@
+AJS.$(document).ready(function() {
+    // Add a button to the create issue form
+    AJS.$("#create-issue-submit").before('<button id="my-custom-button">My Custom Button</button>');
+
+    // Handle the button click event
+    AJS.$("#my-custom-button").click(function() {
+        // Perform custom actions, e.g., using the Jira REST API
+        AJS.ajax({
+            url: "/rest/api/2/issue",
+            type: "POST",
+            // ...
+        }).done(function(response) {
+            // Handle the response
+        });
+    });
+});
+
+
+
+<atlassian-plugin key="my-plugin-key" name="My Plugin" class="com.example.MyPlugin">
+    <plugin-info>
+        </plugin-info>
+
+    <web-resource key="my-plugin-resource" name="My Plugin Resource">
+        <resource type="download" name="my-plugin.js" location="/resources/my-plugin.js"/>
+    </web-resource>
+
+    <module key="my-module-key" class="com.example.MyModule"/>
+</atlassian-plugin>
