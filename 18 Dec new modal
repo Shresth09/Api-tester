@@ -111,8 +111,11 @@
         // Attach click event to the modal close button
         AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
             AJS.dialog2("#api-modal").hide();
-            // Reset the modal content after hiding
-            AJS.$("#api-response").html("Loading data...");
+            // Ensure the modal is properly hidden and reset
+            setTimeout(function() {
+                AJS.$("#api-modal").attr("aria-hidden", "true").hide();
+                AJS.$("#api-response").html("Loading data...");
+            }, 300);
         });
     });
 </script>
