@@ -15,7 +15,7 @@
     </div>
     <footer class="aui-dialog2-footer">
         <div class="aui-dialog2-footer-actions">
-            <button id="close-button" class="aui-button aui-button-primary aui-dialog2-hide">Close</button>
+            <button id="close-button" class="aui-button aui-button-primary">Close</button>
         </div>
     </footer>
 </div>
@@ -111,7 +111,7 @@
         // Attach click event to the modal close button
         AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
             AJS.dialog2("#api-modal").hide();
-            // Clear the response content to reset modal state
+            // Reset the modal content after hiding
             AJS.$("#api-response").html("Loading data...");
         });
     });
