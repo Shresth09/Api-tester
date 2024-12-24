@@ -1,0 +1,110 @@
+package com.example.jira.plugins;
+
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import com.atlassian.sal.api.web.RequestFactory;
+import com.atlassian.sal.api.web.WebAction;
+import com.atlassian.sal.api.web.WebRequest;
+import com.atlassian.sal.api.web.WebResponse;
+import com.google.common.collect.ImmutableMap;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Map;
+
+@Component
+public class MyWebAction implements WebAction {
+
+    private static final String MY_WEB_ITEM_KEY = "my-web-item";
+    private static final String JS_FILE_PATH = "/js/my-script.js"; 
+
+    @ComponentImport
+    private final PluginSettingsFactory pluginSettingsFactory;
+
+    @ComponentImport
+    private final RequestFactory requestFactory;
+
+    @Autowired
+    public MyWebAction(PluginSettingsFactory pluginSettingsFactory, RequestFactory requestFactory) {
+        this.pluginSettingsFactory = pluginSettingsFactory;
+        this.requestFactory = requestFactory;
+    }
+
+    @Override
+    public String execute() throws IOException {
+        return "success"; 
+    }
+
+    @Override
+    public boolean isLoggedInUserRequired() {
+        return false; 
+    }
+
+    @Override
+    public void execute(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        WebRequest webRequest = requestFactory.createWebRequest(request, response);
+        WebResponse webResponse = requestFactory.createWebResponse(response);
+
+        // Load the JavaScript file
+        webResponse.setContentType("text/html");
+        webResponse.getWriter().println("<html>");
+        webResponse.getWriter().println("<head>");
+        webResponse.getWriter().println("<script src=\"" + request.getContextPath() + JS_FILE_PATH + "\"></script>");
+        webResponse.getWriter().println("</head>");
+        webResponse.getWriter().println("<body>");
+        webResponse.getWriter().println("</body>");
+        webResponse.getWriter().println("</html>");
+    }
+
+    @Override
+    public Map<String, Object> getExecutionParams(HttpServletRequest request) {
+        return ImmutableMap.of();
+    }
+
+    public String getModuleKey() {
+        return MY_WEB_ITEM_KEY;
+    }
+}
+
+
+
+
+
+
+
+==========================
+==========================
+
+<?xml version="1.0" encoding="UTF-8"?>
+<atlassian-plugin key="my-jira-plugin" name="My Jira Plugin" vendor="Your Company"
+        plugins-version="2">
+
+    <plugin-info>
+        <description>A simple Jira plugin that loads a JavaScript file.</description>
+        <version>1.0.0</version>
+        <url>https://www.example.com</url>
+        <developer>
+            <name>Your Name</name>
+            <email>your.email@example.com</email>
+        </developer>
+    </plugin-info>
+
+    <web-item key="my-web-item" name="My Web Item" weight="100">
+        <label>My Web Item</label>
+        <icon>icons/default.png</icon>
+        <access-condition>
+            <permission name="jira-administrators" /> 
+        </access-condition>
+        <weight>100</weight>
+        <section name="system_config" />
+    </web-item>
+
+    <resources>
+        <resource type="download" name="my-script.js" location="js/my-script.js" />
+    </resources>
+
+</atlassian-plugin>
