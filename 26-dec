@@ -1,0 +1,120 @@
+<!-- Button styled like the "Start Progress" button -->
+<a id="show-popup" class="aui-button aui-button-link">Show API Data</a>
+
+<!-- Modal Structure -->
+<div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+    <header class="aui-dialog2-header">
+        <h2 class="aui-dialog2-header-main">API Response</h2>
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
+    </header>
+    <div class="aui-dialog2-content">
+        <div id="api-response">Loading data...</div>
+    </div>
+    <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+            <button id="close-button" class="aui-button aui-button-primary">Close</button>
+        </div>
+    </footer>
+</div>
+
+<script type="text/javascript">
+    AJS.$(document).ready(function() {
+        alert("Document is ready!");
+
+        // Function to extract the issue key from the URL or other elements
+        function getIssueKey() {
+            alert("Extracting issue key...");
+            var url = window.location.href;
+            var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
+            var match = url.match(issueKeyPattern);
+            if (match) {
+                return match[1];
+            }
+
+            var issueKeyElement = AJS.$("#key-val");
+            if (issueKeyElement.length) {
+                return issueKeyElement.text().trim();
+            }
+
+            var selectedIssueKey = AJS.$(".selected-issue-key").text();
+            if (selectedIssueKey) {
+                return selectedIssueKey.trim();
+            }
+
+            return null;
+        }
+
+        // Show the modal and fetch API data on button click
+        AJS.$("#show-popup").click(function() {
+            alert("Button clicked!");
+            var issueKey = getIssueKey();
+            if (!issueKey) {
+                alert("Issue key not found.");
+                AJS.$("#api-response").html("<p style='color: red;'>Issue key not found.</p>");
+                AJS.dialog2("#api-modal").show();
+                return;
+            }
+
+            var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+            alert("Fetching data from Jira API: " + jiraApiUrl);
+
+            // Fetch the issue description from Jira REST API
+            jQuery.ajax({
+                url: jiraApiUrl,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    alert("Jira API response received: " + JSON.stringify(response));
+                    var description = response.fields.description;
+
+                    var payload = JSON.stringify({ user_story: description });
+                    var apiUrl = 'http://localhost:2990/jira/rest/external-api/1.0/myapi';
+                    alert("Sending data to external API: " + apiUrl + " with payload: " + payload);
+
+                    AJS.$("#api-modal").show();
+                    AJS.$("#api-response").html("<pre>Loading data...</pre>");
+
+                    jQuery.ajax({
+                        url: apiUrl,
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: payload,
+                        success: function(apiResponse) {
+                            alert("External API response received: " + JSON.stringify(apiResponse));
+                            var cscore = apiResponse.NA.cscore;
+                            var messages = apiResponse.NA.message;
+
+                            var formattedData = `
+                                <p style='font-size: 1.5em;'><strong>SCORE:</strong> ${cscore}</p>
+                                <p style='font-size: 1.2em;'><strong>MESSAGE:</strong> ${messages.join("<br>")}</p>
+                            `;
+                            AJS.$("#api-response").html(formattedData);
+                            AJS.dialog2("#api-modal").show();
+                        },
+                        error: function(xhr, status, error) {
+                            alert("Error in external API call: " + status + " " + error);
+                            AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch data. Status: " + xhr.status + ", Error: " + error + "</p>");
+                            AJS.dialog2("#api-modal").show();
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    alert("Error in Jira API call: " + status + " " + error);
+                    AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch Jira issue data. Status: " + xhr.status + ", Error: " + error + "</p>");
+                    AJS.dialog2("#api-modal").show();
+                }
+            });
+        });
+
+        AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
+            alert("Closing modal");
+            AJS.dialog2("#api-modal").hide();
+            setTimeout(function() {
+                AJS.$("#api-modal").attr("aria-hidden", "true").hide();
+                AJS.$("#api-response").html("Loading data...");
+            }, 300);
+        });
+    });
+</script>
