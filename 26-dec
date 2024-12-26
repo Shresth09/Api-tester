@@ -20,8 +20,9 @@
 </div>
 
 <script type="text/javascript">
-    AJS.$(document).ready(function() {
-        alert("Document is ready!");
+    AJS.toInit(function() {
+        // Ensure the script is running
+        alert("Script is running!");
 
         // Function to extract the issue key from the URL or other elements
         function getIssueKey() {
