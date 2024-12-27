@@ -60,7 +60,7 @@
             var issueKey = getIssueKey();
             if (!issueKey) {
                 console.log("Issue key not found.");
-                AJS.$("#api-response").html("<p style='color: red;'>Issue key not found.</p>");
+                AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Issue key not found.</p>");
                 AJS.dialog2("#api-modal").show();
                 return;
             }
@@ -76,6 +76,13 @@
                 success: function(response) {
                     console.log("Jira API response received:", response);
                     var description = response.fields.description;
+
+                    if (!description) {
+                        console.log("Description not provided in the issue.");
+                        AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Description is not provided in the issue.</p>");
+                        AJS.dialog2("#api-modal").show();
+                        return;
+                    }
 
                     var payload = JSON.stringify({ user_story: description });
                     var apiUrl = 'http://localhost:2990/jira/rest/external-api/1.0/myapi';
