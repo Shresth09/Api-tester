@@ -242,3 +242,26 @@ public class UserLicenseContextProvider implements ContextProvider {
         return context;
     }
 }
+
+
+
+=================================================
+=================================================
+
+<web-section name="User License Helper" i18n-name-key="com.vvit.services.websection.configuration.name" key="user-license-helper" location="admin_applications_section" weight="1000">
+    <description key="user-license-helper.description">The User License Helper Plugin</description>
+    <label key="plugin-urls">Plugin URLs</label>
+</web-section>
+
+<web-item name="Configuration" i18n-name-key="com.vvit.services.webitem.configuration.name" key="configuration" section="admin_applications_section/user-license-helper" weight="1000">
+    <description key="configuration.description">The Configuration Plugin</description>
+    <label key="ai-rqm-url">AI-RQM URL</label>
+</web-item>
+
+<web-panel key="user-license-panel" location="admin_applications_section/user-license-helper" weight="1000">
+    <resource type="velocity" name="view" location="templates/user-license-panel.vm"/>
+</web-panel>
+
+<rest key="endpoint-rest" path="/endpoint" version="1.0">
+    <description>Endpoint REST Service</description>
+</rest>
