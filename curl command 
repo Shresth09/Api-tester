@@ -16,3 +16,6 @@ curl -X PUT -u admin:admin -H "Content-Type: application/json" -d "{\"value\": \
 curl -X PUT -u admin:admin -H "Content-Type: application/json" -d '{"value": "http://your-api-url"}' http://localhost:2990/jira/rest/api/2/project/<project-key>/properties/api-url
 
 curl -X PUT -u admin:admin -H "Content-Type: application/json" -d "{\"value\": \"http://your-api-url\"}" http://localhost:2990/jira/rest/api/2/project/<project-key>/properties/api-url
+
+
+curl -u admin:admin -H "Content-Type: application/json" http://localhost:2990/jira/rest/api/2/project/PROJ/properties/api-url
