@@ -9,4 +9,6 @@ curl -X PUT -u admin:admin -H "Content-Type: application/json" -d "{\"value\": \
 curl -X PUT -u admin:admin -H "Content-Type: application/json" -d "{\"value\": \"http://api.example.com\"}" http://localhost:2990/jira/rest/api/2/application-properties/externalApiUrl
 
 
-curl -u admin:admin -H "Content-Type: application/json" http://localhost:2990/jira/rest/api/2/application-properties 
+curl -u admin:admin -H "Content-Type: application/json" http://localhost:2990/jira/rest/api/2/application-properties
+
+curl -X PUT -u admin:admin -H "Content-Type: application/json" -d "{\"value\": \"test\"}" http://localhost:2990/jira/rest/api/2/application-properties/testProperty
