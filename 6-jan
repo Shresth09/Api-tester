@@ -409,3 +409,134 @@ Make sure your existing code fetches the API URL from local storage as described
 This setup should place the configuration button in the left panel under the specified section, and users will be able to set the API URL through the configuration form.
 
 Feel free to ask if you need more details or further assistance! 
+
+
+
+
+
+₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹₹? ₹₹? ₹? ₹?? ₹? ₹
+₹? ₹?? ₹? ₹? ₹? ₹? ₹? ₹? ₹? ₹? ₹? ₹
+
+Sure, let's go with Approach 1, which uses a modal to handle the configuration.
+
+### Step 1: Update `atlassian-plugin.xml`
+
+Ensure your `atlassian-plugin.xml` file includes the web section and web panel definitions:
+
+```xml
+<atlassian-plugin key="ai-rqm-plugin" name="AI RQM Plugin" plugins-version="2">
+    <plugin-info>
+        <description>AI RQM Plugin for JIRA</description>
+        <version>1.0.0</version>
+        <vendor name="Your Company" url="http://example.com"/>
+    </plugin-info>
+
+    <!-- Web section for configuration -->
+    <web-section
+        name="AI RQM Plugin Configuration"
+        key="ai-rqm-configuration-section"
+        location="admin.applications"
+        weight="1000">
+        <description>The section for configuring AI RQM Plugin</description>
+    </web-section>
+
+    <!-- Web item for configuration button -->
+    <web-item
+        name="Configure AI RQM Plugin"
+        key="ai-rqm-configuration-item"
+        section="admin.applications/ai-rqm-configuration-section"
+        weight="10">
+        <description>Open the configuration page for AI RQM Plugin</description>
+        <label key="ai-rqm-configuration-item.label"/>
+        <url>/plugins/servlet/applications/versions-licenses</url>
+    </web-item>
+
+    <!-- Web panel for the configuration button in the left panel -->
+    <web-panel
+        key="ai-rqm-config-panel"
+        location="atl.jira.view.issue.left.context"
+        weight="10">
+        <resource type="velocity" name="view" location="templates/config-button.vm"/>
+    </web-panel>
+</atlassian-plugin>
+```
+
+### Step 2: Create the Velocity Template `config-button.vm`
+
+This template contains the button that will trigger the modal:
+
+```html
+<!-- config-button.vm -->
+<a id="open-config-modal" class="aui-button aui-button-primary">Configure AI RQM Plugin</a>
+
+<!-- Modal Structure -->
+<div id="config-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+    <header class="aui-dialog2-header">
+        <h2 class="aui-dialog2-header-main">AI RQM Plugin Configuration</h2>
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
+    </header>
+    <div class="aui-dialog2-content">
+        <div id="config-form-container">
+            <!-- Form will be loaded here -->
+        </div>
+    </div>
+    <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+            <button id="close-config-modal" class="aui-button aui-button-primary">Close</button>
+        </div>
+    </footer>
+</div>
+
+<script type="text/javascript">
+    jQuery(document).ready(function() {
+        // Load the saved URL from local storage
+        var savedApiUrl = AJS.storage.getItem('ai-rqm-api-url');
+
+        // Open modal on button click
+        jQuery('#open-config-modal').on('click', function(event) {
+            event.preventDefault();
+            jQuery("#config-form-container").html(`
+                <form id="api-config-form">
+                    <h3>AI RQM Plugin Configuration</h3>
+                    <label for="apiUrl">API URL:</label>
+                    <input type="text" id="apiUrl" name="apiUrl" value="${savedApiUrl || ''}"/>
+                    <button type="submit" class="aui-button aui-button-primary">Save</button>
+                </form>
+                <p id="config-status"></p>
+            `);
+            AJS.dialog2("#config-modal").show();
+        });
+
+        // Save the URL to local storage on form submission
+        jQuery(document).on('submit', '#api-config-form', function(event) {
+            event.preventDefault();
+            var newApiUrl = jQuery('#apiUrl').val().trim();
+            if (newApiUrl) {
+                AJS.storage.setItem('ai-rqm-api-url', newApiUrl);
+                jQuery('#config-status').text('API URL saved successfully!');
+            } else {
+                jQuery('#config-status').text('Please enter a valid API URL.');
+            }
+        });
+
+        // Close the modal
+        jQuery('#close-config-modal, .aui-dialog2-header-close').on('click', function() {
+            AJS.dialog2("#config-modal").hide();
+        });
+    });
+</script>
+```
+
+### Step 3: Ensure Correct Path and Deployment
+
+- Place the `config-button.vm` file in the `templates` directory of your plugin.
+- Redeploy your plugin and restart JIRA to apply changes.
+
+### Verify and Test
+
+- Verify that the button appears in the desired location.
+- When clicking the button, the modal should appear, allowing users to configure the API URL without reloading the page.
+
+Feel free to ask if you need further assistance or have any questions![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1") 
