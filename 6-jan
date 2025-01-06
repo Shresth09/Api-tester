@@ -89,4 +89,19 @@
         ...
     }
 </script>
- 
+
+
+
+
+
+=================
+=================
+
+
+
+<web-item key="ai-rqm-plugin-admin" 
+          name="AI-RQM Plugin" 
+          section="system.admin.sidebar.applications" 
+          weight="1000"> 
+    <resource type="velocity" name="view" location="templates/admin-button.vm"/> 
+</web-item>
