@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI-RQM Plugin Configuration</title>
+    <meta name="atlassian-plugin" content="installed">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <style>
+        .container {
+            margin: 20px;
+        }
+        .label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI-RQM Plugin Configuration</h1>
+        <form id="config-form">
+            <label for="api-url" class="label">External API URL:</label>
+            <input type="text" id="api-url" name="api-url" placeholder="Enter API URL">
+            <br>
+            <button type="submit">Save Configuration</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Get the stored API URL from plugin settings
+            var apiUrl = AJS.storage.get('ai-rqm-api-url') || '';
+            $('#api-url').val(apiUrl);
+
+            $('#config-form').submit(function(event) {
+                event.preventDefault();
+
+                var newApiUrl = $('#api-url').val().trim();
+                if (!newApiUrl) {
+                    alert('Please enter a valid API URL.');
+                    return;
+                }
+
+                // Store the new API URL in plugin settings
+                AJS.storage.set('ai-rqm-api-url', newApiUrl);
+
+                alert('Configuration saved successfully!');
+                // Optionally, reload the Jira page to refresh the plugin
+                window.location.reload();
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+=========================
+=========================
+
+
+<web-resource key="ai-rqm-config" name="AI-RQM Plugin Configuration" location="resources/admin.html">
+    <resource type="velocity" name="view" location="templates/admin.vm"/>
+    <permission name="atl.admin"/>
+</web-resource>
+
+
+
+====================
+====================
+
+<script type="module">
+    AJS.toInit(function() {
+        jQuery(document).ready(function() {
+            initStuff();
+        });
+    });
+
+    function initStuff() {
+        console.log("Initializing Stuff...");
+
+        // Retrieve the stored API URL from plugin settings
+        var apiUrl = AJS.storage.get('ai-rqm-api-url') || '';
+
+        // Ensure event listeners are attached only once (rest of the code remains the same)
+        ...
+    }
+</script>
+ 
