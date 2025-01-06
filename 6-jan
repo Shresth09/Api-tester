@@ -157,3 +157,10 @@
     </dependencies>
 </atlassian-plugin>
  
+
+
+
+<div id="ai-rqm-plugin-container">
+    <a id="show-popup" class="aui-button aui-button-link">Show API Data</a>
+</div>
+
