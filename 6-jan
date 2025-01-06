@@ -177,3 +177,159 @@ AJS.$("#show-popup").click(function() {
 ```
 
 This implementation will allow users to set the API URL from the application left panel, and your existing code will dynamically use the configured URL. Feel free to ask if you need further details or assistance!
+
+
+
+
+
+
+=*=*=*=*==*=*+*+*+*+*++*+*+*+*++*+*++*+**+*
+=*=*=*=*==*=*=*=*=*=*=*=*==*=*=*=*=*=*=*=*
+
+
+Got it! I'll guide you through creating a separate `config.vm` to handle the URL configuration and placing a button for it in the specified location. Here's how you can achieve this:
+
+### Step 1: Add the Configuration Button to the Left Panel
+
+First, you need to create a new web panel that will display a button in the left panel. This button will open a configuration page where users can set the API URL.
+
+Add the following to your `atlassian-plugin.xml` to create the web panel:
+
+```xml
+<web-panel key="ai-rqm-config-panel" location="atl.jira.left.context" weight="10">
+    <resource type="velocity" name="view" location="templates/config-button.vm"/>
+</web-panel>
+```
+
+Create the `config-button.vm` template with the button:
+
+```html
+<!-- config-button.vm -->
+<a href="$request.contextPath/plugins/servlet/applications/versions-licenses" class="aui-button aui-button-primary">Configure AI RQM Plugin</a>
+```
+
+### Step 2: Create the Configuration Page
+
+Next, create the `config.vm` template which will contain the form to input the API URL:
+
+```html
+<!-- config.vm -->
+<form id="api-config-form">
+    <h3>AI RQM Plugin Configuration</h3>
+    <label for="apiUrl">API URL:</label>
+    <input type="text" id="apiUrl" name="apiUrl"/>
+    <button type="submit" class="aui-button aui-button-primary">Save</button>
+</form>
+<p id="config-status"></p>
+
+<script type="text/javascript">
+    jQuery(document).ready(function() {
+        // Load the saved URL from local storage
+        var savedApiUrl = AJS.storage.getItem('ai-rqm-api-url');
+        if (savedApiUrl) {
+            jQuery('#apiUrl').val(savedApiUrl);
+        }
+
+        // Save the URL to local storage on form submission
+        jQuery('#api-config-form').on('submit', function(event) {
+            event.preventDefault();
+            var newApiUrl = jQuery('#apiUrl').val().trim();
+            if (newApiUrl) {
+                AJS.storage.setItem('ai-rqm-api-url', newApiUrl);
+                jQuery('#config-status').text('API URL saved successfully!');
+            } else {
+                jQuery('#config-status').text('Please enter a valid API URL.');
+            }
+        });
+    });
+</script>
+```
+
+### Step 3: Modify the Configuration Page to Open from the Left Panel Button
+
+Ensure that the URL of the configuration page matches the URL path where the button is placed. This will ensure that clicking the button opens the configuration form.
+
+### Step 4: Fetch the API URL in Your Existing Code
+
+Update your existing code to fetch the API URL from local storage as previously discussed. 
+
+Here's the updated code for fetching the API URL:
+
+```javascript
+AJS.$("#show-popup").click(function() {
+    console.log("Button clicked!");
+    var issueKey = getIssueKey();
+    if (!issueKey) {
+        console.log("Issue key not found.");
+        AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Issue key not found.</p>");
+        AJS.dialog2("#api-modal").show();
+        return;
+    }
+
+    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+    console.log("Fetching data from Jira API:", jiraApiUrl);
+
+    jQuery.ajax({
+        url: jiraApiUrl,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            console.log("Jira API response received:", response);
+            var description = response.fields.description;
+
+            if (!description) {
+                console.log("Description not provided in the issue.");
+                AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Description is not provided in the issue.</p>");
+                AJS.dialog2("#api-modal").show();
+                return;
+            }
+
+            var payload = JSON.stringify({ user_story: description });
+            var apiUrl = AJS.storage.getItem('ai-rqm-api-url');
+            if (!apiUrl) {
+                console.log("API URL not set.");
+                AJS.$("#api-response").html("<p style='color: red;'>API URL not set. Please configure it first.</p>");
+                AJS.dialog2("#api-modal").show();
+                return;
+            }
+            console.log("Sending data to external API:", apiUrl, payload);
+
+            AJS.$("#api-modal").show();
+            AJS.$("#api-response").html("<pre>Loading data...</pre>");
+
+            jQuery.ajax({
+                url: apiUrl,
+                type: 'POST',
+                contentType: 'application/json',
+                data: payload,
+                success: function(apiResponse) {
+                    console.log("External API response received:", apiResponse);
+                    var cscore = apiResponse.NA.cscore;
+                    var messages = apiResponse.NA.message;
+
+                    var formattedData = `
+                        <p style='font-size: 1.5em;'><strong>SCORE:</strong> ${cscore}</p>
+                        <p style='font-size: 1.2em;'><strong>MESSAGE:</strong> ${messages.join("<br>")}</p>
+                    `;
+                    AJS.$("#api-response").html(formattedData);
+                    AJS.dialog2("#api-modal").show();
+                },
+                error: function(xhr, status, error) {
+                    console.log("Error in external API call:", status, error);
+                    AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch data. Status: " + xhr.status + ", Error: " + error + "</p>");
+                    AJS.dialog2("#api-modal").show();
+                }
+            });
+        },
+        error: function(xhr, status, error) {
+            console.log("Error in Jira API call:", status, error);
+            AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch Jira issue data. Status: " + xhr.status + ", Error: " + error + "</p>");
+            AJS.dialog2("#api-modal").show();
+        }
+    });
+});
+```
+
+This setup ensures that the configuration button is accessible from the left panel, and users can input the API URL through the configuration form without mixing it with the `popup.vm` logic.
+
+Feel free to ask if you need more details or further assistance! 
