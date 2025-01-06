@@ -108,3 +108,52 @@
 
 <a id="show-popup" class="aui-button aui-button-link">Show API Data</a>
 
+
+
+
+
+*******************
+****=*= =*=*==*===*=*=*=*= =*=
+
+<?xml version="1.0" encoding="UTF-8"?>
+<atlassian-plugin key="${project.artifactId}" name="${project.name}" plugins-version="2">
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="Your Company Name" url="your-company-website" />
+        <param name="plugin-icon" location="images/icon.png" />
+    </plugin-info>
+
+    <web-panel key="ai-rqm-plugin-admin" 
+              name="AI-RQM Plugin" 
+              location="atl.admin.applications" 
+              weight="1000"> 
+        <resource type="velocity" name="view" location="templates/admin-panel.vm"/>
+        <permission name="admin" /> 
+    </web-panel>
+
+    <web-resource key="ai-rqm-config" name="AI-RQM Plugin Configuration" location="resources/admin.html">
+        <permission name="admin"/> 
+    </web-resource>
+
+    <resources>
+        <resource type="javascript" name="view" location="js/view.js"/>
+        <resource type="css" name="view" location="css/view.css"/>
+    </resources>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.atlassian.jira</groupId>
+            <artifactId>jira-api</artifactId>
+            <version>${jira.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.plugins</groupId>
+            <artifactId>atlassian-spring-scanner</artifactId>
+            <version>${atlassian-spring-scanner-version}</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+</atlassian-plugin>
+ 
