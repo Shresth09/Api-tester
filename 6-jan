@@ -105,3 +105,6 @@
           weight="1000"> 
     <resource type="velocity" name="view" location="templates/admin-button.vm"/> 
 </web-item>
+
+<a id="show-popup" class="aui-button aui-button-link">Show API Data</a>
+
