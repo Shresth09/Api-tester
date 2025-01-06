@@ -1,166 +1,179 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>AI-RQM Plugin Configuration</title>
-    <meta name="atlassian-plugin" content="installed">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
-    <style>
-        .container {
-            margin: 20px;
-        }
-        .label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>AI-RQM Plugin Configuration</h1>
-        <form id="config-form">
-            <label for="api-url" class="label">External API URL:</label>
-            <input type="text" id="api-url" name="api-url" placeholder="Enter API URL">
-            <br>
-            <button type="submit">Save Configuration</button>
-        </form>
-    </div>
+That's a great idea! To allow users to set the API URL dynamically from the application left panel, you'll need to add a new module for that purpose. This module will include a form to input the API URL and save it. Then, your existing code will use this saved URL instead of a hardcoded one.
 
-    <script>
-        $(document).ready(function() {
-            // Get the stored API URL from plugin settings
-            var apiUrl = AJS.storage.get('ai-rqm-api-url') || '';
-            $('#api-url').val(apiUrl);
+Here is a high-level approach on how to implement this:
 
-            $('#config-form').submit(function(event) {
-                event.preventDefault();
+1. **Create a Configuration Module**: Add a new web panel to your plugin that will appear in the application left panel.
+2. **Save the Configuration**: Use a servlet to save the configuration (the API URL) when the user submits the form.
+3. **Fetch the Configuration**: Modify your existing code to fetch the API URL from the saved configuration instead of using a hardcoded URL.
 
-                var newApiUrl = $('#api-url').val().trim();
-                if (!newApiUrl) {
-                    alert('Please enter a valid API URL.');
-                    return;
-                }
+Here's an example implementation:
 
-                // Store the new API URL in plugin settings
-                AJS.storage.set('ai-rqm-api-url', newApiUrl);
+### Step 1: Create the Configuration Module
 
-                alert('Configuration saved successfully!');
-                // Optionally, reload the Jira page to refresh the plugin
-                window.location.reload();
-            });
-        });
-    </script>
-</body>
-</html>
+Add the following web panel to your `atlassian-plugin.xml`:
 
+```xml
+<web-panel key="ai-rqm-config-panel" location="atl.jira.left.context" weight="10">
+    <resource type="velocity" name="view" location="templates/config.vm"/>
+</web-panel>
+```
 
+### Step 2: Add a Configuration Servlet
 
+Create a servlet to handle saving and retrieving the configuration. Add the following to your `atlassian-plugin.xml`:
 
+```xml
+<servlet key="ai-rqm-config-servlet" name="AI RQM Configuration Servlet" class="com.example.plugin.AIRQMConfigServlet">
+    <description>Servlet for saving and retrieving AI RQM plugin configuration</description>
+    <url-pattern>/plugins/servlet/applications/versions-licenses</url-pattern>
+    <init-param name="apiUrl" value="http://localhost:2990/jira/rest/external-api/1.0/myapi"/>
+</servlet>
+```
 
+Implement the servlet in Java:
 
-=========================
-=========================
+```java
+package com.example.plugin;
 
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.sal.api.net.RequestFactory;
+import com.atlassian.sal.api.net.ResponseException;
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 
-<web-resource key="ai-rqm-config" name="AI-RQM Plugin Configuration" location="resources/admin.html">
-    <resource type="velocity" name="view" location="templates/admin.vm"/>
-    <permission name="atl.admin"/>
-</web-resource>
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
+public class AIRQMConfigServlet extends HttpServlet {
+    private final PluginSettingsFactory pluginSettingsFactory;
 
-
-====================
-====================
-
-<script type="module">
-    AJS.toInit(function() {
-        jQuery(document).ready(function() {
-            initStuff();
-        });
-    });
-
-    function initStuff() {
-        console.log("Initializing Stuff...");
-
-        // Retrieve the stored API URL from plugin settings
-        var apiUrl = AJS.storage.get('ai-rqm-api-url') || '';
-
-        // Ensure event listeners are attached only once (rest of the code remains the same)
-        ...
+    public AIRQMConfigServlet(PluginSettingsFactory pluginSettingsFactory) {
+        this.pluginSettingsFactory = pluginSettingsFactory;
     }
-</script>
 
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        String apiUrl = (String) settings.get("ai-rqm-plugin.api.url");
+        if (apiUrl == null) {
+            apiUrl = "http://localhost:2990/jira/rest/external-api/1.0/myapi";
+        }
+        resp.setContentType("text/plain");
+        resp.getWriter().write(apiUrl);
+    }
 
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        String apiUrl = req.getParameter("apiUrl");
+        if (apiUrl != null) {
+            settings.put("ai-rqm-plugin.api.url", apiUrl);
+        }
+        resp.sendRedirect(req.getContextPath() + "/plugins/servlet/applications/versions-licenses");
+    }
+}
+```
 
+### Step 3: Create the Configuration Panel Template
 
+Create a new Velocity template `config.vm` for the configuration panel:
 
-=================
-=================
+```html
+<form action="$request.contextPath/plugins/servlet/applications/versions-licenses" method="post">
+    <h3>AI RQM Plugin Configuration</h3>
+    <label for="apiUrl">API URL:</label>
+    <input type="text" id="apiUrl" name="apiUrl" value="$apiUrl"/>
+    <button type="submit" class="aui-button aui-button-primary">Save</button>
+</form>
+```
 
+### Step 4: Fetch the Configuration in Your Existing Code
 
+Modify your existing code to fetch the API URL from the configuration servlet:
 
-<web-item key="ai-rqm-plugin-admin" 
-          name="AI-RQM Plugin" 
-          section="system.admin.sidebar.applications" 
-          weight="1000"> 
-    <resource type="velocity" name="view" location="templates/admin-button.vm"/> 
-</web-item>
+```javascript
+// Replace the hardcoded apiUrl with the dynamically fetched URL
+AJS.$("#show-popup").click(function() {
+    console.log("Button clicked!");
+    var issueKey = getIssueKey();
+    if (!issueKey) {
+        console.log("Issue key not found.");
+        AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Issue key not found.</p>");
+        AJS.dialog2("#api-modal").show();
+        return;
+    }
 
-<a id="show-popup" class="aui-button aui-button-link">Show API Data</a>
+    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+    console.log("Fetching data from Jira API:", jiraApiUrl);
 
+    jQuery.ajax({
+        url: jiraApiUrl,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            console.log("Jira API response received:", response);
+            var description = response.fields.description;
 
+            if (!description) {
+                console.log("Description not provided in the issue.");
+                AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Description is not provided in the issue.</p>");
+                AJS.dialog2("#api-modal").show();
+                return;
+            }
 
+            var payload = JSON.stringify({ user_story: description });
+            var apiUrl;
+            // Fetch the API URL from the configuration
+            jQuery.ajax({
+                url: AJS.params.baseURL + "/plugins/servlet/applications/versions-licenses",
+                type: 'GET',
+                success: function(configuredUrl) {
+                    apiUrl = configuredUrl;
+                    console.log("Sending data to external API:", apiUrl, payload);
 
+                    AJS.$("#api-modal").show();
+                    AJS.$("#api-response").html("<pre>Loading data...</pre>");
 
-*******************
-****=*= =*=*==*===*=*=*=*= =*=
+                    jQuery.ajax({
+                        url: apiUrl,
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: payload,
+                        success: function(apiResponse) {
+                            console.log("External API response received:", apiResponse);
+                            var cscore = apiResponse.NA.cscore;
+                            var messages = apiResponse.NA.message;
 
-<?xml version="1.0" encoding="UTF-8"?>
-<atlassian-plugin key="${project.artifactId}" name="${project.name}" plugins-version="2">
-    <plugin-info>
-        <description>${project.description}</description>
-        <version>${project.version}</version>
-        <vendor name="Your Company Name" url="your-company-website" />
-        <param name="plugin-icon" location="images/icon.png" />
-    </plugin-info>
+                            var formattedData = `
+                                <p style='font-size: 1.5em;'><strong>SCORE:</strong> ${cscore}</p>
+                                <p style='font-size: 1.2em;'><strong>MESSAGE:</strong> ${messages.join("<br>")}</p>
+                            `;
+                            AJS.$("#api-response").html(formattedData);
+                            AJS.dialog2("#api-modal").show();
+                        },
+                        error: function(xhr, status, error) {
+                            console.log("Error in external API call:", status, error);
+                            AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch data. Status: " + xhr.status + ", Error: " + error + "</p>");
+                            AJS.dialog2("#api-modal").show();
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.log("Error in fetching configuration:", status, error);
+                    AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch configuration. Status: " + xhr.status + ", Error: " + error + "</p>");
+                    AJS.dialog2("#api-modal").show();
+                }
+            });
+        },
+        error: function(xhr, status, error) {
+            console.log("Error in Jira API call:", status, error);
+            AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch Jira issue data. Status: " + xhr.status + ", Error: " + error + "</p>");
+            AJS.dialog2("#api-modal").show();
+        }
+    });
+});
+```
 
-    <web-panel key="ai-rqm-plugin-admin" 
-              name="AI-RQM Plugin" 
-              location="atl.admin.applications" 
-              weight="1000"> 
-        <resource type="velocity" name="view" location="templates/admin-panel.vm"/>
-        <permission name="admin" /> 
-    </web-panel>
-
-    <web-resource key="ai-rqm-config" name="AI-RQM Plugin Configuration" location="resources/admin.html">
-        <permission name="admin"/> 
-    </web-resource>
-
-    <resources>
-        <resource type="javascript" name="view" location="js/view.js"/>
-        <resource type="css" name="view" location="css/view.css"/>
-    </resources>
-
-    <dependencies>
-        <dependency>
-            <groupId>com.atlassian.jira</groupId>
-            <artifactId>jira-api</artifactId>
-            <version>${jira.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.plugins</groupId>
-            <artifactId>atlassian-spring-scanner</artifactId>
-            <version>${atlassian-spring-scanner-version}</version>
-            <scope>compile</scope>
-        </dependency>
-    </dependencies>
-</atlassian-plugin>
- 
-
-
-
-<div id="ai-rqm-plugin-container">
-    <a id="show-popup" class="aui-button aui-button-link">Show API Data</a>
-</div>
-
+This implementation will allow users to set the API URL from the application left panel, and your existing code will dynamically use the configured URL. Feel free to ask if you need further details or assistance!
