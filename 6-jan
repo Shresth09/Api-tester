@@ -333,3 +333,79 @@ AJS.$("#show-popup").click(function() {
 This setup ensures that the configuration button is accessible from the left panel, and users can input the API URL through the configuration form without mixing it with the `popup.vm` logic.
 
 Feel free to ask if you need more details or further assistance! 
+
+###################
+₹₹₹₹₹***₹#₹#₹#₹#₹#₹₹#₹#₹#₹#₹₹#
+
+I see the approach your friend used is quite helpful and straightforward. Let's adjust it for your use case. We'll create a new section and item in the application navigator where users can configure the API URL.
+
+### Step 1: Add a New Section and Item to the Application Navigator
+
+Add the following to your `atlassian-plugin.xml` to define the new section and item:
+
+```xml
+<web-section
+    name="AI RQM Plugin Configuration"
+    key="ai-rqm-configuration-section"
+    location="admin.applications"
+    weight="1000">
+    <description>The section for configuring AI RQM Plugin</description>
+</web-section>
+
+<web-item
+    name="Configure AI RQM Plugin"
+    key="ai-rqm-configuration-item"
+    section="admin.applications/ai-rqm-configuration-section"
+    weight="10">
+    <description>Open the configuration page for AI RQM Plugin</description>
+    <label key="ai-rqm-configuration-item.label"/>
+    <link linkId="ai-rqm-configuration-link">/plugins/servlet/applications/versions-licenses</link>
+</web-item>
+```
+
+### Step 2: Create the Configuration Page
+
+Ensure that your `config.vm` file is created as mentioned earlier. The form will allow users to input and save the API URL. This template will be rendered when users click the "Configure AI RQM Plugin" link.
+
+### Step 3: Modify the Configuration Template and JavaScript
+
+```html
+<!-- config.vm -->
+<form id="api-config-form">
+    <h3>AI RQM Plugin Configuration</h3>
+    <label for="apiUrl">API URL:</label>
+    <input type="text" id="apiUrl" name="apiUrl"/>
+    <button type="submit" class="aui-button aui-button-primary">Save</button>
+</form>
+<p id="config-status"></p>
+
+<script type="text/javascript">
+    jQuery(document).ready(function() {
+        // Load the saved URL from local storage
+        var savedApiUrl = AJS.storage.getItem('ai-rqm-api-url');
+        if (savedApiUrl) {
+            jQuery('#apiUrl').val(savedApiUrl);
+        }
+
+        // Save the URL to local storage on form submission
+        jQuery('#api-config-form').on('submit', function(event) {
+            event.preventDefault();
+            var newApiUrl = jQuery('#apiUrl').val().trim();
+            if (newApiUrl) {
+                AJS.storage.setItem('ai-rqm-api-url', newApiUrl);
+                jQuery('#config-status').text('API URL saved successfully!');
+            } else {
+                jQuery('#config-status').text('Please enter a valid API URL.');
+            }
+        });
+    });
+</script>
+```
+
+### Step 4: Fetch the API URL in Your Existing Code
+
+Make sure your existing code fetches the API URL from local storage as described before.
+
+This setup should place the configuration button in the left panel under the specified section, and users will be able to set the API URL through the configuration form.
+
+Feel free to ask if you need more details or further assistance! 
