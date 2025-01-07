@@ -115,3 +115,97 @@ Ensure the `atlassian-plugin.xml` correctly references the Velocity template:
 3. Verify that clicking the web item now opens the modal with the configuration form without reloading the page.
 
 This should ensure that the modal opens correctly when clicking the web item. Let me know if you encounter any issues or need further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/DamianFekete/atlassian-sdk-docs/tree/68e8bb366f119c7926cbba0218cc87eb775ad544/content%2Fserver%2Fframework%2Fatlassian-sdk%2Frun-wired-tests-with-the-plugin-test-console.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/MrScriptMaster/Atlassian-Plugin-SDK-Guide/tree/487020ee86c1fc9f31b5476160fcecad2520fcf9/docs%2Fatlassian_plugin_sdk.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
+
+
+
+
+
+
+
+*&***'&*' ₹₹₹**&
+*&_&&'' '' '' '**' '&
+
+<!-- config-button.vm -->
+<!-- Button styled for the configuration -->
+<a id="show-config" class="aui-button aui-button-link">Configure AI RQM Plugin</a>
+
+<!-- Modal Structure -->
+<div id="config-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+    <header class="aui-dialog2-header">
+        <h2 class="aui-dialog2-header-main">AI RQM Plugin Configuration</h2>
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
+    </header>
+    <div class="aui-dialog2-content">
+        <div id="config-form-container">
+            <!-- Form will be loaded here -->
+            <form id="api-config-form">
+                <h3>AI RQM Plugin Configuration</h3>
+                <label for="apiUrl">API URL:</label>
+                <input type="text" id="apiUrl" name="apiUrl" value=""/>
+                <button type="submit" class="aui-button aui-button-primary">Save</button>
+            </form>
+            <p id="config-status"></p>
+        </div>
+    </div>
+    <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+            <button id="close-config" class="aui-button aui-button-primary">Close</button>
+        </div>
+    </footer>
+</div>
+
+<script type="module">
+    AJS.toInit(function() {
+        jQuery(document).ready(function() {
+            initConfig();
+        });
+    });
+</script>
+
+<script type="text/javascript">
+    function initConfig() {
+        console.log("Initializing Configuration...");
+
+        // Load the saved URL from local storage
+        var savedApiUrl = AJS.storage.getItem('ai-rqm-api-url');
+        if (savedApiUrl) {
+            jQuery('#apiUrl').val(savedApiUrl);
+        }
+
+        // Ensure event listeners are attached only once
+        if (AJS.$("#show-config").length && !AJS.$("#show-config").data('events-attached')) {
+            console.log("Attaching event listeners for configuration...");
+
+            // Show the modal on button click
+            AJS.$("#show-config").click(function() {
+                console.log("Config Button clicked!");
+                jQuery("#config-modal").show();
+                AJS.dialog2("#config-modal").show();
+            });
+
+            // Save the URL to local storage on form submission
+            jQuery(document).on('submit', '#api-config-form', function(event) {
+                event.preventDefault();
+                var newApiUrl = jQuery('#apiUrl').val().trim();
+                if (newApiUrl) {
+                    AJS.storage.setItem('ai-rqm-api-url', newApiUrl);
+                    jQuery('#config-status').text('API URL saved successfully!');
+                } else {
+                    jQuery('#config-status').text('Please enter a valid API URL.');
+                }
+            });
+
+            // Close the modal
+            AJS.$("#close-config, .aui-dialog2-header-close").on("click", function() {
+                console.log("Closing configuration modal");
+                AJS.dialog2("#config-modal").hide();
+                setTimeout(function() {
+                    AJS.$("#config-modal").attr("aria-hidden", "true").hide();
+                    jQuery('#config-status').text('');
+                    jQuery('#apiUrl').val(savedApiUrl || '');
+                }, 300);
+            });
+
+            AJS.$("#show-config").data('events-attached', true); 
