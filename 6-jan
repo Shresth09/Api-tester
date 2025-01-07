@@ -1,16 +1,30 @@
-Got it. We can use the existing web item and trigger the modal directly without creating a separate button. Here’s how we can achieve this:
+Thanks for providing more context. The 500 error likely occurs because the web item expects to have a destination defined by a `<url>` or `<link>` tag. Without this, the web item doesn't know where to navigate or what action to perform, leading to server errors.
+
+To resolve this, you can combine both approaches by including a `<url>` tag that points to the current page but still handle the click event with JavaScript to open the modal.
+
+### Updated Approach
+
+1. **Ensure the web item has a `<url>` tag**:
+2. **Handle the click event to open the modal instead of reloading the page**.
 
 ### Update `atlassian-plugin.xml`
 
-Ensure the web item uses the `label` key correctly and it includes the necessary resources to load the modal:
+Add the `<url>` tag to your web item to prevent the 500 error:
 
 ```xml
-<atlassian-plugin key="ai-rqm-plugin" name="AI RQM Plugin" plugins-version="2">
+<atlassian-plugin key="AI_Plugin_Key" name="${project.name}" plugins-version="2">
     <plugin-info>
-        <description>AI RQM Plugin for JIRA</description>
-        <version>1.0.0</version>
-        <vendor name="Your Company" url="http://example.com"/>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="${project.organization.name}" url="${project.organization.url}"/>
+        <param name="plugin-icon">images/plugin_logo.png</param>
+        <param name="plugin-logo">images/plugin_logo.png</param>
     </plugin-info>
+
+    <!-- Web panel -->
+    <web-panel key="AI-RQM-plugin" location="atl.jira.view.issue.right.context" weight="18">
+        <resource type="velocity" name="view" location="templates/popup.vm"/>
+    </web-panel>
 
     <!-- Web section for configuration -->
     <web-section
@@ -28,7 +42,8 @@ Ensure the web item uses the `label` key correctly and it includes the necessary
         section="admin_applications_section/ai-rqm-configuration-section"
         weight="10">
         <description>Open the configuration page for AI RQM Plugin</description>
-        <label key="ai-rqm-configuration-item.label"/>
+        <label key="ai-rqm-configuration-item.label">Configure AI RQM Plugin</label>
+        <url>/plugins/servlet/applications/versions-licenses</url>
         <resource type="velocity" name="view" location="templates/config-button.vm"/>
     </web-item>
 </atlassian-plugin>
@@ -36,7 +51,7 @@ Ensure the web item uses the `label` key correctly and it includes the necessary
 
 ### Velocity Template (`config-button.vm`)
 
-Update the Velocity template to include the modal and ensure it triggers on click:
+Use JavaScript to handle the click event and open the modal:
 
 ```html
 <!-- config-button.vm -->
@@ -104,6 +119,6 @@ Update the Velocity template to include the modal and ensure it triggers on clic
 
 1. Place the `config-button.vm` file in the `templates` directory of your plugin.
 2. Redeploy your plugin and restart JIRA to apply changes.
-3. Verify that clicking the existing web item opens the modal with the configuration form.
+3. Verify that clicking the web item opens the modal with the configuration form.
 
-This ensures that the web item directly triggers the modal for the API URL configuration without needing an additional button. Let me know if you encounter any issues or need further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
+This should prevent the 500 error and ensure that the modal opens for the configuration form. Let me know if you encounter any issues or need further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/DamianFekete/atlassian-sdk-docs/tree/68e8bb366f119c7926cbba0218cc87eb775ad544/content%2Fserver%2Fframework%2Fatlassian-sdk%2Frun-wired-tests-with-the-plugin-test-console.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/MrScriptMaster/Atlassian-Plugin-SDK-Guide/tree/487020ee86c1fc9f31b5476160fcecad2520fcf9/docs%2Fatlassian_plugin_sdk.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
