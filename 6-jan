@@ -1,11 +1,39 @@
-Got it! We'll ensure the JavaScript initialization is handled using `DOMContentLoaded` and `AJS.toInit` as you've indicated. Here's the updated `config-button.vm` that includes both methods:
+Understood! Let's place the button under the "Administration > Applications" section.
 
-### Updated Velocity Template (`config-button.vm`)
+### Update `atlassian-plugin.xml`
+
+We'll add the web panel to the `admin.applications` section directly:
+
+```xml
+<atlassian-plugin key="AI_Plugin_Key" name="${project.name}" plugins-version="2">
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="${project.organization.name}" url="${project.organization.url}"/>
+        <param name="plugin-icon">images/plugin_logo.png</param>
+        <param name="plugin-logo">images/plugin_logo.png</param>
+    </plugin-info>
+
+    <!-- Web panel for the configuration button in the administration applications section -->
+    <web-panel key="ai-rqm-config-panel" location="admin.applications" weight="10">
+        <resource type="velocity" name="view" location="templates/config-button.vm"/>
+    </web-panel>
+
+    <!-- Web panel for the main plugin functionality -->
+    <web-panel key="AI-RQM-plugin" location="atl.jira.view.issue.right.context" weight="18">
+        <resource type="velocity" name="view" location="templates/popup.vm"/>
+    </web-panel>
+</atlassian-plugin>
+```
+
+### Velocity Template (`config-button.vm`)
+
+Make sure the button and modal structure are defined, and the script correctly attaches event listeners:
 
 ```html
 <!-- config-button.vm -->
 <!-- Button styled for the configuration -->
-<a id="show-config" class="aui-button aui-button-link">Configure AI RQM Plugin</a>
+<a id="show-config" class="aui-button aui-button-primary">Configure AI RQM Plugin</a>
 
 <!-- Modal Structure -->
 <div id="config-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
@@ -105,137 +133,10 @@ Got it! We'll ensure the JavaScript initialization is handled using `DOMContentL
 </script>
 ```
 
-### Update `atlassian-plugin.xml`
-
-Make sure the web item references the `config-button.vm`:
-
-```xml
-<atlassian-plugin key="AI_Plugin_Key" name="${project.name}" plugins-version="2">
-    <plugin-info>
-        <description>${project.description}</description>
-        <version>${project.version}</version>
-        <vendor name="${project.organization.name}" url="${project.organization.url}"/>
-        <param name="plugin-icon">images/plugin_logo.png</param>
-        <param name="plugin-logo">images/plugin_logo.png</param>
-    </plugin-info>
-
-    <!-- Web panel -->
-    <web-panel key="AI-RQM-plugin" location="atl.jira.view.issue.right.context" weight="18">
-        <resource type="velocity" name="view" location="templates/popup.vm"/>
-    </web-panel>
-
-    <!-- Web section for configuration -->
-    <web-section
-        name="AI RQM Plugin Configuration"
-        key="ai-rqm-configuration-section"
-        location="admin_applications_section"
-        weight="1000">
-        <description>The section for configuring AI RQM Plugin</description>
-    </web-section>
-
-    <!-- Web item for configuration button -->
-    <web-item
-        name="Configure AI RQM Plugin"
-        key="ai-rqm-configuration-item"
-        section="admin_applications_section/ai-rqm-configuration-section"
-        weight="10">
-        <description>Open the configuration page for AI RQM Plugin</description>
-        <label key="ai-rqm-configuration-item.label">Configure AI RQM Plugin</label>
-        <link linkId="ai-rqm-config-link">/plugins/servlet/applications/versions-licenses</link>
-        <resource type="velocity" name="view" location="templates/config-button.vm"/>
-    </web-item>
-</atlassian-plugin>
-```
-
 ### Deployment Steps
 
 1. Place the `config-button.vm` file in the `templates` directory of your plugin.
 2. Redeploy your plugin and restart JIRA to apply changes.
-3. Verify that clicking the "Configure AI RQM Plugin" button opens the modal without reloading the page.
+3. Verify that the "Configure AI RQM Plugin" button appears in the "Administration > Applications" section and opens the modal without reloading the page.
 
-This setup should now work seamlessly, ensuring the modal opens correctly. Let me know if you need further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/DamianFekete/atlassian-sdk-docs/tree/68e8bb366f119c7926cbba0218cc87eb775ad544/content%2Fserver%2Fframework%2Fatlassian-sdk%2Frun-wired-tests-with-the-plugin-test-console.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/MrScriptMaster/Atlassian-Plugin-SDK-Guide/tree/487020ee86c1fc9f31b5476160fcecad2520fcf9/docs%2Fatlassian_plugin_sdk.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
-
-
-
-
-
-&&&&&&&&&_&_&_&_&____&_&__
-&_____-________
-
-<atlassian-plugin key="AI_Plugin_Key" name="${project.name}" plugins-version="2">
-    <plugin-info>
-        <description>${project.description}</description>
-        <version>${project.version}</version>
-        <vendor name="${project.organization.name}" url="${project.organization.url}"/>
-        <param name="plugin-icon">images/plugin_logo.png</param>
-        <param name="plugin-logo">images/plugin_logo.png</param>
-    </plugin-info>
-
-    <!-- Web panel for the configuration button -->
-    <web-panel key="ai-rqm-config-panel" location="admin.applications.section/ai-rqm-configuration-section" weight="10">
-        <resource type="velocity" name="view" location="templates/config-button.vm"/>
-    </web-panel>
-
-    <!-- Web section for configuration -->
-    <web-section
-        name="AI RQM Plugin Configuration"
-        key="ai-rqm-configuration-section"
-        location="admin_applications_section"
-        weight="1000">
-        <description>The section for configuring AI RQM Plugin</description>
-    </web-section>
-
-    <!-- Web panel for the main plugin functionality -->
-    <web-panel key="AI-RQM-plugin" location="atl.jira.view.issue.right.context" weight="18">
-        <resource type="velocity" name="view" location="templates/popup.vm"/>
-    </web-panel>
-</atlassian-plugin> 
-
-
-
-&@@#@@@@@@@@@@@@@@@@@@@@@@@
-
-<!-- config-button.vm -->
-<!-- Button styled for the configuration -->
-<a id="show-config" class="aui-button aui-button-link">Configure AI RQM Plugin</a>
-
-<!-- Modal Structure -->
-<div id="config-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
-    <header class="aui-dialog2-header">
-        <h2 class="aui-dialog2-header-main">AI RQM Plugin Configuration</h2>
-        <a class="aui-dialog2-header-close">
-            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-        </a>
-    </header>
-    <div class="aui-dialog2-content">
-        <div id="config-form-container">
-            <!-- Form will be loaded here -->
-            <form id="api-config-form">
-                <h3>AI RQM Plugin Configuration</h3>
-                <label for="apiUrl">API URL:</label>
-                <input type="text" id="apiUrl" name="apiUrl" value=""/>
-                <button type="submit" class="aui-button aui-button-primary">Save</button>
-            </form>
-            <p id="config-status"></p>
-        </div>
-    </div>
-    <footer class="aui-dialog2-footer">
-        <div class="aui-dialog2-footer-actions">
-            <button id="close-config" class="aui-button aui-button-primary">Close</button>
-        </div>
-    </footer>
-</div>
-
-<script type="text/javascript">
-    function initConfig() {
-        console.log("Initializing Configuration...");
-
-        // Load the saved URL from local storage
-        var savedApiUrl = AJS.storage.getItem('ai-rqm-api-url');
-        if (savedApiUrl) {
-            jQuery('#apiUrl').val(savedApiUrl);
-        }
-
-        // Ensure event listeners are attached only once
-        if (AJS.$("#show-config").length && !AJS.$("#show-config").data('events-attached')) {
-            console.log("Attaching event listeners
+This configuration places the button where you want it, ensuring it's accessible in the Administration > Applications section. Let me know if you encounter any issues or need further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/DamianFekete/atlassian-sdk-docs/tree/68e8bb366f119c7926cbba0218cc87eb775ad544/content%2Fserver%2Fframework%2Fatlassian-sdk%2Frun-wired-tests-with-the-plugin-test-console.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/MrScriptMaster/Atlassian-Plugin-SDK-Guide/tree/487020ee86c1fc9f31b5476160fcecad2520fcf9/docs%2Fatlassian_plugin_sdk.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
