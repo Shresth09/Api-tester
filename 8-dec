@@ -1,0 +1,147 @@
+Let's try a simpler approach to create a button under the administration section without using webwork actions, which might help avoid the 405 error. We'll place a web panel in a visible administration location.
+
+### Step-by-Step Instructions:
+
+1. **Define the Web Section and Web Item in `atlassian-plugin.xml`**
+2. **Create the Velocity Template**
+
+### Update `atlassian-plugin.xml`
+
+Place the configuration button in the "Applications" section of the administration menu:
+
+```xml
+<atlassian-plugin key="AI_Plugin_Key" name="${project.name}" plugins-version="2">
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="${project.organization.name}" url="${project.organization.url}"/>
+        <param name="plugin-icon">images/plugin_logo.png</param>
+        <param name="plugin-logo">images/plugin_logo.png</param>
+    </plugin-info>
+
+    <!-- Web section in the admin applications menu -->
+    <web-section key="admin_applications_section" location="admin_plugins_menu">
+        <label key="admin_applications_section.label">Plugin - Admin Configuration</label>
+    </web-section>
+
+    <!-- Web item to link to the plugin configuration page -->
+    <web-item key="plugin-admin-config-link" section="admin_plugins_menu/admin_applications_section">
+        <label key="plugin-admin-config-link.label">Configure AI RQM Plugin</label>
+        <link>/plugins/servlet/ai-rqm-config</link>
+    </web-item>
+</atlassian-plugin>
+```
+
+### Create the Servlet for Configuration Page
+
+Implement a servlet to handle the GET request for displaying the configuration page.
+
+**Java Servlet Implementation:**
+
+```java
+package com.yourcompany.plugin.servlet;
+
+import com.atlassian.jira.web.action.JiraWebActionSupport;
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+
+import javax.inject.Inject;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class AIConfigServlet extends HttpServlet {
+
+    private final PluginSettingsFactory pluginSettingsFactory;
+
+    @Inject
+    public AIConfigServlet(PluginSettingsFactory pluginSettingsFactory) {
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        String apiUrl = (String) settings.get("aiRqmPlugin.apiUrl");
+
+        req.setAttribute("apiUrl", apiUrl);
+        req.getRequestDispatcher("/templates/servlet/ai-config.vm").forward(req, resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        String apiUrl = req.getParameter("apiUrl");
+
+        settings.put("aiRqmPlugin.apiUrl", apiUrl);
+        resp.sendRedirect(req.getContextPath() + "/plugins/servlet/ai-rqm-config");
+    }
+}
+```
+
+### Create the Velocity Template
+
+Create the `ai-config.vm` file in the `templates/servlet` directory:
+
+```html
+<!-- ai-config.vm -->
+<html>
+<head>
+<title>Configuration</title>
+<meta name="decorator" content="atl.admin" />
+<meta name="admin.active.section" content="plugin-admin-config-link" />
+</head>
+<body>
+    <h1>Plugin Configuration</h1>
+    <form action="#" method="post">
+        <label for="apiUrl">API URL:</label>
+        <input type="text" id="apiUrl" name="apiUrl" value="$!{apiUrl}"/>
+        <button type="submit" class="aui-button aui-button-primary">Save</button>
+    </form>
+</body>
+</html>
+```
+
+### Update `atlassian-plugin.xml` for the Servlet
+
+Register the servlet in the `atlassian-plugin.xml`:
+
+```xml
+<atlassian-plugin key="AI_Plugin_Key" name="${project.name}" plugins-version="2">
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="${project.organization.name}" url="${project.organization.url}"/>
+        <param name="plugin-icon">images/plugin_logo.png</param>
+        <param name="plugin-logo">images/plugin_logo.png</param>
+    </plugin-info>
+
+    <!-- Web section in the admin applications menu -->
+    <web-section key="admin_applications_section" location="admin_plugins_menu">
+        <label key="admin_applications_section.label">Plugin - Admin Configuration</label>
+    </web-section>
+
+    <!-- Web item to link to the plugin configuration page -->
+    <web-item key="plugin-admin-config-link" section="admin_plugins_menu/admin_applications_section">
+        <label key="plugin-admin-config-link.label">Configure AI RQM Plugin</label>
+        <link>/plugins/servlet/ai-rqm-config</link>
+    </web-item>
+
+    <!-- Register the servlet -->
+    <servlet key="ai-rqm-config-servlet" class="com.yourcompany.plugin.servlet.AIConfigServlet">
+        <description>AI RQM Plugin Configuration Servlet</description>
+        <url-pattern>/plugins/servlet/ai-rqm-config</url-pattern>
+    </servlet>
+</atlassian-plugin>
+```
+
+### Deployment Steps
+
+1. **Compile and Package**: Compile and package your plugin.
+2. **Deploy the Plugin**: Deploy the plugin to your JIRA instance.
+3. **Restart JIRA**: Restart JIRA to apply the changes.
+4. **Navigate to the Configuration Page**: Go to the Administration > Add-ons page, and you should see the "Configure AI RQM Plugin" link under "Plugin - Admin Configuration". Clicking this link should take you to the configuration page.
+
+This approach should create a button under the administration section and allow you to configure the plugin. Let me know if you encounter any issues or need further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/DamianFekete/atlassian-sdk-docs/tree/68e8bb366f119c7926cbba0218cc87eb775ad544/content%2Fserver%2Fframework%2Fatlassian-sdk%2Frun-wired-tests-with-the-plugin-test-console.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/MrScriptMaster/Atlassian-Plugin-SDK-Guide/tree/487020ee86c1fc9f31b5476160fcecad2520fcf9/docs%2Fatlassian_plugin_sdk.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/nickname55/atlassian-web/tree/b99d5b5b74eeed9b28cc40562f9713a180eb0ea4/%D0%94%D0%BE%D0%B1%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B2%D0%B5%D0%B1-%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D0%B0%20%D0%B4%D0%BB%D1%8F%20%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F%20%D0%B5%D0%B3%D0%BE%20%D0%B2%20%D1%88%D0%B0%D0%B1%D0%BB%D0%BE%D0%BD%D0%B5%20velocity%2C%20%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D0%BE%D0%BC%20%D1%81%D0%B5%D1%80%D0%B2%D0%BB%D0%B5%D1%82%D0%BE%D0%BC.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
