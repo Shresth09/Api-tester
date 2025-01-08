@@ -82,3 +82,81 @@ This provides the most basic and functional setup for your Jira plugin's configu
  * https://community.atlassian.com/t5/Answers-Developer-Questions/How-to-get-quot-Control-access-with-SAL-quot-step-in-plugin/qaq-p/478437
  * https://github.com/iorad/integrations
  * https://github.com/neeejm/gesttion-parking
+
+
+
+
+
+
+
+
+
+@@(@(@(@(@((@(
+@)@))@)@@))@)@)@))@))@
+
+package com.yourcompany.airam;
+
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class MyPluginServlet extends HttpServlet {
+
+    private final PluginSettingsFactory pluginSettingsFactory;
+
+    public MyPluginServlet(PluginSettingsFactory pluginSettingsFactory) {
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Get plugin settings (if needed)
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        String apiKey = settings.getString("apiKey"); 
+
+        // Render the configuration page
+        req.getRequestDispatcher("/WEB-INF/templates/config.vm").forward(req, resp); 
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Handle form submission and save settings
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        settings.put("apiKey", req.getParameter("apiKey")); 
+
+        // Redirect back to the configuration page (or another page)
+        resp.sendRedirect(req.getContextPath() + "/plugins/servlet/myplugin/configure"); 
+    }
+}
+
+
+
+
+
+
+
+
+
+#set( $baseUrl = $action.getPluginBaseUrl() )
+
+<h1>AI RQM Plugin Configuration</h1>
+
+<form>
+    <label for="apiKey">API Key:</label>
+    <input type="text" id="apiKey" name="apiKey"><br><br>
+
+    <button type="submit">Save</button>
+</form>
+
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("Button loaded!");
+        AJS.$("#show-config").click(function() {
+            alert("Configure AI RQM Plugin button clicked!");
+        });
+    });
+</script>
