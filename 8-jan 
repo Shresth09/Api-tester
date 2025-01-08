@@ -1,0 +1,84 @@
+Certainly, here's the simplified code with only the essential elements:
+atlassian-plugin.xml:
+<?xml version="1.0" encoding="UTF-8"?>
+<atlassian-plugin key="com.yourcompany.airam" name="AI RQM Plugin" 
+        plugins-version="2">
+    <plugin-info>
+        <description>This plugin provides configuration options for AI RQM.</description>
+        <version>1.0.0</version>
+        <vendor name="Your Company" url="http://www.yourcompany.com"/>
+    </plugin-info>
+
+    <web-item key="ai-ram-config-panel" 
+              name="Configure AI RQM Plugin" 
+              section="system.admin" 
+              url="/plugins/servlet/myplugin/configure"> 
+    </web-item>
+
+    <servlet key="myplugin-servlet" class="com.yourcompany.airam.MyPluginServlet" 
+            name="myplugin" />
+
+</atlassian-plugin>
+
+configure.vm:
+#set( $baseUrl = $action.getPluginBaseUrl() )
+
+<h1>AI RQM Plugin Configuration</h1>
+
+<form>
+    <label for="apiKey">API Key:</label>
+    <input type="text" id="apiKey" name="apiKey"><br><br>
+
+    <button type="submit">Save</button>
+</form>
+
+MyPluginServlet.java:
+package com.yourcompany.airam;
+
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class MyPluginServlet extends HttpServlet {
+
+    private final PluginSettingsFactory pluginSettingsFactory;
+
+    public MyPluginServlet(PluginSettingsFactory pluginSettingsFactory) {
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Get plugin settings (if needed)
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        String apiKey = settings.getString("apiKey"); 
+
+        // Render the configuration page
+        req.getRequestDispatcher("/plugins/servlet/myplugin/configure.vm").forward(req, resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Handle form submission and save settings
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        settings.put("apiKey", req.getParameter("apiKey")); 
+
+        // Redirect back to the configuration page (or another page)
+        resp.sendRedirect(req.getContextPath() + "/plugins/servlet/myplugin/configure"); 
+    }
+}
+
+This version removes:
+ * Icon URL (iconUrl) from the web-item tag.
+ * Resource definitions for JavaScript and CSS in the atlassian-plugin.xml.
+ * JavaScript and CSS inclusions in the configure.vm template.
+This provides the most basic and functional setup for your Jira plugin's configuration page. You can always add back the optional elements (icon, CSS, JavaScript) later if needed.
+ * https://community.developer.atlassian.com/t/nosuchbeanexception-on-jira-plugin-component/6530
+ * https://kk.wikipedia.org/wiki/Java_Servlet
+ * https://community.atlassian.com/t5/Answers-Developer-Questions/How-to-get-quot-Control-access-with-SAL-quot-step-in-plugin/qaq-p/478437
+ * https://github.com/iorad/integrations
+ * https://github.com/neeejm/gesttion-parking
