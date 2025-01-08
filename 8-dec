@@ -128,3 +128,24 @@ Create a simple Velocity template for the button. When clicked, this button can 
 4. **Navigate to the Configuration Page**: Go to the Administration > Add-ons page, and you should see the "Configure AI RQM Plugin" button. Clicking this button should open the modal or perform the desired action.
 
 This setup should create a simple button within the administration section using a web panel. Let me know if you need any further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/DamianFekete/atlassian-sdk-docs/tree/68e8bb366f119c7926cbba0218cc87eb775ad544/content%2Fserver%2Fframework%2Fatlassian-sdk%2Frun-wired-tests-with-the-plugin-test-console.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/MrScriptMaster/Atlassian-Plugin-SDK-Guide/tree/487020ee86c1fc9f31b5476160fcecad2520fcf9/docs%2Fatlassian_plugin_sdk.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
+
+
+
+
+
+
+
+
+#set( $baseUrl = $action.getPluginBaseUrl() ) 
+
+<a id="show-config" href="$baseUrl/configure">Configure AI RQM Plugin</a>
+
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("Button loaded!");
+        AJS.$("#show-config").click(function() {
+            // You can add more specific actions here if needed
+            console.log("Configure AI RQM Plugin button clicked!");
+        });
+    });
+</script>
