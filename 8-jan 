@@ -160,3 +160,56 @@ public class MyPluginServlet extends HttpServlet {
         });
     });
 </script>
+
+
+
+
+
+
+Mmmmammsmsmsmmsmsmsmsmxm
+Xjjxnxnxnnxnxnx
+
+
+package com.yourcompany.airam;
+
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+import javax.servlet.annotation.WebServlet;
+
+@WebServlet(name = "MyPluginServlet", urlPatterns = {"/myplugin"})
+public class MyPluginServlet extends HttpServlet {
+
+    private final PluginSettingsFactory pluginSettingsFactory;
+
+    public MyPluginServlet(PluginSettingsFactory pluginSettingsFactory) {
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Get plugin settings (if needed)
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        String apiKey = (String) settings.get("apiKey"); 
+
+        // Render the configuration page
+        req.getRequestDispatcher("/WEB-INF/templates/config.vm").forward(req, resp); 
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Handle form submission and save settings
+        PluginSettings settings = pluginSettingsFactory.createGlobalSettings();
+        settings.put("apiKey", req.getParameter("apiKey")); 
+
+        // Redirect back to the configuration page (or another page)
+        resp.sendRedirect(req.getContextPath() + "/plugins/servlet/myplugin/configure"); 
+    }
+}
+ 
