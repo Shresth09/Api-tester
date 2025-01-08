@@ -149,3 +149,47 @@ This setup should create a simple button within the administration section using
         });
     });
 </script>
+
+
+
+
+
+
+Ebdndndnjdjdkjsjsjs
+Sjjsksksksks
+
+<?xml version="1.0" encoding="UTF-8"?>
+<atlassian-plugin key="com.yourcompany.airam" name="AI RQM Plugin" 
+        plugins-version="2">
+    <plugin-info>
+        <description>This plugin provides configuration options for AI RQM.</description>
+        <version>1.0.0</version>
+        <vendor name="Your Company" url="http://www.yourcompany.com"/>
+    </plugin-info>
+
+    <web-section name="AI RQM Configuration" 
+             i18n-name-key="com.yourcompany.airam.config.section.name"
+             key="ai-rqm-config-section" 
+             location="admin_applications_section" 
+             weight="1000">
+        <description key="ai-rqm-config-section.description">Configuration options for AI RQM plugin</description>
+    </web-section>
+
+    <web-item key="ai-ram-config-panel" 
+              name="Configure AI RQM Plugin" 
+              i18n-name-key="com.yourcompany.airam.config.name"
+              section="admin_applications_section/ai-rqm-config-section" 
+              weight="1000">
+        <description key="ai-rqm-config-panel.description">Configure AI RQM plugin settings</description>
+        <label key="ai-rqm-config-panel.label"/>
+        <link linkId="configure-ai-rqm-link">/plugins/servlet/ai-rqm-config</link>
+        <condition class="com.atlassian.jira.plugin.webfragment.conditions.UserIsAdminCondition"/>
+    </web-item>
+
+    <servlet key="ai-rqm-config-servlet" class="com.citi.cate.stash.webwork.MyPluginServlet"> 
+        <description>AI RQM Plugin Configuration Servlet</description>
+        <url-pattern>/plugins/servlet/ai-rqm-config</url-pattern>
+    </servlet>
+
+</atlassian-plugin>
+ 
