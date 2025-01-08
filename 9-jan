@@ -1,0 +1,255 @@
+Certainly! Here is the complete code for your Jira plugin, with file names and locations mentioned:
+
+### 1. **Plugin Descriptor (`atlassian-plugin.xml`):**
+
+**Location:** `src/main/resources/atlassian-plugin.xml`
+
+```xml
+<atlassian-plugin key="com.example.jira.plugin" name="Dynamic API URL Plugin" pluginsVersion="2">
+    <plugin-info>
+        <description>Jira plugin to fetch and display external API data</description>
+        <version>1.0</version>
+        <vendor name="Your Name" url="http://example.com"/>
+    </plugin-info>
+
+    <web-panel key="AI-RQM-plugin" location="atl.jira.view.issue.right.context">
+        <resource type="velocity" name="view" location="templates/popup.vm"/>
+    </web-panel>
+
+    <web-resource key="dynamic-api-url-plugin-resources" name="Dynamic API URL Plugin Resources">
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <resource type="download" name="popup.js" location="/js/popup.js"/>
+    </web-resource>
+
+    <!-- Configuration for the plugin -->
+    <plugin-settings key="dynamic-api-url-settings">
+        <param name="apiUrl" value=""/>
+    </plugin-settings>
+
+    <webwork1 key="config" name="Dynamic API URL Plugin Configuration" class="com.example.jira.plugin.ConfigAction">
+        <description>Configure the plugin</description>
+        <actions>
+            <action name="edit" alias="config"/>
+        </actions>
+        <view name="input">/templates/config.vm</view>
+    </webwork1>
+</atlassian-plugin>
+```
+
+### 2. **Configuration Action (`ConfigAction.java`):**
+
+**Location:** `src/main/java/com/example/jira/plugin/ConfigAction.java`
+
+```java
+package com.example.jira.plugin;
+
+import com.atlassian.jira.web.action.JiraWebActionSupport;
+import com.opensymphony.webwork.ServletActionContext;
+import org.apache.commons.lang.StringUtils;
+
+import javax.servlet.http.HttpServletRequest;
+
+public class ConfigAction extends JiraWebActionSupport {
+    private String apiUrl;
+
+    public String doExecute() {
+        if (StringUtils.isNotBlank(apiUrl)) {
+            getHttpRequest().setAttribute("apiUrl", apiUrl);
+        }
+        return INPUT;
+    }
+
+    public String doSave() {
+        HttpServletRequest request = ServletActionContext.getRequest();
+        apiUrl = request.getParameter("apiUrl");
+        saveApiUrl(apiUrl);
+        return SUCCESS;
+    }
+
+    private void saveApiUrl(String apiUrl) {
+        // Save the API URL to plugin storage or database
+    }
+
+    public String getApiUrl() {
+        return apiUrl;
+    }
+
+    public void setApiUrl(String apiUrl) {
+        this.apiUrl = apiUrl;
+    }
+}
+```
+
+### 3. **Configuration Template (`config.vm`):**
+
+**Location:** `src/main/resources/templates/config.vm`
+
+```html
+<form action="config" method="post">
+    <fieldset>
+        <legend>Configure API URL</legend>
+        <label for="apiUrl">API URL:</label>
+        <input type="text" id="apiUrl" name="apiUrl" value="$!{apiUrl}"/>
+        <input type="submit" value="Save"/>
+    </fieldset>
+</form>
+```
+
+### 4. **Popup Template (`popup.vm`):**
+
+**Location:** `src/main/resources/templates/popup.vm`
+
+```html
+<!-- Button styled like the "Start Progress" button -->
+<a id="show-popup" class="aui-button aui-button-link">Show API Data</a>
+
+<!-- Modal Structure -->
+<div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+    <header class="aui-dialog2-header">
+        <h2 class="aui-dialog2-header-main">API Response</h2>
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
+    </header>
+    <div class="aui-dialog2-content">
+        <div id="api-response">Loading data...</div>
+    </div>
+    <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+            <button id="close-button" class="aui-button aui-button-primary">Close</button>
+        </div>
+    </footer>
+</div>
+
+<script type="module">
+    AJS.toInit(function() {
+        jQuery(document).ready(function() {
+            initStuff();
+        });
+    });
+</script>
+
+<script type="text/javascript">
+    function initStuff() {
+        console.log("Initializing Stuff...");
+
+        // Ensure event listeners are attached only once
+        if (AJS.$("#show-popup").length && !AJS.$("#show-popup").data('events-attached')) {
+            console.log("Attaching event listeners...");
+
+            // Function to extract the issue key from the URL or other elements
+            function getIssueKey() {
+                console.log("Extracting issue key...");
+                var url = window.location.href;
+                var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
+                var match = url.match(issueKeyPattern);
+                if (match) {
+                    return match[1];
+                }
+
+                var issueKeyElement = AJS.$("#key-val");
+                if (issueKeyElement.length) {
+                    return issueKeyElement.text().trim();
+                }
+
+                var selectedIssueKey = AJS.$(".selected-issue-key").text();
+                if (selectedIssueKey) {
+                    return selectedIssueKey.trim();
+                }
+
+                return null;
+            }
+
+            // Function to fetch the API URL from the plugin configuration
+            function fetchApiUrl(callback) {
+                var configUrl = AJS.params.baseURL + "/rest/dynamic-api-url/1.0/config";
+                jQuery.ajax({
+                    url: configUrl,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        console.log("Configuration fetched:", response);
+                        callback(response.apiUrl);
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("Error fetching configuration:", status, error);
+                        callback(null);
+                    }
+                });
+            }
+
+            // Show the modal and fetch API data on button click
+            AJS.$("#show-popup").click(function() {
+                console.log("Button clicked!");
+                var issueKey = getIssueKey();
+                if (!issueKey) {
+                    console.log("Issue key not found.");
+                    AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Issue key not found.</p>");
+                    AJS.dialog2("#api-modal").show();
+                    return;
+                }
+
+                fetchApiUrl(function(apiUrl) {
+                    if (!apiUrl) {
+                        console.log("API URL not configured.");
+                        AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>API URL not configured.</p>");
+                        AJS.dialog2("#api-modal").show();
+                        return;
+                    }
+
+                    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+                    console.log("Fetching data from Jira API:", jiraApiUrl);
+
+                    // Fetch the issue description from Jira REST API
+                    jQuery.ajax({
+                        url: jiraApiUrl,
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function(response) {
+                            console.log("Jira API response received:", response);
+                            var description = response.fields.description;
+
+                            if (!description) {
+                                console.log("Description not provided in the issue.");
+                                AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Description is not provided in the issue.</p>");
+                                AJS.dialog2("#api-modal").show();
+                                return;
+                            }
+
+                            var payload = JSON.stringify({ user_story: description });
+                            console.log("Sending data to external API:", apiUrl, payload);
+
+                            AJS.$("#api-modal").show();
+                            AJS.$("#api-response").html("<pre>Loading data...</pre>");
+
+                            jQuery.ajax({
+                                url: apiUrl,
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: payload,
+                                success: function(apiResponse) {
+                                    console.log("External API response received:", apiResponse);
+                                    var cscore = apiResponse.NA.cscore;
+                                    var messages = apiResponse.NA.message;
+
+                                    var formattedData = `
+                                        <p style='font-size: 1.5em;'><strong>SCORE:</strong> ${cscore}</p>
+                                        <p style='font-size: 1.2em;'><strong>MESSAGE:</strong> ${messages.join("<br>")}</p>
+                                    `;
+                                    AJS.$("#api-response").html(formattedData);
+                                    AJS.dialog2("#api-modal").show();
+                                },
+                                error: function(xhr, status, error) {
+                                    console.log("Error in external API call:", status, error);
+                                    AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch data. Status: " + xhr.status + ", Error: " + error + "</p>");
+                                    AJS.dialog2("#api-modal").show();
+                                }
+                            });
+                        },
+                        error: function(xhr, status, error) {
+                            console.log("Error in Jira API call:", status, error);
+                            AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch Jira issue data. Status: " + xhr.status + ", Error: " + error + "</p>");
+                            AJS.dialog2("#api-modal").show();
+                        }
+                    });
+               [43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
