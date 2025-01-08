@@ -1,8 +1,15 @@
-Yes, you are correct. The path `/plugins/servlet/ai-rqm-config-link` needs to match the `url-pattern` you've defined in your `atlassian-plugin.xml`. Let's ensure the servlet mapping and web item link are consistent.
+Alright, thank you for checking the logs. Since nothing is appearing there, let's try a more detailed approach to ensure our configuration is correct. Here's a step-by-step process to create a servlet and make sure it works:
 
-### Updated `atlassian-plugin.xml`
+### Step-by-Step Guide
 
-Ensure the `url-pattern` and link are aligned:
+1. **Verify the `atlassian-plugin.xml` Configuration**
+2. **Check the Servlet Implementation**
+3. **Confirm the Velocity Template Placement**
+4. **Review and Redeploy the Plugin**
+
+### 1. Verify the `atlassian-plugin.xml` Configuration
+
+Make sure everything is properly defined:
 
 ```xml
 <atlassian-plugin key="AI_Plugin_Key" name="${project.name}" plugins-version="2">
@@ -33,9 +40,9 @@ Ensure the `url-pattern` and link are aligned:
 </atlassian-plugin>
 ```
 
-### Ensure the Servlet Path
+### 2. Check the Servlet Implementation
 
-Make sure the servlet is registered correctly and the path matches:
+Ensure your servlet is implemented correctly and referenced in the proper package:
 
 ```java
 package com.citi.cate.stash.webwork;
@@ -79,9 +86,9 @@ public class AIConfigServlet extends HttpServlet {
 }
 ```
 
-### Verify Velocity Template Location
+### 3. Confirm Velocity Template Placement
 
-Ensure the Velocity template (`ai-config.vm`) is correctly placed in the `templates` directory:
+Make sure the template is correctly placed in the `templates` directory and is named properly:
 
 **Template Path:**
 
@@ -108,11 +115,41 @@ Ensure the Velocity template (`ai-config.vm`) is correctly placed in the `templa
 </html>
 ```
 
-### Deployment Steps
+### 4. Review and Redeploy the Plugin
 
-1. **Compile and Package**: Compile and package your plugin.
-2. **Deploy the Plugin**: Deploy the plugin to your JIRA instance.
-3. **Restart JIRA**: Restart JIRA to apply the changes.
+1. **Compile and Package**: Run the `atlas-package` command to compile and package your plugin.
+2. **Deploy the Plugin**: Deploy the generated JAR file to your JIRA instance.
+3. **Restart JIRA**: Restart JIRA to ensure the changes take effect.
 4. **Navigate to the Configuration Page**: Go to the Administration > Add-ons page, and you should see the "Configure AI RQM Plugin" link under "Plugin - Admin Configuration". Clicking this link should take you to the configuration page.
 
-By ensuring that the URL paths, servlet mappings, and Velocity template locations are consistent and correct, the 404 error should be resolved, and the configuration page should be accessible. Let me know how it goes or if you need further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/DamianFekete/atlassian-sdk-docs/tree/68e8bb366f119c7926cbba0218cc87eb775ad544/content%2Fserver%2Fframework%2Fatlassian-sdk%2Frun-wired-tests-with-the-plugin-test-console.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/MrScriptMaster/Atlassian-Plugin-SDK-Guide/tree/487020ee86c1fc9f31b5476160fcecad2520fcf9/docs%2Fatlassian_plugin_sdk.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/nickname55/atlassian-web/tree/b99d5b5b74eeed9b28cc40562f9713a180eb0ea4/%D0%94%D0%BE%D0%B1%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B2%D0%B5%D0%B1-%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D0%B0%20%D0%B4%D0%BB%D1%8F%20%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F%20%D0%B5%D0%B3%D0%BE%20%D0%B2%20%D1%88%D0%B0%D0%B1%D0%BB%D0%BE%D0%BD%D0%B5%20velocity%2C%20%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D0%BE%D0%BC%20%D1%81%D0%B5%D1%80%D0%B2%D0%BB%D0%B5%D1%82%D0%BE%D0%BC.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
+### Additional Debugging Steps
+
+1. **Check the Browser Console**: Inspect the browser's console for any errors when you try to access the URL.
+2. **Use a Minimal Servlet**: Temporarily replace your servlet with a simple one that just prints a message to confirm it's being reached:
+
+```java
+package com.citi.cate.stash.webwork;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class AIConfigServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().write("Servlet is reachable!");
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().write("Servlet POST is reachable!");
+    }
+}
+```
+
+This simple servlet can help determine if the issue is with servlet mapping or the content processing.
+
+By following these steps, we can troubleshoot and resolve the 404 error effectively. Let me know how it goes or if you need further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/DamianFekete/atlassian-sdk-docs/tree/68e8bb366f119c7926cbba0218cc87eb775ad544/content%2Fserver%2Fframework%2Fatlassian-sdk%2Frun-wired-tests-with-the-plugin-test-console.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/MrScriptMaster/Atlassian-Plugin-SDK-Guide/tree/487020ee86c1fc9f31b5476160fcecad2520fcf9/docs%2Fatlassian_plugin_sdk.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/nickname55/atlassian-web/tree/b99d5b5b74eeed9b28cc40562f9713a180eb0ea4/%D0%94%D0%BE%D0%B1%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%B2%D0%B5%D0%B1-%D1%80%D0%B5%D1%81%D1%83%D1%80%D1%81%D0%B0%20%D0%B4%D0%BB%D1%8F%20%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F%20%D0%B5%D0%B3%D0%BE%20%D0%B2%20%D1%88%D0%B0%D0%B1%D0%BB%D0%BE%D0%BD%D0%B5%20velocity%2C%20%D0%B8%D1%81%D0%BF%D0%BE%D0%BB%D1%8C%D0%B7%D1%83%D0%B5%D0%BC%D0%BE%D0%BC%20%D1%81%D0%B5%D1%80%D0%B2%D0%BB%D0%B5%D1%82%D0%BE%D0%BC.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
