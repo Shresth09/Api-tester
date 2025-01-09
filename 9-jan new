@@ -1,95 +1,8 @@
-Understood. Let's simplify things and ensure the default URL is handled correctly from the servlet. We'll show the current URL on the page and fetch it from the servlet. Here's the revised implementation:
+Let's ensure that the new URL is correctly saved and retrieved. I’ll focus on this core functionality first.
 
-1. **Update the Velocity Template (`issuecrud-page.vm`):**
-
-```velocity
-<!-- templates/issuecrud-page.vm -->
-<html>
-<head>
-    <title>Set API URL</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-    <h1>Set API URL</h1>
-
-    <!-- Display current URL -->
-    <p><strong>Current URL:</strong> <span id="current-url">Loading...</span></p>
-
-    <!-- Hidden form to edit the URL -->
-    <form id="edit-url-form" style="display: none;">
-        <label for="api-url">API URL:</label>
-        <input type="text" id="api-url" name="api-url" required>
-        <button type="submit">Save URL</button>
-    </form>
-    
-    <!-- Edit button -->
-    <button id="edit-button">Edit</button>
-
-    <div id="message"></div>
-
-    <script type="module">
-        AJS.toInit(function() {
-            jQuery(document).ready(function() {
-                initStuff();
-            });
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            initStuff();
-            JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
-                initStuff();
-            });
-        });
-
-        function initStuff() {
-            // Load the current URL from the servlet
-            jQuery.ajax({
-                url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    const apiUrl = response.apiUrl;
-                    AJS.$("#current-url").text(apiUrl);
-                    AJS.$("#api-url").val(apiUrl); // Set the input field value
-                },
-                error: function() {
-                    console.log("Failed to fetch the URL from the servlet.");
-                }
-            });
-
-            // Show the form to edit the URL
-            AJS.$("#edit-button").click(function() {
-                AJS.$("#edit-url-form").show();
-                AJS.$(this).hide();
-            });
-
-            // Handle form submission
-            AJS.$("#edit-url-form").submit(function(e) {
-                e.preventDefault();
-                const apiUrl = AJS.$("#api-url").val();
-
-                jQuery.ajax({
-                    url: AJS.params.baseURL + "/plugins/servlet/issuecrud",
-                    type: "POST",
-                    data: { action: "saveUrl", url: apiUrl },
-                    success: function() {
-                        AJS.$("#message").html("<p style='color: green;'>URL saved successfully!</p>");
-                        AJS.$("#current-url").text(apiUrl); // Update the displayed URL
-                        AJS.$("#edit-url-form").hide();
-                        AJS.$("#edit-button").show();
-                    },
-                    error: function(xhr, status, error) {
-                        AJS.$("#message").html("<p style='color: red;'>Failed to save URL: " + error + "</p>");
-                    }
-                });
-            });
-        }
-    </script>
-</body>
-</html>
-```
-
-2. **Ensure the Default URL is Set Correctly in the Servlet:**
+### Ensure Saving and Retrieving the URL
+1. **Servlet Code:**
+Make sure the servlet is correctly saving and retrieving the URL:
 
 ```java
 package com.example.plugins.tutorial.servlet;
@@ -149,45 +62,9 @@ public class IssueCRUD extends HttpServlet {
 }
 ```
 
-3. **Update the Plugin Descriptor (`atlassian-plugin.xml`):**
+2. **Template Code:**
 
-Ensure your plugin descriptor correctly injects both the `TemplateRenderer` and `PluginSettingsFactory`:
-
-```xml
-<servlet name="Issue CRUD" key="issue-crud" class="com.example.plugins.tutorial.servlet.IssueCRUD">
-    <description>The Issue CRUD Plugin</description>
-    <url-pattern>/plugins/servlet/issuecrud</url-pattern>
-    <param name="templateRenderer" value="templateRenderer"/>
-    <param name="pluginSettingsFactory" value="pluginSettingsFactory"/>
-</servlet>
-
-<component-import key="templateRenderer" interface="com.atlassian.templaterenderer.TemplateRenderer"/>
-<component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
-```
-
-With these changes:
-1. The default URL is only set once in the servlet.
-2. The current URL will always be fetched from the servlet and displayed on the page.
-3. Users can edit the URL, and the form will display the current URL in the input field when the edit button is clicked.
-
-Let me know if this resolves the issue or if you need any further adjustments![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```velocity
 <!-- templates/issuecrud-page.vm -->
 <html>
 <head>
@@ -203,21 +80,13 @@ Let me know if this resolves the issue or if you need any further adjustments![4
     </form>
 
     <div id="message"></div>
+    
+    <!-- Show Current URL button -->
+    <button id="show-current-url-button">Show Current URL</button>
+    <p><strong>Current URL:</strong> <span id="current-url">Click the button to display</span></p>
 
     <script type="text/javascript">
         AJS.$(document).ready(function() {
-            // Load the current URL if it exists
-            jQuery.ajax({
-                url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.apiUrl) {
-                        AJS.$("#api-url").val(response.apiUrl);
-                    }
-                }
-            });
-
             AJS.$("#set-url-form").submit(function(e) {
                 e.preventDefault();
                 var apiUrl = AJS.$("#api-url").val();
@@ -227,10 +96,10 @@ Let me know if this resolves the issue or if you need any further adjustments![4
                     type: "POST",
                     data: { action: "saveUrl", url: apiUrl },
                     success: function(response) {
-                        // Display success message and the current URL
+                        // Display success message
                         AJS.$("#message").html("<p style='color: green;'>URL saved successfully!</p>");
                         
-                        // Fetch and display the current URL
+                        // Show current URL after saving
                         jQuery.ajax({
                             url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
                             type: 'GET',
@@ -249,7 +118,31 @@ Let me know if this resolves the issue or if you need any further adjustments![4
                     }
                 });
             });
+
+            // Show the current URL when the button is clicked
+            AJS.$("#show-current-url-button").click(function() {
+                jQuery.ajax({
+                    url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        const apiUrl = response.apiUrl;
+                        AJS.$("#current-url").text(apiUrl);
+                    },
+                    error: function() {
+                        AJS.$("#current-url").text("Failed to load URL.");
+                    }
+                });
+            });
         });
     </script>
 </body>
-</html> 
+</html>
+```
+
+These changes ensure that:
+1. The URL is saved correctly when the form is submitted.
+2. After saving, the current URL is fetched and displayed.
+3. The "Show Current URL" button fetches and displays the current URL.
+
+Please test this and let me know if it works as expected! If not, we can continue to debug and refine the approach.[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
