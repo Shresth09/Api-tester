@@ -189,11 +189,15 @@ public class IssueCRUD extends HttpServlet {
 
 
 
+
+##*&#&#&#&#&#&&#&#&#
+#=#+#+#+#+#+#+##++#
+
 <!-- templates/issuecrud-page.vm -->
 <html>
 <head>
     <title>Fetch and Display URL</title>
-    <script src="${contextPath}/s/2.0.1/_/download/batch/com.atlassian.auiplugin:ajs/js/aui/aui.min.js"></script>
+    <script src="${contextPath}/s/d41d8cd98f00b204e9800998ecf8427e/en_US-e9781b0c5f5c1b8bb1f9a54bf1b9e7d8/b3/6/2/_/download/contextbatch/js/aui/aui.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
@@ -204,7 +208,14 @@ public class IssueCRUD extends HttpServlet {
 
 <script type="module">
     AJS.toInit(function() {
-        console.log("Document ready, fetching URL...");
+        jQuery(document).ready(function() {
+            initStuff();
+        });
+    });
+
+    function initStuff() {
+        console.log("Initializing Stuff...");
+
         jQuery.ajax({
             url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
             type: 'GET',
@@ -219,5 +230,17 @@ public class IssueCRUD extends HttpServlet {
                 AJS.$("#current-url").text("Failed to load URL.");
             }
         });
+    }
+
+    if (typeof jQuery != "undefined") {
+        jQuery(document).ready(function() {
+            initStuff();
+        });
+    }
+    document.addEventListener("DOMContentLoaded", function() {
+        initStuff();
+        JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
+            initStuff();
+        });
     });
-</script>
+</script> 
