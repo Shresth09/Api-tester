@@ -1,40 +1,3 @@
-<!-- templates/issuecrud-page.vm -->
-<html>
-<head>
-    <title>Fetch and Display URL</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-    <h1>Fetch and Display URL</h1>
-    <p><strong>Current URL:</strong> <span id="current-url">Loading...</span></p>
-
-    <script type="module">
-        AJS.toInit(function() {
-            console.log("Document ready, fetching URL...");
-            jQuery.ajax({
-                url: AJS.params.baseURL + "/plugins/servlet/issuecrud",
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    const apiUrl = response.apiUrl;
-                    console.log("Fetched URL:", apiUrl);
-                    AJS.$("#current-url").text(apiUrl);
-                },
-                error: function() {
-                    console.log("Failed to fetch URL");
-                    AJS.$("#current-url").text("Failed to load URL.");
-                }
-            });
-        });
-    </script>
-</body>
-</html>
-
-
-
-
-
-
 package com.example.plugins.tutorial.servlet;
 
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
@@ -64,17 +27,71 @@ public class IssueCRUD extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-        String apiUrl = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".apiUrl");
-        if (apiUrl == null) {
-            apiUrl = DEFAULT_API_URL; // Use default URL if not set
+        String action = req.getParameter("action");
+        if ("getUrl".equals(action)) {
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            String apiUrl = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".apiUrl");
+            if (apiUrl == null) {
+                apiUrl = DEFAULT_API_URL; // Use default URL if not set
+            }
+            resp.setContentType("application/json");
+            resp.getWriter().write("{\"apiUrl\": \"" + apiUrl + "\"}");
+        } else {
+            resp.setContentType("text/html;charset=utf-8");
+            templateRenderer.render("templates/issuecrud-page.vm", resp.getWriter());
         }
-        resp.setContentType("application/json");
-        resp.getWriter().write("{\"apiUrl\": \"" + apiUrl + "\"}");
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Leaving POST handling for now
+        String action = req.getParameter("action");
+        if ("saveUrl".equals(action)) {
+            String apiUrl = req.getParameter("url");
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            pluginSettings.put(PLUGIN_STORAGE_KEY + ".apiUrl", apiUrl);
+            resp.getWriter().write("URL saved successfully!");
+        }
     }
-} 
+}
+
+
+
+
+
+
+
+
+
+
+
+<!-- templates/issuecrud-page.vm -->
+<html>
+<head>
+    <title>Fetch and Display URL</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Fetch and Display URL</h1>
+    <p><strong>Current URL:</strong> <span id="current-url">Loading...</span></p>
+</body>
+</html>
+
+<script type="module">
+    AJS.toInit(function() {
+        console.log("Document ready, fetching URL...");
+        jQuery.ajax({
+            url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                const apiUrl = response.apiUrl;
+                console.log("Fetched URL:", apiUrl);
+                AJS.$("#current-url").text(apiUrl);
+            },
+            error: function() {
+                console.log("Failed to fetch URL");
+                AJS.$("#current-url").text("Failed to load URL.");
+            }
+        });
+    });
+</script>
