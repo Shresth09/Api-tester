@@ -181,6 +181,13 @@ Let me know if this resolves the issue or if you need any further adjustments![4
 
 
 
+
+
+
+
+
+
+
 <!-- templates/issuecrud-page.vm -->
 <html>
 <head>
@@ -189,83 +196,60 @@ Let me know if this resolves the issue or if you need any further adjustments![4
 </head>
 <body>
     <h1>Set API URL</h1>
-
-    <!-- Button to show current URL -->
-    <button id="show-current-url-button">Show Current URL</button>
-    <p><strong>Current URL:</strong> <span id="current-url">Click the button to display</span></p>
-
-    <!-- Hidden form to edit the URL -->
-    <form id="edit-url-form" style="display: none;">
+    <form id="set-url-form">
         <label for="api-url">API URL:</label>
         <input type="text" id="api-url" name="api-url" required>
         <button type="submit">Save URL</button>
     </form>
-    
-    <!-- Edit button -->
-    <button id="edit-button">Edit</button>
 
     <div id="message"></div>
 
-    <script type="module">
-        AJS.toInit(function() {
-            jQuery(document).ready(function() {
-                initStuff();
-            });
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            initStuff();
-            JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
-                initStuff();
-            });
-        });
-
-        function initStuff() {
-            // Show the current URL when the button is clicked
-            AJS.$("#show-current-url-button").click(function() {
-                // Load the current URL from the servlet
-                jQuery.ajax({
-                    url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        const apiUrl = response.apiUrl;
-                        AJS.$("#current-url").text(apiUrl);
-                        AJS.$("#api-url").val(apiUrl); // Set the input field value
-                    },
-                    error: function() {
-                        AJS.$("#current-url").text("Failed to load URL.");
+    <script type="text/javascript">
+        AJS.$(document).ready(function() {
+            // Load the current URL if it exists
+            jQuery.ajax({
+                url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.apiUrl) {
+                        AJS.$("#api-url").val(response.apiUrl);
                     }
-                });
+                }
             });
 
-            // Show the form to edit the URL
-            AJS.$("#edit-button").click(function() {
-                AJS.$("#edit-url-form").show();
-                AJS.$(this).hide();
-            });
-
-            // Handle form submission
-            AJS.$("#edit-url-form").submit(function(e) {
+            AJS.$("#set-url-form").submit(function(e) {
                 e.preventDefault();
-                const apiUrl = AJS.$("#api-url").val();
+                var apiUrl = AJS.$("#api-url").val();
 
                 jQuery.ajax({
                     url: AJS.params.baseURL + "/plugins/servlet/issuecrud",
                     type: "POST",
                     data: { action: "saveUrl", url: apiUrl },
-                    success: function() {
+                    success: function(response) {
+                        // Display success message and the current URL
                         AJS.$("#message").html("<p style='color: green;'>URL saved successfully!</p>");
-                        AJS.$("#current-url").text(apiUrl); // Update the displayed URL
-                        AJS.$("#edit-url-form").hide();
-                        AJS.$("#edit-button").show();
+                        
+                        // Fetch and display the current URL
+                        jQuery.ajax({
+                            url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(response) {
+                                const currentUrl = response.apiUrl;
+                                AJS.$("#message").append("<p>Current URL is: " + currentUrl + "</p>");
+                            },
+                            error: function() {
+                                AJS.$("#message").append("<p>Failed to fetch the current URL.</p>");
+                            }
+                        });
                     },
                     error: function(xhr, status, error) {
                         AJS.$("#message").html("<p style='color: red;'>Failed to save URL: " + error + "</p>");
                     }
                 });
             });
-        }
+        });
     </script>
 </body>
 </html> 
