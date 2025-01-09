@@ -1,8 +1,8 @@
-Let's ensure that the new URL is correctly saved and retrieved. I’ll focus on this core functionality first.
+Got it. We'll adjust the approach to send the updated URL as a query parameter via a GET request, which will then be processed by the servlet to update the URL.
 
-### Ensure Saving and Retrieving the URL
-1. **Servlet Code:**
-Make sure the servlet is correctly saving and retrieving the URL:
+### Updated Servlet Code
+
+Ensure the servlet handles the GET request to update the URL:
 
 ```java
 package com.example.plugins.tutorial.servlet;
@@ -34,7 +34,14 @@ public class IssueCRUD extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Add CORS headers
+        resp.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
+        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Allow GET, POST, and OPTIONS methods
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type"); // Allow Content-Type header
+
         String action = req.getParameter("action");
+
+        // Fetch the current URL
         if ("getUrl".equals(action)) {
             PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
             String apiUrl = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".apiUrl");
@@ -43,6 +50,20 @@ public class IssueCRUD extends HttpServlet {
             }
             resp.setContentType("application/json");
             resp.getWriter().write("{\"apiUrl\": \"" + apiUrl + "\"}");
+
+        // Update the URL
+        } else if ("updateUrl".equals(action)) {
+            try {
+                String newUrl = req.getParameter("url");
+                PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+                pluginSettings.put(PLUGIN_STORAGE_KEY + ".apiUrl", newUrl);
+                resp.setContentType("text/plain");
+                resp.getWriter().write("URL updated successfully!");
+            } catch (Exception e) {
+                log.error("Error processing update URL request", e);
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.getWriter().write("Error processing request!");
+            }
         } else {
             resp.setContentType("text/html;charset=utf-8");
             templateRenderer.render("templates/issuecrud-page.vm", resp.getWriter());
@@ -51,206 +72,125 @@ public class IssueCRUD extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String action = req.getParameter("action");
-        if ("saveUrl".equals(action)) {
-            String apiUrl = req.getParameter("url");
-            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-            pluginSettings.put(PLUGIN_STORAGE_KEY + ".apiUrl", apiUrl);
-            resp.getWriter().write("URL saved successfully!");
-        }
+        // Add CORS headers
+        resp.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
+        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Allow GET, POST, and OPTIONS methods
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type"); // Allow Content-Type header
+    }
+
+    @Override
+    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Add CORS headers for OPTIONS requests
+        resp.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
+        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Allow GET, POST, and OPTIONS methods
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type"); // Allow Content-Type header
     }
 }
 ```
 
-2. **Template Code:**
+### Updated HTML and JavaScript Code
 
-```velocity
-<!-- templates/issuecrud-page.vm -->
-<html>
+Modify the client-side code to send the new URL as a query parameter in a GET request:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Set API URL</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch and Update URL</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <h1>Set API URL</h1>
-    <form id="set-url-form">
-        <label for="api-url">API URL:</label>
-        <input type="text" id="api-url" name="api-url" required>
-        <button type="submit">Save URL</button>
-    </form>
+    <div class="container">
+        <h2>Fetch and Update URL</h2>
+        <button onclick="fetchUrl()">Fetch URL</button>
+        <div class="response-group">
+            <h3>Response</h3>
+            <div class="response-body">
+                <strong>Current URL:</strong>
+                <pre id="currentUrl">Loading...</pre>
+            </div>
+        </div>
+        
+        <!-- Input to update the URL -->
+        <div class="update-group">
+            <input type="text" id="newUrl" placeholder="Enter new API URL">
+            <button onclick="updateUrl()">Update URL</button>
+        </div>
+    </div>
 
-    <div id="message"></div>
-    
-    <!-- Show Current URL button -->
-    <button id="show-current-url-button">Show Current URL</button>
-    <p><strong>Current URL:</strong> <span id="current-url">Click the button to display</span></p>
+    <script>
+        function fetchUrl() {
+            const apiUrl = `${window.location.origin}/jira/plugins/servlet/issuecrud?action=getUrl`;
 
-    <script type="text/javascript">
-        AJS.$(document).ready(function() {
-            AJS.$("#set-url-form").submit(function(e) {
-                e.preventDefault();
-                var apiUrl = AJS.$("#api-url").val();
-
-                jQuery.ajax({
-                    url: AJS.params.baseURL + "/plugins/servlet/issuecrud",
-                    type: "POST",
-                    data: { action: "saveUrl", url: apiUrl },
-                    success: function(response) {
-                        // Display success message
-                        AJS.$("#message").html("<p style='color: green;'>URL saved successfully!</p>");
-                        
-                        // Fetch and display the current URL
-                        jQuery.ajax({
-                            url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
-                            type: 'GET',
-                            dataType: 'json',
-                            success: function(response) {
-                                const currentUrl = response.apiUrl;
-                                AJS.$("#message").append("<p>Current URL is: " + currentUrl + "</p>");
-                            },
-                            error: function() {
-                                AJS.$("#message").append("<p>Failed to fetch the current URL.</p>");
-                            }
-                        });
-                    },
-                    error: function(xhr, status, error) {
-                        AJS.$("#message").html("<p style='color: red;'>Failed to save URL: " + error + "</p>");
-                    }
-                });
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Referer': window.location.href,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('currentUrl').textContent = `Current URL: ${data.apiUrl}`;
+            })
+            .catch(error => {
+                document.getElementById('currentUrl').textContent = `Error: ${error}`;
             });
+        }
 
-            // Show the current URL when the button is clicked
-            AJS.$("#show-current-url-button").click(function() {
-                jQuery.ajax({
-                    url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        const apiUrl = response.apiUrl;
-                        AJS.$("#current-url").text(apiUrl);
-                    },
-                    error: function() {
-                        AJS.$("#current-url").text("Failed to load URL.");
-                    }
-                });
+        function updateUrl() {
+            const newUrl = document.getElementById('newUrl').value;
+            const apiUrl = `${window.location.origin}/jira/plugins/servlet/issuecrud?action=updateUrl&url=${encodeURIComponent(newUrl)}`;
+
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Referer': window.location.href
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                fetchUrl(); // Refresh the displayed URL after updating
+                alert('URL updated successfully!');
+            })
+            .catch(error => {
+                alert(`Error: ${error}`);
             });
-        });
+        }
+
+        // Automatically fetch the URL when the page loads
+        document.addEventListener("DOMContentLoaded", fetchUrl);
     </script>
 </body>
-</html> 
+</html>
 ```
 
-These changes ensure that:
-1. The URL is saved correctly when the form is submitted.
-2. After saving, the current URL is fetched and displayed.
-3. The "Show Current URL" button fetches and displays the current URL.
+### Explanation:
 
-Please test this and let me know if it works as expected! If not, we can continue to debug and refine the approach.[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
+1. **Servlet Code:**
+   - The `updateUrl` action in the servlet updates the URL when a GET request with the `url` parameter is received.
+   - Error handling is added to log any exceptions and return a 500 status code if an error occurs.
 
+2. **HTML and JavaScript:**
+   - The `fetchUrl` function fetches the current URL and displays it.
+   - The `updateUrl` function sends a GET request with the new URL as a query parameter to update the URL.
+   - The displayed URL is refreshed after updating.
 
+### Next Steps:
 
+1. **Deploy the updated servlet and HTML page.**
+2. **Test the page to ensure the URL is fetched and updated correctly.**
 
-
-
-
-
-
-
-
-
-<!-- templates/issuecrud-page.vm -->
-<html>
-<head>
-    <title>Set API URL</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-    <h1>Set API URL</h1>
-    <form id="set-url-form">
-        <label for="api-url">API URL:</label>
-        <input type="text" id="api-url" name="api-url" required>
-        <button type="submit">Save URL</button>
-    </form>
-
-    <div id="message"></div>
-    
-    <!-- Show Current URL button -->
-    <button id="show-current-url-button">Show Current URL</button>
-    <p><strong>Current URL:</strong> <span id="current-url">Click the button to display</span></p>
-
-    <script type="module">
-        AJS.toInit(function() {
-            jQuery(document).ready(function() {
-                initStuff();
-            });
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            initStuff();
-            JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
-                initStuff();
-            });
-        });
-
-        function initStuff() {
-            console.log("Initializing Stuff...");
-
-            // Event listener for form submission
-            AJS.$("#set-url-form").submit(function(e) {
-                e.preventDefault();
-                var apiUrl = AJS.$("#api-url").val();
-                console.log("Saving URL:", apiUrl);
-
-                // AJAX call to save the URL
-                jQuery.ajax({
-                    url: AJS.params.baseURL + "/plugins/servlet/issuecrud",
-                    type: "POST",
-                    data: { action: "saveUrl", url: apiUrl },
-                    success: function(response) {
-                        console.log("URL saved successfully");
-                        AJS.$("#message").html("<p style='color: green;'>URL saved successfully!</p>");
-                    },
-                    error: function(xhr, status, error) {
-                        console.log("Failed to save URL:", error);
-                        AJS.$("#message").html("<p style='color: red;'>Failed to save URL: " + error + "</p>");
-                    }
-                });
-            });
-
-            // Event listener for showing current URL
-            AJS.$("#show-current-url-button").click(function() {
-                console.log("Show Current URL button clicked");
-                
-                // AJAX call to fetch the current URL
-                jQuery.ajax({
-                    url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        const apiUrl = response.apiUrl;
-                        console.log("Current URL fetched:", apiUrl);
-                        AJS.$("#current-url").text(apiUrl);
-                    },
-                    error: function() {
-                        console.log("Failed to load URL");
-                        AJS.$("#current-url").text("Failed to load URL.");
-                    }
-                });
-            });
-        }
-
-        if (typeof jQuery != "undefined") {
-            jQuery(document).ready(function() {
-                initStuff();
-            });
-        }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            initStuff();
-            JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
-                initStuff();
-            });
-        });
-    </script>
-</body>
-</html> 
+This approach should ensure that the GET request successfully updates the URL. Let me know if this resolves the issue or if further adjustments are needed![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/jesulonimii/trin-app-rest-api/tree/4a292f13d0ad8332e328ffc59aa0be847144cf8d/editPost.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "4")
