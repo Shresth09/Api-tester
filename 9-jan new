@@ -1,8 +1,8 @@
-Got it. We'll adjust the approach to send the updated URL as a query parameter via a GET request, which will then be processed by the servlet to update the URL.
+Got it. Let's handle the update process by sending the URL directly as a string in a GET request. We'll update the servlet to store the URL correctly and ensure it handles the new format.
 
 ### Updated Servlet Code
 
-Ensure the servlet handles the GET request to update the URL:
+Ensure the servlet correctly handles storing the URL as a string:
 
 ```java
 package com.example.plugins.tutorial.servlet;
@@ -122,7 +122,7 @@ Modify the client-side code to send the new URL as a query parameter in a GET re
 
     <script>
         function fetchUrl() {
-            const apiUrl = `${window.location.origin}/jira/plugins/servlet/issuecrud?action=getUrl`;
+            const apiUrl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
 
             fetch(apiUrl, {
                 method: 'GET',
@@ -147,7 +147,10 @@ Modify the client-side code to send the new URL as a query parameter in a GET re
 
         function updateUrl() {
             const newUrl = document.getElementById('newUrl').value;
-            const apiUrl = `${window.location.origin}/jira/plugins/servlet/issuecrud?action=updateUrl&url=${encodeURIComponent(newUrl)}`;
+            const apiUrl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=updateUrl&url=" + newUrl;
+
+            console.log("Updating URL:", newUrl);
+            console.log("Request URL:", apiUrl);
 
             fetch(apiUrl, {
                 method: 'GET',
@@ -156,16 +159,19 @@ Modify the client-side code to send the new URL as a query parameter in a GET re
                 }
             })
             .then(response => {
+                console.log("Response status:", response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
                 return response.text();
             })
             .then(data => {
+                console.log("Response data:", data);
                 fetchUrl(); // Refresh the displayed URL after updating
                 alert('URL updated successfully!');
             })
             .catch(error => {
+                console.log("Error occurred:", error);
                 alert(`Error: ${error}`);
             });
         }
@@ -188,9 +194,4 @@ Modify the client-side code to send the new URL as a query parameter in a GET re
    - The `updateUrl` function sends a GET request with the new URL as a query parameter to update the URL.
    - The displayed URL is refreshed after updating.
 
-### Next Steps:
-
-1. **Deploy the updated servlet and HTML page.**
-2. **Test the page to ensure the URL is fetched and updated correctly.**
-
-This approach should ensure that the GET request successfully updates the URL. Let me know if this resolves the issue or if further adjustments are needed![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/jesulonimii/trin-app-rest-api/tree/4a292f13d0ad8332e328ffc59aa0be847144cf8d/editPost.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "4")
+By following these steps, we should ensure that the GET request successfully updates the URL. Let me know if this resolves the issue or if further adjustments are needed![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/jesulonimii/trin-app-rest-api/tree/4a292f13d0ad8332e328ffc59aa0be847144cf8d/editPost.php?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "4")
