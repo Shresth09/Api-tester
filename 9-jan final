@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch and Update URL</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Fetch and Update URL</h2>
+        <div class="response-group">
+            <h3>Response</h3>
+            <div class="response-body">
+                <strong>Current URL:</strong>
+                <pre id="currentUrl">Loading...</pre>
+            </div>
+        </div>
+        
+        <!-- Input to update the URL -->
+        <div class="update-group">
+            <input type="text" id="newUrl" placeholder="Enter new API URL">
+            <button onclick="updateUrl()">Update URL</button>
+        </div>
+    </div>
+
+    <script>
+        function fetchUrl() {
+            const apiUrl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
+
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Referer': window.location.href,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('currentUrl').textContent = `Current URL: ${data.apiUrl}`;
+                document.getElementById('newUrl').value = data.apiUrl; // Maintain the updated URL in the input field
+            })
+            .catch(error => {
+                document.getElementById('currentUrl').textContent = `Error: ${error}`;
+            });
+        }
+
+        function updateUrl() {
+            const newUrl = document.getElementById('newUrl').value;
+            const apiUrl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=updateUrl&url=" + newUrl;
+
+            console.log("Updating URL:", newUrl);
+            console.log("Request URL:", apiUrl);
+
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Referer': window.location.href
+                }
+            })
+            .then(response => {
+                console.log("Response status:", response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                console.log("Response data:", data);
+                document.getElementById('currentUrl').textContent = `Current URL: ${newUrl}`;
+                document.getElementById('newUrl').value = newUrl; // Maintain the updated URL in the input field
+                alert('URL updated successfully!');
+            })
+            .catch(error => {
+                console.log("Error occurred:", error);
+                alert(`Error: ${error}`);
+            });
+        }
+
+        // Automatically fetch the URL when the page loads
+        document.addEventListener("DOMContentLoaded", fetchUrl);
+    </script>
+</body>
+</html>
