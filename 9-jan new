@@ -99,7 +99,7 @@ public class IssueCRUD extends HttpServlet {
                         // Display success message
                         AJS.$("#message").html("<p style='color: green;'>URL saved successfully!</p>");
                         
-                        // Show current URL after saving
+                        // Fetch and display the current URL
                         jQuery.ajax({
                             url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
                             type: 'GET',
@@ -137,7 +137,7 @@ public class IssueCRUD extends HttpServlet {
         });
     </script>
 </body>
-</html>
+</html> 
 ```
 
 These changes ensure that:
