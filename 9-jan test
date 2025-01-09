@@ -380,10 +380,11 @@ Dodooddodododododododododod
                 return response.text();
             })
             .then(data => {
-                document.getElementById('currentUrl').textContent = `URL updated successfully! Current URL: ${newUrl}`;
+                fetchUrl(); // Refresh the displayed URL after updating
+                alert('URL updated successfully!');
             })
             .catch(error => {
-                document.getElementById('currentUrl').textContent = `Error: ${error}`;
+                alert(`Error: ${error}`);
             });
         }
 
@@ -391,4 +392,4 @@ Dodooddodododododododododod
         document.addEventListener("DOMContentLoaded", fetchUrl);
     </script>
 </body>
-</html> 
+</html>
