@@ -146,3 +146,130 @@ These changes ensure that:
 3. The "Show Current URL" button fetches and displays the current URL.
 
 Please test this and let me know if it works as expected! If not, we can continue to debug and refine the approach.[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- templates/issuecrud-page.vm -->
+<html>
+<head>
+    <title>Set API URL</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Set API URL</h1>
+    <form id="set-url-form">
+        <label for="api-url">API URL:</label>
+        <input type="text" id="api-url" name="api-url" required>
+        <button type="submit">Save URL</button>
+    </form>
+
+    <div id="message"></div>
+    
+    <!-- Show Current URL button -->
+    <button id="show-current-url-button">Show Current URL</button>
+    <p><strong>Current URL:</strong> <span id="current-url">Click the button to display</span></p>
+
+    <script type="module">
+        AJS.toInit(function() {
+            jQuery(document).ready(function() {
+                initStuff();
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            initStuff();
+            JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
+                initStuff();
+            });
+        });
+
+        function initStuff() {
+            console.log("Initializing Stuff...");
+
+            // Ensure event listeners are attached only once
+            if (AJS.$("#set-url-form").length && !AJS.$("#set-url-form").data('events-attached')) {
+                console.log("Attaching event listeners...");
+
+                AJS.$("#set-url-form").submit(function(e) {
+                    e.preventDefault();
+                    var apiUrl = AJS.$("#api-url").val();
+                    console.log("Saving URL:", apiUrl);
+
+                    jQuery.ajax({
+                        url: AJS.params.baseURL + "/plugins/servlet/issuecrud",
+                        type: "POST",
+                        data: { action: "saveUrl", url: apiUrl },
+                        success: function(response) {
+                            console.log("URL saved successfully");
+                            AJS.$("#message").html("<p style='color: green;'>URL saved successfully!</p>");
+                            
+                            // Fetch and display the current URL
+                            jQuery.ajax({
+                                url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function(response) {
+                                    const currentUrl = response.apiUrl;
+                                    console.log("Current URL fetched:", currentUrl);
+                                    AJS.$("#message").append("<p>Current URL is: " + currentUrl + "</p>");
+                                },
+                                error: function() {
+                                    console.log("Failed to fetch the current URL");
+                                    AJS.$("#message").append("<p>Failed to fetch the current URL.</p>");
+                                }
+                            });
+                        },
+                        error: function(xhr, status, error) {
+                            console.log("Failed to save URL:", error);
+                            AJS.$("#message").html("<p style='color: red;'>Failed to save URL: " + error + "</p>");
+                        }
+                    });
+                });
+
+                // Show the current URL when the button is clicked
+                AJS.$("#show-current-url-button").click(function() {
+                    console.log("Show Current URL button clicked");
+                    jQuery.ajax({
+                        url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function(response) {
+                            const apiUrl = response.apiUrl;
+                            console.log("Current URL fetched:", apiUrl);
+                            AJS.$("#current-url").text(apiUrl);
+                        },
+                        error: function() {
+                            console.log("Failed to load URL");
+                            AJS.$("#current-url").text("Failed to load URL.");
+                        }
+                    });
+                });
+
+                AJS.$("#set-url-form").data('events-attached', true);
+            }
+        }
+
+        if (typeof jQuery != "undefined") {
+            jQuery(document).ready(function() {
+                initStuff();
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            initStuff();
+            JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
+                initStuff();
+            });
+        });
+    </script>
+</body>
+</html>
