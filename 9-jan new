@@ -273,3 +273,145 @@ public class IssueCRUD extends HttpServlet {
 These changes will ensure that when you access the URL `localhost:2990/jira/plugins/servlet/issuecrud`, the servlet will load and display the `issuecrud-page.vm` template with the content you defined. 
 
 Let me know if this works for you or if you need any further adjustments![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
+
+
+
+
+
+
+
+
+
+
+Let's replace the basic "Hello World" page with a form where users can input and save their custom API URL. We'll do this by updating the `issuecrud-page.vm` template and modifying the servlet to handle the form submission.
+
+1. **Update the Velocity Template (`issuecrud-page.vm`):**
+
+```velocity
+<!-- templates/issuecrud-page.vm -->
+<html>
+<head>
+    <title>Set API URL</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Set API URL</h1>
+    <form id="set-url-form">
+        <label for="api-url">API URL:</label>
+        <input type="text" id="api-url" name="api-url" required>
+        <button type="submit">Save URL</button>
+    </form>
+
+    <div id="message"></div>
+
+    <script type="text/javascript">
+        AJS.$(document).ready(function() {
+            // Load the current URL if it exists
+            jQuery.ajax({
+                url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.apiUrl) {
+                        AJS.$("#api-url").val(response.apiUrl);
+                    }
+                }
+            });
+
+            AJS.$("#set-url-form").submit(function(e) {
+                e.preventDefault();
+                var apiUrl = AJS.$("#api-url").val();
+
+                jQuery.ajax({
+                    url: AJS.params.baseURL + "/plugins/servlet/issuecrud",
+                    type: "POST",
+                    data: { action: "saveUrl", url: apiUrl },
+                    success: function(response) {
+                        AJS.$("#message").html("<p style='color: green;'>URL saved successfully!</p>");
+                    },
+                    error: function(xhr, status, error) {
+                        AJS.$("#message").html("<p style='color: red;'>Failed to save URL: " + error + "</p>");
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+```
+
+2. **Modify the Servlet to Handle the Form Submission:**
+
+```java
+package com.example.plugins.tutorial.servlet;
+
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import com.atlassian.templaterenderer.TemplateRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class IssueCRUD extends HttpServlet {
+
+    private static final Logger log = LoggerFactory.getLogger(IssueCRUD.class);
+    private final TemplateRenderer templateRenderer;
+    private final PluginSettingsFactory pluginSettingsFactory;
+    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins.tutorial.servlet.IssueCRUD";
+
+    public IssueCRUD(TemplateRenderer templateRenderer, PluginSettingsFactory pluginSettingsFactory) {
+        this.templateRenderer = templateRenderer;
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String action = req.getParameter("action");
+        if ("getUrl".equals(action)) {
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            String apiUrl = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".apiUrl");
+            resp.setContentType("application/json");
+            resp.getWriter().write("{\"apiUrl\": \"" + apiUrl + "\"}");
+        } else {
+            resp.setContentType("text/html;charset=utf-8");
+            templateRenderer.render("templates/issuecrud-page.vm", resp.getWriter());
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String action = req.getParameter("action");
+        if ("saveUrl".equals(action)) {
+            String apiUrl = req.getParameter("url");
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            pluginSettings.put(PLUGIN_STORAGE_KEY + ".apiUrl", apiUrl);
+            resp.getWriter().write("URL saved successfully!");
+        }
+    }
+}
+```
+
+3. **Update the Plugin Descriptor (`atlassian-plugin.xml`):**
+
+Ensure your plugin descriptor correctly injects both the `TemplateRenderer` and `PluginSettingsFactory`:
+
+```xml
+<servlet name="Issue CRUD" key="issue-crud" class="com.example.plugins.tutorial.servlet.IssueCRUD">
+    <description>The Issue CRUD Plugin</description>
+    <url-pattern>/plugins/servlet/issuecrud</url-pattern>
+    <param name="templateRenderer" value="templateRenderer"/>
+    <param name="pluginSettingsFactory" value="pluginSettingsFactory"/>
+</servlet>
+
+<component-import key="templateRenderer" interface="com.atlassian.templaterenderer.TemplateRenderer"/>
+<component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
+```
+
+These changes will ensure that when users visit the `plugins/servlet/issuecrud` URL, they will see a form that allows them to input and save the API URL. The form will also display a success or error message based on the result of the form submission.
+
+Please let me know if this works for you or if there are any further adjustments needed![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
