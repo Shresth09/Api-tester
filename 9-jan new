@@ -1,289 +1,18 @@
-Great work on your Jira plugin! Now, let's extend it to allow users to set their custom API URL.
+Sure, let's implement the changes step-by-step:
 
-1. **Add a UI to Set the API URL:**
-Create a new Velocity template (e.g., `set-url.vm`) to provide a simple form where users can enter their API URL. We will then save this URL using a Jira property (or plugin setting).
+1. **Create a variable for the default URL:**
 
-```velocity
-<!-- set-url.vm -->
-<html>
-<head>
-    <title>Set API URL</title>
-</head>
-<body>
-    <form id="set-url-form">
-        <label for="api-url">API URL:</label>
-        <input type="text" id="api-url" name="api-url" required>
-        <button type="submit">Save URL</button>
-    </form>
-    
-    <script type="text/javascript">
-        AJS.$(document).ready(function() {
-            AJS.$("#set-url-form").submit(function(e) {
-                e.preventDefault();
-                var apiUrl = AJS.$("#api-url").val();
+   Let's define a default URL that the plugin will use if no URL has been set by the user.
 
-                jQuery.ajax({
-                    url: AJS.params.baseURL + "/plugins/servlet/issuecrud",
-                    type: "POST",
-                    data: { action: "saveUrl", url: apiUrl },
-                    success: function(response) {
-                        alert("URL saved successfully!");
-                    },
-                    error: function(xhr, status, error) {
-                        alert("Failed to save URL: " + error);
-                    }
-                });
-            });
-        });
-    </script>
-</body>
-</html>
-```
+2. **Always show the current URL on our page:**
 
-2. **Update the Servlet:**
-Modify your `IssueCRUD` servlet to handle the URL saving and fetching logic.
+   We will display the current URL on the page, and if no URL is provided, we will show the default URL.
 
-```java
-package com.example.plugins.tutorial.servlet;
+3. **Change the "Save" button to an "Edit" button:**
 
-import com.atlassian.sal.api.pluginsettings.PluginSettings;
-import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+   We'll ensure the page initially displays the current URL (or default URL) and provide an "Edit" button to allow users to change the URL.
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
-public class IssueCRUD extends HttpServlet {
-
-    private static final Logger log = LoggerFactory.getLogger(IssueCRUD.class);
-    private final PluginSettingsFactory pluginSettingsFactory;
-    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins.tutorial.servlet.IssueCRUD";
-
-    public IssueCRUD(PluginSettingsFactory pluginSettingsFactory) {
-        this.pluginSettingsFactory = pluginSettingsFactory;
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String action = req.getParameter("action");
-        if ("getUrl".equals(action)) {
-            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-            String apiUrl = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".apiUrl");
-            resp.setContentType("application/json");
-            resp.getWriter().write("{\"apiUrl\": \"" + apiUrl + "\"}");
-        } else {
-            resp.setContentType("text/html");
-            resp.getWriter().write("<html><body>Hello World</body></html>");
-        }
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String action = req.getParameter("action");
-        if ("saveUrl".equals(action)) {
-            String apiUrl = req.getParameter("url");
-            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-            pluginSettings.put(PLUGIN_STORAGE_KEY + ".apiUrl", apiUrl);
-            resp.getWriter().write("URL saved successfully!");
-        }
-    }
-}
-```
-
-3. **Modify Your Existing JavaScript to Fetch the Stored URL:**
-
-Update your JavaScript code in `popup.vm` to fetch the API URL dynamically from the servlet.
-
-```javascript
-AJS.$("#show-popup").click(function() {
-    console.log("Button clicked!");
-
-    jQuery.ajax({
-        url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
-        type: 'GET',
-        dataType: 'json',
-        success: function(response) {
-            console.log("API URL fetched:", response.apiUrl);
-            var apiUrl = response.apiUrl;
-
-            if (!apiUrl) {
-                AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>API URL not set.</p>");
-                AJS.dialog2("#api-modal").show();
-                return;
-            }
-
-            // Proceed with your existing logic
-            var issueKey = getIssueKey();
-            if (!issueKey) {
-                console.log("Issue key not found.");
-                AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Issue key not found.</p>");
-                AJS.dialog2("#api-modal").show();
-                return;
-            }
-
-            var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
-            console.log("Fetching data from Jira API:", jiraApiUrl);
-
-            jQuery.ajax({
-                url: jiraApiUrl,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    console.log("Jira API response received:", response);
-                    var description = response.fields.description;
-
-                    if (!description) {
-                        console.log("Description not provided in the issue.");
-                        AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Description is not provided in the issue.</p>");
-                        AJS.dialog2("#api-modal").show();
-                        return;
-                    }
-
-                    var payload = JSON.stringify({ user_story: description });
-                    console.log("Sending data to external API:", apiUrl, payload);
-
-                    AJS.$("#api-modal").show();
-                    AJS.$("#api-response").html("<pre>Loading data...</pre>");
-
-                    jQuery.ajax({
-                        url: apiUrl,
-                        type: 'POST',
-                        contentType: 'application/json',
-                        data: payload,
-                        success: function(apiResponse) {
-                            console.log("External API response received:", apiResponse);
-                            var cscore = apiResponse.NA.cscore;
-                            var messages = apiResponse.NA.message;
-
-                            var formattedData = `
-                                <p style='font-size: 1.5em;'><strong>SCORE:</strong> ${cscore}</p>
-                                <p style='font-size: 1.2em;'><strong>MESSAGE:</strong> ${messages.join("<br>")}</p>
-                            `;
-                            AJS.$("#api-response").html(formattedData);
-                            AJS.dialog2("#api-modal").show();
-                        },
-                        error: function(xhr, status, error) {
-                            console.log("Error in external API call:", status, error);
-                            AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch data. Status: " + xhr.status + ", Error: " + error + "</p>");
-                            AJS.dialog2("#api-modal").show();
-                        }
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.log("Error in Jira API call:", status, error);
-                    AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch Jira issue data. Status: " + xhr.status + ", Error: " + error + "</p>");
-                    AJS.dialog2("#api-modal").show();
-                }
-            });
-        },
-        error: function(xhr, status, error) {
-            console.log("Error fetching API URL:", status, error);
-            AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch API URL. Status: " + xhr.status + ", Error: " + error + "</p>");
-            AJS.dialog2("#api-modal").show();
-        }
-    });
-});
-```
-
-With these changes, any Jira user will be able to set the API URL via the provided form, and your plugin will dynamically use the saved URL for making API calls. Let me know if you need any further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")
-
-
-
-
-
-
-
-
-
-Got it! Let's start by modifying your servlet to load an HTML page from a Velocity template instead of displaying "Hello World". Here's how you can do that:
-
-1. **Create a Velocity Template:**
-   First, create a new Velocity template file (e.g., `issuecrud-page.vm`) in the `templates` directory. This template will be the HTML page served by the servlet.
-
-```velocity
-<!-- templates/issuecrud-page.vm -->
-<html>
-<head>
-    <title>Issue CRUD Page</title>
-</head>
-<body>
-    <h1>Welcome to the Issue CRUD Page!</h1>
-    <p>This is the content served by the servlet.</p>
-</body>
-</html>
-```
-
-2. **Modify the Servlet to Load the Velocity Template:**
-   Update your `IssueCRUD` servlet to load and display the `issuecrud-page.vm` template.
-
-```java
-package com.example.plugins.tutorial.servlet;
-
-import com.atlassian.templaterenderer.TemplateRenderer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
-public class IssueCRUD extends HttpServlet {
-
-    private static final Logger log = LoggerFactory.getLogger(IssueCRUD.class);
-    private final TemplateRenderer templateRenderer;
-
-    public IssueCRUD(TemplateRenderer templateRenderer) {
-        this.templateRenderer = templateRenderer;
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setContentType("text/html;charset=utf-8");
-        templateRenderer.render("templates/issuecrud-page.vm", resp.getWriter());
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Handle POST requests if necessary
-        resp.setContentType("text/html");
-        resp.getWriter().write("POST request handled.");
-    }
-}
-```
-
-3. **Update the Plugin Descriptor:**
-   Make sure your plugin descriptor (`atlassian-plugin.xml`) includes the `TemplateRenderer` dependency.
-
-```xml
-<servlet name="Issue CRUD" key="issue-crud" class="com.example.plugins.tutorial.servlet.IssueCRUD">
-    <description>The Issue CRUD Plugin</description>
-    <url-pattern>/plugins/servlet/issuecrud</url-pattern>
-    <param name="templateRenderer" value="templateRenderer"/>
-</servlet>
-
-<component-import key="templateRenderer" interface="com.atlassian.templaterenderer.TemplateRenderer"/>
-```
-
-These changes will ensure that when you access the URL `localhost:2990/jira/plugins/servlet/issuecrud`, the servlet will load and display the `issuecrud-page.vm` template with the content you defined. 
-
-Let me know if this works for you or if you need any further adjustments![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
-
-
-
-
-
-
-
-
-
-
-Let's replace the basic "Hello World" page with a form where users can input and save their custom API URL. We'll do this by updating the `issuecrud-page.vm` template and modifying the servlet to handle the form submission.
+Here are the changes:
 
 1. **Update the Velocity Template (`issuecrud-page.vm`):**
 
@@ -296,31 +25,48 @@ Let's replace the basic "Hello World" page with a form where users can input and
 </head>
 <body>
     <h1>Set API URL</h1>
-    <form id="set-url-form">
+
+    <!-- Display current URL -->
+    <p><strong>Current URL:</strong> <span id="current-url">Loading...</span></p>
+
+    <!-- Hidden form to edit the URL -->
+    <form id="edit-url-form" style="display: none;">
         <label for="api-url">API URL:</label>
         <input type="text" id="api-url" name="api-url" required>
         <button type="submit">Save URL</button>
     </form>
+    
+    <!-- Edit button -->
+    <button id="edit-button">Edit</button>
 
     <div id="message"></div>
 
     <script type="text/javascript">
         AJS.$(document).ready(function() {
-            // Load the current URL if it exists
+            const defaultUrl = "http://default-api-url.com"; // Default URL
+            
+            // Load the current URL or default URL if not set
             jQuery.ajax({
                 url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
                 type: 'GET',
                 dataType: 'json',
                 success: function(response) {
-                    if (response.apiUrl) {
-                        AJS.$("#api-url").val(response.apiUrl);
-                    }
+                    const apiUrl = response.apiUrl || defaultUrl;
+                    AJS.$("#current-url").text(apiUrl);
+                    AJS.$("#api-url").val(apiUrl); // Set the input field value
                 }
             });
 
-            AJS.$("#set-url-form").submit(function(e) {
+            // Show the form to edit the URL
+            AJS.$("#edit-button").click(function() {
+                AJS.$("#edit-url-form").show();
+                AJS.$(this).hide();
+            });
+
+            // Handle form submission
+            AJS.$("#edit-url-form").submit(function(e) {
                 e.preventDefault();
-                var apiUrl = AJS.$("#api-url").val();
+                const apiUrl = AJS.$("#api-url").val();
 
                 jQuery.ajax({
                     url: AJS.params.baseURL + "/plugins/servlet/issuecrud",
@@ -328,6 +74,9 @@ Let's replace the basic "Hello World" page with a form where users can input and
                     data: { action: "saveUrl", url: apiUrl },
                     success: function(response) {
                         AJS.$("#message").html("<p style='color: green;'>URL saved successfully!</p>");
+                        AJS.$("#current-url").text(apiUrl); // Update the displayed URL
+                        AJS.$("#edit-url-form").hide();
+                        AJS.$("#edit-button").show();
                     },
                     error: function(xhr, status, error) {
                         AJS.$("#message").html("<p style='color: red;'>Failed to save URL: " + error + "</p>");
@@ -340,7 +89,7 @@ Let's replace the basic "Hello World" page with a form where users can input and
 </html>
 ```
 
-2. **Modify the Servlet to Handle the Form Submission:**
+2. **Modify the Servlet to Handle the Default URL:**
 
 ```java
 package com.example.plugins.tutorial.servlet;
@@ -363,6 +112,7 @@ public class IssueCRUD extends HttpServlet {
     private final TemplateRenderer templateRenderer;
     private final PluginSettingsFactory pluginSettingsFactory;
     private static final String PLUGIN_STORAGE_KEY = "com.example.plugins.tutorial.servlet.IssueCRUD";
+    private static final String DEFAULT_API_URL = "http://default-api-url.com"; // Default URL
 
     public IssueCRUD(TemplateRenderer templateRenderer, PluginSettingsFactory pluginSettingsFactory) {
         this.templateRenderer = templateRenderer;
@@ -375,6 +125,9 @@ public class IssueCRUD extends HttpServlet {
         if ("getUrl".equals(action)) {
             PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
             String apiUrl = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".apiUrl");
+            if (apiUrl == null) {
+                apiUrl = DEFAULT_API_URL; // Use default URL if not set
+            }
             resp.setContentType("application/json");
             resp.getWriter().write("{\"apiUrl\": \"" + apiUrl + "\"}");
         } else {
@@ -412,6 +165,9 @@ Ensure your plugin descriptor correctly injects both the `TemplateRenderer` and 
 <component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
 ```
 
-These changes will ensure that when users visit the `plugins/servlet/issuecrud` URL, they will see a form that allows them to input and save the API URL. The form will also display a success or error message based on the result of the form submission.
+With these changes:
+1. The plugin will use a default URL if no URL is set by the user.
+2. The current URL will always be displayed on the page, defaulting to the default URL if no URL is set.
+3. Users can edit the URL, and the form will display the current URL in the input field when the edit button is clicked.
 
-Please let me know if this works for you or if there are any further adjustments needed![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
+Let me know if this works for you or if you need further adjustments![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
