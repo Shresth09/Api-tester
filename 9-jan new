@@ -181,7 +181,6 @@ Let me know if this resolves the issue or if you need any further adjustments![4
 
 
 
-
 <!-- templates/issuecrud-page.vm -->
 <html>
 <head>
@@ -191,8 +190,9 @@ Let me know if this resolves the issue or if you need any further adjustments![4
 <body>
     <h1>Set API URL</h1>
 
-    <!-- Display current URL -->
-    <p><strong>Current URL:</strong> <span id="current-url">Loading...</span></p>
+    <!-- Button to show current URL -->
+    <button id="show-current-url-button">Show Current URL</button>
+    <p><strong>Current URL:</strong> <span id="current-url">Click the button to display</span></p>
 
     <!-- Hidden form to edit the URL -->
     <form id="edit-url-form" style="display: none;">
@@ -221,19 +221,22 @@ Let me know if this resolves the issue or if you need any further adjustments![4
         });
 
         function initStuff() {
-            // Load the current URL from the servlet
-            jQuery.ajax({
-                url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    const apiUrl = response.apiUrl;
-                    AJS.$("#current-url").text(apiUrl);
-                    AJS.$("#api-url").val(apiUrl); // Set the input field value
-                },
-                error: function() {
-                    AJS.$("#current-url").text("Failed to load URL.");
-                }
+            // Show the current URL when the button is clicked
+            AJS.$("#show-current-url-button").click(function() {
+                // Load the current URL from the servlet
+                jQuery.ajax({
+                    url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        const apiUrl = response.apiUrl;
+                        AJS.$("#current-url").text(apiUrl);
+                        AJS.$("#api-url").val(apiUrl); // Set the input field value
+                    },
+                    error: function() {
+                        AJS.$("#current-url").text("Failed to load URL.");
+                    }
+                });
             });
 
             // Show the form to edit the URL
@@ -265,4 +268,4 @@ Let me know if this resolves the issue or if you need any further adjustments![4
         }
     </script>
 </body>
-</html>
+</html> 
