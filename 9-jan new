@@ -1,0 +1,192 @@
+Great work on your Jira plugin! Now, let's extend it to allow users to set their custom API URL.
+
+1. **Add a UI to Set the API URL:**
+Create a new Velocity template (e.g., `set-url.vm`) to provide a simple form where users can enter their API URL. We will then save this URL using a Jira property (or plugin setting).
+
+```velocity
+<!-- set-url.vm -->
+<html>
+<head>
+    <title>Set API URL</title>
+</head>
+<body>
+    <form id="set-url-form">
+        <label for="api-url">API URL:</label>
+        <input type="text" id="api-url" name="api-url" required>
+        <button type="submit">Save URL</button>
+    </form>
+    
+    <script type="text/javascript">
+        AJS.$(document).ready(function() {
+            AJS.$("#set-url-form").submit(function(e) {
+                e.preventDefault();
+                var apiUrl = AJS.$("#api-url").val();
+
+                jQuery.ajax({
+                    url: AJS.params.baseURL + "/plugins/servlet/issuecrud",
+                    type: "POST",
+                    data: { action: "saveUrl", url: apiUrl },
+                    success: function(response) {
+                        alert("URL saved successfully!");
+                    },
+                    error: function(xhr, status, error) {
+                        alert("Failed to save URL: " + error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+```
+
+2. **Update the Servlet:**
+Modify your `IssueCRUD` servlet to handle the URL saving and fetching logic.
+
+```java
+package com.example.plugins.tutorial.servlet;
+
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class IssueCRUD extends HttpServlet {
+
+    private static final Logger log = LoggerFactory.getLogger(IssueCRUD.class);
+    private final PluginSettingsFactory pluginSettingsFactory;
+    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins.tutorial.servlet.IssueCRUD";
+
+    public IssueCRUD(PluginSettingsFactory pluginSettingsFactory) {
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String action = req.getParameter("action");
+        if ("getUrl".equals(action)) {
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            String apiUrl = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".apiUrl");
+            resp.setContentType("application/json");
+            resp.getWriter().write("{\"apiUrl\": \"" + apiUrl + "\"}");
+        } else {
+            resp.setContentType("text/html");
+            resp.getWriter().write("<html><body>Hello World</body></html>");
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String action = req.getParameter("action");
+        if ("saveUrl".equals(action)) {
+            String apiUrl = req.getParameter("url");
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            pluginSettings.put(PLUGIN_STORAGE_KEY + ".apiUrl", apiUrl);
+            resp.getWriter().write("URL saved successfully!");
+        }
+    }
+}
+```
+
+3. **Modify Your Existing JavaScript to Fetch the Stored URL:**
+
+Update your JavaScript code in `popup.vm` to fetch the API URL dynamically from the servlet.
+
+```javascript
+AJS.$("#show-popup").click(function() {
+    console.log("Button clicked!");
+
+    jQuery.ajax({
+        url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            console.log("API URL fetched:", response.apiUrl);
+            var apiUrl = response.apiUrl;
+
+            if (!apiUrl) {
+                AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>API URL not set.</p>");
+                AJS.dialog2("#api-modal").show();
+                return;
+            }
+
+            // Proceed with your existing logic
+            var issueKey = getIssueKey();
+            if (!issueKey) {
+                console.log("Issue key not found.");
+                AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Issue key not found.</p>");
+                AJS.dialog2("#api-modal").show();
+                return;
+            }
+
+            var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+            console.log("Fetching data from Jira API:", jiraApiUrl);
+
+            jQuery.ajax({
+                url: jiraApiUrl,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    console.log("Jira API response received:", response);
+                    var description = response.fields.description;
+
+                    if (!description) {
+                        console.log("Description not provided in the issue.");
+                        AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Description is not provided in the issue.</p>");
+                        AJS.dialog2("#api-modal").show();
+                        return;
+                    }
+
+                    var payload = JSON.stringify({ user_story: description });
+                    console.log("Sending data to external API:", apiUrl, payload);
+
+                    AJS.$("#api-modal").show();
+                    AJS.$("#api-response").html("<pre>Loading data...</pre>");
+
+                    jQuery.ajax({
+                        url: apiUrl,
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: payload,
+                        success: function(apiResponse) {
+                            console.log("External API response received:", apiResponse);
+                            var cscore = apiResponse.NA.cscore;
+                            var messages = apiResponse.NA.message;
+
+                            var formattedData = `
+                                <p style='font-size: 1.5em;'><strong>SCORE:</strong> ${cscore}</p>
+                                <p style='font-size: 1.2em;'><strong>MESSAGE:</strong> ${messages.join("<br>")}</p>
+                            `;
+                            AJS.$("#api-response").html(formattedData);
+                            AJS.dialog2("#api-modal").show();
+                        },
+                        error: function(xhr, status, error) {
+                            console.log("Error in external API call:", status, error);
+                            AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch data. Status: " + xhr.status + ", Error: " + error + "</p>");
+                            AJS.dialog2("#api-modal").show();
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.log("Error in Jira API call:", status, error);
+                    AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch Jira issue data. Status: " + xhr.status + ", Error: " + error + "</p>");
+                    AJS.dialog2("#api-modal").show();
+                }
+            });
+        },
+        error: function(xhr, status, error) {
+            console.log("Error fetching API URL:", status, error);
+            AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch API URL. Status: " + xhr.status + ", Error: " + error + "</p>");
+            AJS.dialog2("#api-modal").show();
+        }
+    });
+});
+```
+
+With these changes, any Jira user will be able to set the API URL via the provided form, and your plugin will dynamically use the saved URL for making API calls. Let me know if you need any further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")
