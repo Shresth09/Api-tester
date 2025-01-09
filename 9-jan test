@@ -243,4 +243,65 @@ public class IssueCRUD extends HttpServlet {
             initStuff();
         });
     });
-</script> 
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+New new new 
+New new new 
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch and Display URL</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Fetch and Display URL</h2>
+        <button onclick="fetchUrl()">Fetch URL</button>
+        <div class="response-group">
+            <h3>Response</h3>
+            <div class="response-body">
+                <strong>Response Body:</strong>
+                <pre id="responseBody"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function fetchUrl() {
+            const apiUrl = `${window.location.origin}/jira/plugins/servlet/issuecrud?action=getUrl`;
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('responseBody').textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    document.getElementById('responseBody').textContent = `Error: ${error}`;
+                });
+        }
+
+        // Automatically fetch the URL when the page loads
+        document.addEventListener("DOMContentLoaded", fetchUrl);
+    </script>
+</body>
+</html> 
