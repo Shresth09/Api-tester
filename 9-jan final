@@ -5,24 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fetch and Update URL</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Correct URL for Jira AUI CSS -->
-    <link rel="stylesheet" href="${contextPath}/download/resources/com.atlassian.auiplugin:ajs/css/aui.min.css" media="all">
 </head>
 <body>
-    <div class="aui-page-panel">
-        <div class="aui-page-panel-inner">
-            <section class="aui-page-panel-content">
-                <h2 class="aui-page-header">Fetch and Update URL</h2>
-                <div class="aui-message aui-message-info">
-                    <p><strong>Current URL:</strong> <pre id="currentUrl">Loading...</pre></p>
-                </div>
-
-                <!-- Input to update the URL -->
-                <div class="aui-group">
-                    <input type="text" id="newUrl" class="text medium-field" placeholder="Enter new API URL">
-                    <button class="aui-button aui-button-primary" onclick="updateUrl()">Update URL</button>
-                </div>
-            </section>
+    <div class="container">
+        <h2>Fetch and Update URL</h2>
+        <div class="response-group">
+            <h3>Response</h3>
+            <div class="response-body">
+                <strong>Current URL:</strong>
+                <pre id="currentUrl">Loading...</pre>
+            </div>
+        </div>
+        
+        <!-- Input to update the URL -->
+        <div class="update-group">
+            <input type="text" id="newUrl" placeholder="Enter new API URL">
+            <button onclick="updateUrl()">Update URL</button>
         </div>
     </div>
 
