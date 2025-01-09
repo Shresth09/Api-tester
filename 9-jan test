@@ -95,3 +95,88 @@ public class IssueCRUD extends HttpServlet {
         });
     });
 </script>
+
+
+
+
+
+
+
+
+===#=#=#==#=#=@==@++#+#+#+#+=#=#=#
+=#=#==#=#=#=#+#+#+#=+#+#+#+#+#++#+#+#=
+
+
+package com.example.plugins.tutorial.servlet;
+
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import com.atlassian.templaterenderer.TemplateRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class IssueCRUD extends HttpServlet {
+
+    private static final Logger log = LoggerFactory.getLogger(IssueCRUD.class);
+    private final TemplateRenderer templateRenderer;
+    private final PluginSettingsFactory pluginSettingsFactory;
+    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins.tutorial.servlet.IssueCRUD";
+    private static final String DEFAULT_API_URL = "http://default-api-url.com"; // Default URL
+
+    public IssueCRUD(TemplateRenderer templateRenderer, PluginSettingsFactory pluginSettingsFactory) {
+        this.templateRenderer = templateRenderer;
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Add CORS headers
+        resp.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
+        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Allow GET, POST, and OPTIONS methods
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type"); // Allow Content-Type header
+
+        String action = req.getParameter("action");
+        if ("getUrl".equals(action)) {
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            String apiUrl = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".apiUrl");
+            if (apiUrl == null) {
+                apiUrl = DEFAULT_API_URL; // Use default URL if not set
+            }
+            resp.setContentType("application/json");
+            resp.getWriter().write("{\"apiUrl\": \"" + apiUrl + "\"}");
+        } else {
+            resp.setContentType("text/html;charset=utf-8");
+            templateRenderer.render("templates/issuecrud-page.vm", resp.getWriter());
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Add CORS headers
+        resp.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
+        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Allow GET, POST, and OPTIONS methods
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type"); // Allow Content-Type header
+
+        String action = req.getParameter("action");
+        if ("saveUrl".equals(action)) {
+            String apiUrl = req.getParameter("url");
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            pluginSettings.put(PLUGIN_STORAGE_KEY + ".apiUrl", apiUrl);
+            resp.getWriter().write("URL saved successfully!");
+        }
+    }
+
+    @Override
+    protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Add CORS headers for OPTIONS requests
+        resp.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
+        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Allow GET, POST, and OPTIONS methods
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type"); // Allow Content-Type header
+    }
+} 
