@@ -195,67 +195,48 @@ Please test this and let me know if it works as expected! If not, we can continu
         function initStuff() {
             console.log("Initializing Stuff...");
 
-            // Ensure event listeners are attached only once
-            if (AJS.$("#set-url-form").length && !AJS.$("#set-url-form").data('events-attached')) {
-                console.log("Attaching event listeners...");
+            // Event listener for form submission
+            AJS.$("#set-url-form").submit(function(e) {
+                e.preventDefault();
+                var apiUrl = AJS.$("#api-url").val();
+                console.log("Saving URL:", apiUrl);
 
-                AJS.$("#set-url-form").submit(function(e) {
-                    e.preventDefault();
-                    var apiUrl = AJS.$("#api-url").val();
-                    console.log("Saving URL:", apiUrl);
-
-                    jQuery.ajax({
-                        url: AJS.params.baseURL + "/plugins/servlet/issuecrud",
-                        type: "POST",
-                        data: { action: "saveUrl", url: apiUrl },
-                        success: function(response) {
-                            console.log("URL saved successfully");
-                            AJS.$("#message").html("<p style='color: green;'>URL saved successfully!</p>");
-                            
-                            // Fetch and display the current URL
-                            jQuery.ajax({
-                                url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
-                                type: 'GET',
-                                dataType: 'json',
-                                success: function(response) {
-                                    const currentUrl = response.apiUrl;
-                                    console.log("Current URL fetched:", currentUrl);
-                                    AJS.$("#message").append("<p>Current URL is: " + currentUrl + "</p>");
-                                },
-                                error: function() {
-                                    console.log("Failed to fetch the current URL");
-                                    AJS.$("#message").append("<p>Failed to fetch the current URL.</p>");
-                                }
-                            });
-                        },
-                        error: function(xhr, status, error) {
-                            console.log("Failed to save URL:", error);
-                            AJS.$("#message").html("<p style='color: red;'>Failed to save URL: " + error + "</p>");
-                        }
-                    });
+                // AJAX call to save the URL
+                jQuery.ajax({
+                    url: AJS.params.baseURL + "/plugins/servlet/issuecrud",
+                    type: "POST",
+                    data: { action: "saveUrl", url: apiUrl },
+                    success: function(response) {
+                        console.log("URL saved successfully");
+                        AJS.$("#message").html("<p style='color: green;'>URL saved successfully!</p>");
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("Failed to save URL:", error);
+                        AJS.$("#message").html("<p style='color: red;'>Failed to save URL: " + error + "</p>");
+                    }
                 });
+            });
 
-                // Show the current URL when the button is clicked
-                AJS.$("#show-current-url-button").click(function() {
-                    console.log("Show Current URL button clicked");
-                    jQuery.ajax({
-                        url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
-                        type: 'GET',
-                        dataType: 'json',
-                        success: function(response) {
-                            const apiUrl = response.apiUrl;
-                            console.log("Current URL fetched:", apiUrl);
-                            AJS.$("#current-url").text(apiUrl);
-                        },
-                        error: function() {
-                            console.log("Failed to load URL");
-                            AJS.$("#current-url").text("Failed to load URL.");
-                        }
-                    });
+            // Event listener for showing current URL
+            AJS.$("#show-current-url-button").click(function() {
+                console.log("Show Current URL button clicked");
+                
+                // AJAX call to fetch the current URL
+                jQuery.ajax({
+                    url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        const apiUrl = response.apiUrl;
+                        console.log("Current URL fetched:", apiUrl);
+                        AJS.$("#current-url").text(apiUrl);
+                    },
+                    error: function() {
+                        console.log("Failed to load URL");
+                        AJS.$("#current-url").text("Failed to load URL.");
+                    }
                 });
-
-                AJS.$("#set-url-form").data('events-attached', true);
-            }
+            });
         }
 
         if (typeof jQuery != "undefined") {
@@ -272,4 +253,4 @@ Please test this and let me know if it works as expected! If not, we can continu
         });
     </script>
 </body>
-</html>
+</html> 
