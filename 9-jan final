@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fetch and Update URL</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" href="${contextPath}/s/2.0.1/_/download/batch/com.atlassian.auiplugin:ajs/css/aui.min.css" media="all">
+    <!-- Correct URL for Jira AUI CSS -->
+    <link rel="stylesheet" href="${contextPath}/download/resources/com.atlassian.auiplugin:ajs/css/aui.min.css" media="all">
 </head>
 <body>
     <div class="aui-page-panel">
