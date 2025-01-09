@@ -190,3 +190,86 @@ AJS.$("#show-popup").click(function() {
 ```
 
 With these changes, any Jira user will be able to set the API URL via the provided form, and your plugin will dynamically use the saved URL for making API calls. Let me know if you need any further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")
+
+
+
+
+
+
+
+
+
+Got it! Let's start by modifying your servlet to load an HTML page from a Velocity template instead of displaying "Hello World". Here's how you can do that:
+
+1. **Create a Velocity Template:**
+   First, create a new Velocity template file (e.g., `issuecrud-page.vm`) in the `templates` directory. This template will be the HTML page served by the servlet.
+
+```velocity
+<!-- templates/issuecrud-page.vm -->
+<html>
+<head>
+    <title>Issue CRUD Page</title>
+</head>
+<body>
+    <h1>Welcome to the Issue CRUD Page!</h1>
+    <p>This is the content served by the servlet.</p>
+</body>
+</html>
+```
+
+2. **Modify the Servlet to Load the Velocity Template:**
+   Update your `IssueCRUD` servlet to load and display the `issuecrud-page.vm` template.
+
+```java
+package com.example.plugins.tutorial.servlet;
+
+import com.atlassian.templaterenderer.TemplateRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class IssueCRUD extends HttpServlet {
+
+    private static final Logger log = LoggerFactory.getLogger(IssueCRUD.class);
+    private final TemplateRenderer templateRenderer;
+
+    public IssueCRUD(TemplateRenderer templateRenderer) {
+        this.templateRenderer = templateRenderer;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("text/html;charset=utf-8");
+        templateRenderer.render("templates/issuecrud-page.vm", resp.getWriter());
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Handle POST requests if necessary
+        resp.setContentType("text/html");
+        resp.getWriter().write("POST request handled.");
+    }
+}
+```
+
+3. **Update the Plugin Descriptor:**
+   Make sure your plugin descriptor (`atlassian-plugin.xml`) includes the `TemplateRenderer` dependency.
+
+```xml
+<servlet name="Issue CRUD" key="issue-crud" class="com.example.plugins.tutorial.servlet.IssueCRUD">
+    <description>The Issue CRUD Plugin</description>
+    <url-pattern>/plugins/servlet/issuecrud</url-pattern>
+    <param name="templateRenderer" value="templateRenderer"/>
+</servlet>
+
+<component-import key="templateRenderer" interface="com.atlassian.templaterenderer.TemplateRenderer"/>
+```
+
+These changes will ensure that when you access the URL `localhost:2990/jira/plugins/servlet/issuecrud`, the servlet will load and display the `issuecrud-page.vm` template with the content you defined. 
+
+Let me know if this works for you or if you need any further adjustments![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
