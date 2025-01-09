@@ -179,4 +179,45 @@ public class IssueCRUD extends HttpServlet {
         resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Allow GET, POST, and OPTIONS methods
         resp.setHeader("Access-Control-Allow-Headers", "Content-Type"); // Allow Content-Type header
     }
-} 
+}
+
+
+
+
+
+
+
+
+
+<!-- templates/issuecrud-page.vm -->
+<html>
+<head>
+    <title>Fetch and Display URL</title>
+    <script src="${contextPath}/s/2.0.1/_/download/batch/com.atlassian.auiplugin:ajs/js/aui/aui.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Fetch and Display URL</h1>
+    <p><strong>Current URL:</strong> <span id="current-url">Loading...</span></p>
+</body>
+</html>
+
+<script type="module">
+    AJS.toInit(function() {
+        console.log("Document ready, fetching URL...");
+        jQuery.ajax({
+            url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl",
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                const apiUrl = response.apiUrl;
+                console.log("Fetched URL:", apiUrl);
+                AJS.$("#current-url").text(apiUrl);
+            },
+            error: function() {
+                console.log("Failed to fetch URL");
+                AJS.$("#current-url").text("Failed to load URL.");
+            }
+        });
+    });
+</script>
