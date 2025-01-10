@@ -81,7 +81,7 @@ Add the AUI modal dialog to your HTML template and attach the click event.
         <div id="url-config-dialog" class="aui-dialog2 aui-dialog2-medium" role="dialog">
             <header class="aui-dialog2-header">
                 <h2 class="aui-dialog2-header-main">AI-RQM URL Configuration</h2>
-                <a class="aui-dialog2-header-close">
+                <a class="aui-dialog2-header-close" href="#">
                     <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
                 </a>
             </header>
