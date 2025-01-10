@@ -43,6 +43,11 @@
         .aui-button.aui-button-primary:hover {
             background-color: #003d99;
         }
+        .url-link {
+            color: #0052cc;
+            text-decoration: underline;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -51,7 +56,7 @@
             <h2>AI-RQM URL Configuration</h2>
         </div>
         <strong>Current URL:</strong>
-        <pre id="currentUrl">Loading...</pre>
+        <pre id="currentUrl" class="url-link">Loading...</pre>
         
         <!-- Input to update the URL -->
         <div class="update-group">
@@ -77,11 +82,13 @@
                 return response.json();
             })
             .then(data => {
-                document.getElementById('currentUrl').textContent = `Current URL: ${data.apiUrl}`;
+                document.getElementById('currentUrl').textContent = data.apiUrl;
+                document.getElementById('currentUrl').className = "url-link"; // Apply the link style
                 document.getElementById('newUrl').value = data.apiUrl;
             })
             .catch(error => {
                 document.getElementById('currentUrl').textContent = `Error: ${error}`;
+                document.getElementById('currentUrl').className = ""; // Remove link style
             });
         }
 
@@ -107,12 +114,15 @@
             })
             .then(data => {
                 console.log("Response data:", data);
-                document.getElementById('currentUrl').textContent = `Current URL: ${newUrl}`;
+                document.getElementById('currentUrl').textContent = newUrl;
+                document.getElementById('currentUrl').className = "url-link"; // Apply the link style
                 document.getElementById('newUrl').value = newUrl;
                 alert('URL updated successfully!');
             })
             .catch(error => {
                 console.log("Error occurred:", error);
+                document.getElementById('currentUrl').textContent = `Error: ${error}`;
+                document.getElementById('currentUrl').className = ""; // Remove link style
                 alert(`Error: ${error}`);
             });
         }
