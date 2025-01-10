@@ -190,3 +190,66 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            padding: 20px;
+        }
+        .url-link {
+            color: #0052cc;
+            text-decoration: underline;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Popup Configuration</h2>
+        <button id="fetch-data-btn">Fetch Data</button>
+        <div id="api-response"><pre>Loading data...</pre></div>
+    </div>
+
+    <script>
+        var apiUrl = '';
+
+        function fetchApiUrl() {
+            const urlEndpoint = '/jira/plugins/servlet/issuecrud?action=getUrl';
+
+            jQuery.ajax({
+                url: urlEndpoint,
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                success: function(response) {
+                    apiUrl = response.apiUrl;
+                    console.log("Fetched URL from servlet:", apiUrl);
+                    // You can now use apiUrl wherever needed
+                },
+                error: function(xhr, status, error) {
+                    console.log("Error fetching URL from servlet:", status, error);
+                }
+            });
+        }
+
+        // Call fetchApiUrl to fetch and store the URL in apiUrl
+        fetchApiUrl();
+    </script>
+</body>
+</html>
