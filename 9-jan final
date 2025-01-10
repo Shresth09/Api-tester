@@ -1,3 +1,37 @@
+I see. Using `#` as the link URL in the web item can indeed cause issues because the browser interprets it as an internal reference, leading to an unintended behavior or no action at all.
+
+Let's adjust our approach to ensure we trigger the modal dialog correctly without encountering the "Request header is too large" error.
+
+### Steps to Implement a Modal Dialog Correctly:
+
+1. **Create a Web Item with a Distinct Link:**
+   - Use a proper link that triggers JavaScript to open the modal.
+   
+2. **Ensure the Link Triggers the Modal:**
+   - Use an identifiable selector to attach the click event for opening the modal.
+
+### Example Implementation
+
+#### Step 1: Define the Web Item with a JavaScript Function Call
+
+Modify the web item to call a JavaScript function.
+
+```xml
+<web-section name="User License Helper" key="ai-rqm-config-websection-key" location="admin_applications_section" weight="1000">
+    <label key="URL-CONFIGURATION" />
+</web-section>
+
+<web-item name="Configuration" key="configuration" section="admin_applications_section/ai-rqm-config-websection-key" weight="1000">
+    <label key="Configure-RQM-URL"/>
+    <link linkId="configuration-link">javascript:void(0);</link>
+</web-item>
+```
+
+#### Step 2: Define the Modal in Your HTML Template
+
+Add the AUI modal dialog to your HTML template and attach the click event.
+
+```velocity
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +39,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fetch and Update URL</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" href="${contextPath}/s/2.0.1/_/download/batch/com.atlassian.auiplugin:ajs/css/aui.min.css" media="all">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .aui-page-header-main {
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        .text.medium-long-field {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .aui-button.aui-button-primary {
+            background-color: #0052cc;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .aui-button.aui-button-primary:hover {
+            background-color: #003d99;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -39,8 +111,7 @@
                 fetch(apiUrl, {
                     method: 'GET',
                     headers: {
-                        'Referer': window.location.href,
-                        'Content-Type': 'application/json'
+                        'Referer': window.location.href
                     }
                 })
                 .then(response => {
@@ -66,10 +137,7 @@
                 console.log("Request URL:", apiUrl);
 
                 fetch(apiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Referer': window.location.href
-                    }
+                    method: 'GET'
                 })
                 .then(response => {
                     console.log("Response status:", response.status);
@@ -95,13 +163,13 @@
             document.addEventListener("DOMContentLoaded", fetchUrl);
 
             // Open the dialog when the web item is clicked
-            AJS.$("#configuration-link").click(function(e) {
+            AJS.$(document).on('click', '#configuration-link', function(e) {
                 e.preventDefault();
                 AJS.dialog2("#url-config-dialog").show();
             });
 
             // Close the dialog when the cancel button is clicked
-            AJS.$("#cancel-button").click(function(e) {
+            AJS.$(document).on('click', '#cancel-button', function(e) {
                 e.preventDefault();
                 AJS.dialog2("#url-config-dialog").hide();
             });
@@ -109,3 +177,14 @@
     </div>
 </body>
 </html>
+```
+
+### Explanation:
+1. **Web Item Trigger:**
+   - Updated the web item link to use `javascript:void(0);` to prevent default behavior and trigger JavaScript instead.
+
+2. **JavaScript:**
+   - Attached click events to open and close the modal dialog.
+   - Ensured minimal request headers to avoid "Request header is too large" error.
+
+These changes should ensure the modal dialog opens correctly without causing header issues. Let me know if this resolves the problem or if further adjustments are needed![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
