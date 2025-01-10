@@ -5,29 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fetch and Update URL</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .aui-page-header-main {
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        .text.medium-long-field {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .aui-button.aui-button-primary {
+            background-color: #0052cc;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .aui-button.aui-button-primary:hover {
+            background-color: #003d99;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h2>Fetch and Update URL</h2>
-        <div class="response-group">
-            <h3>Response</h3>
-            <div class="response-body">
-                <strong>Current URL:</strong>
-                <pre id="currentUrl">Loading...</pre>
-            </div>
+        <div class="aui-page-header-main">
+            <h2>AI-RQM URL Configuration</h2>
         </div>
+        <strong>Current URL:</strong>
+        <pre id="currentUrl">Loading...</pre>
         
         <!-- Input to update the URL -->
         <div class="update-group">
-            <input type="text" id="newUrl" placeholder="Enter new API URL">
-            <button onclick="updateUrl()">Update URL</button>
+            <input type="text" id="newUrl" class="text medium-long-field" placeholder="Enter new API URL">
+            <button onclick="updateUrl()" class="aui-button aui-button-primary">Update URL</button>
         </div>
     </div>
 
     <script>
         function fetchUrl() {
             const apiUrl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
-
             fetch(apiUrl, {
                 method: 'GET',
                 headers: {
@@ -43,7 +78,7 @@
             })
             .then(data => {
                 document.getElementById('currentUrl').textContent = `Current URL: ${data.apiUrl}`;
-                document.getElementById('newUrl').value = data.apiUrl; // Maintain the updated URL in the input field
+                document.getElementById('newUrl').value = data.apiUrl;
             })
             .catch(error => {
                 document.getElementById('currentUrl').textContent = `Error: ${error}`;
@@ -73,7 +108,7 @@
             .then(data => {
                 console.log("Response data:", data);
                 document.getElementById('currentUrl').textContent = `Current URL: ${newUrl}`;
-                document.getElementById('newUrl').value = newUrl; // Maintain the updated URL in the input field
+                document.getElementById('newUrl').value = newUrl;
                 alert('URL updated successfully!');
             })
             .catch(error => {
