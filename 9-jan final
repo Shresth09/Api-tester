@@ -1,20 +1,16 @@
-I see. Using `#` as the link URL in the web item can indeed cause issues because the browser interprets it as an internal reference, leading to an unintended behavior or no action at all.
+I see. It seems like the web item is still treating the link as a regular URL and redirecting to it, causing the 404 error. Let's fix that by making sure the JavaScript function is properly called to open the modal dialog without redirecting.
 
-Let's adjust our approach to ensure we trigger the modal dialog correctly without encountering the "Request header is too large" error.
+### Correct Implementation:
 
-### Steps to Implement a Modal Dialog Correctly:
+1. **Add Click Event Handling:**
+   - Use a click event handler to open the modal dialog.
 
-1. **Create a Web Item with a Distinct Link:**
-   - Use a proper link that triggers JavaScript to open the modal.
-   
-2. **Ensure the Link Triggers the Modal:**
-   - Use an identifiable selector to attach the click event for opening the modal.
+2. **Ensure Proper Link Structure:**
+   - Make sure the link structure is correct and doesn't cause redirection.
 
-### Example Implementation
+#### Step 1: Define the Web Item
 
-#### Step 1: Define the Web Item with a JavaScript Function Call
-
-Modify the web item to call a JavaScript function.
+Ensure your web item correctly triggers the JavaScript function.
 
 ```xml
 <web-section name="User License Helper" key="ai-rqm-config-websection-key" location="admin_applications_section" weight="1000">
@@ -23,7 +19,7 @@ Modify the web item to call a JavaScript function.
 
 <web-item name="Configuration" key="configuration" section="admin_applications_section/ai-rqm-config-websection-key" weight="1000">
     <label key="Configure-RQM-URL"/>
-    <link linkId="configuration-link">javascript:void(0);</link>
+    <link linkId="configuration-link" href="#">Configure</link>
 </web-item>
 ```
 
@@ -109,10 +105,7 @@ Add the AUI modal dialog to your HTML template and attach the click event.
             function fetchUrl() {
                 const apiUrl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
                 fetch(apiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Referer': window.location.href
-                    }
+                    method: 'GET'
                 })
                 .then(response => {
                     if (!response.ok) {
@@ -180,11 +173,10 @@ Add the AUI modal dialog to your HTML template and attach the click event.
 ```
 
 ### Explanation:
-1. **Web Item Trigger:**
-   - Updated the web item link to use `javascript:void(0);` to prevent default behavior and trigger JavaScript instead.
+1. **Web Item Link:**
+   - Changed the link in the web item to `href="#"` to prevent redirection and trigger JavaScript instead.
+   
+2. **JavaScript Click Event:**
+   - Used `e.preventDefault()` to prevent the default behavior and ensure the modal opens without redirecting.
 
-2. **JavaScript:**
-   - Attached click events to open and close the modal dialog.
-   - Ensured minimal request headers to avoid "Request header is too large" error.
-
-These changes should ensure the modal dialog opens correctly without causing header issues. Let me know if this resolves the problem or if further adjustments are needed![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
+These changes should ensure the modal dialog opens correctly without redirecting to an invalid URL. Let me know if this resolves the problem or if further adjustments are needed![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
