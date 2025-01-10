@@ -1,33 +1,3 @@
-I see. It seems like the web item is still treating the link as a regular URL and redirecting to it, causing the 404 error. Let's fix that by making sure the JavaScript function is properly called to open the modal dialog without redirecting.
-
-### Correct Implementation:
-
-1. **Add Click Event Handling:**
-   - Use a click event handler to open the modal dialog.
-
-2. **Ensure Proper Link Structure:**
-   - Make sure the link structure is correct and doesn't cause redirection.
-
-#### Step 1: Define the Web Item
-
-Ensure your web item correctly triggers the JavaScript function.
-
-```xml
-<web-section name="User License Helper" key="ai-rqm-config-websection-key" location="admin_applications_section" weight="1000">
-    <label key="URL-CONFIGURATION" />
-</web-section>
-
-<web-item name="Configuration" key="configuration" section="admin_applications_section/ai-rqm-config-websection-key" weight="1000">
-    <label key="Configure-RQM-URL"/>
-    <link linkId="configuration-link" href="#">Configure</link>
-</web-item>
-```
-
-#### Step 2: Define the Modal in Your HTML Template
-
-Add the AUI modal dialog to your HTML template and attach the click event.
-
-```velocity
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,8 +13,8 @@ Add the AUI modal dialog to your HTML template and attach the click event.
             background-color: #f4f4f4;
         }
         .container {
-            max-width: 600px;
-            margin: 0 auto;
+            max-width: 100%;
+            margin: 0;
             padding: 20px;
             background-color: #fff;
             border-radius: 5px;
@@ -77,106 +47,78 @@ Add the AUI modal dialog to your HTML template and attach the click event.
 </head>
 <body>
     <div class="container">
-        <!-- Modal Dialog -->
-        <div id="url-config-dialog" class="aui-dialog2 aui-dialog2-medium" role="dialog">
-            <header class="aui-dialog2-header">
-                <h2 class="aui-dialog2-header-main">AI-RQM URL Configuration</h2>
-                <a class="aui-dialog2-header-close" href="#">
-                    <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-                </a>
-            </header>
-            <div class="aui-dialog2-content">
-                <div class="aui-message aui-message-info">
-                    <p><strong>Current URL:</strong> <pre id="currentUrl">Loading...</pre></p>
-                </div>
-                <div class="update-group">
-                    <input type="text" id="newUrl" class="text medium-long-field" placeholder="Enter new API URL">
-                </div>
-            </div>
-            <footer class="aui-dialog2-footer">
-                <div class="aui-dialog2-footer-actions">
-                    <button class="aui-button aui-button-primary" onclick="updateUrl()">Update URL</button>
-                    <button class="aui-button aui-button-link" id="cancel-button">Cancel</button>
-                </div>
-            </footer>
+        <div class="aui-page-header-main">
+            <h2>AI-RQM URL Configuration</h2>
         </div>
-
-        <script>
-            function fetchUrl() {
-                const apiUrl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
-                fetch(apiUrl, {
-                    method: 'GET'
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    document.getElementById('currentUrl').textContent = `Current URL: ${data.apiUrl}`;
-                    document.getElementById('newUrl').value = data.apiUrl;
-                })
-                .catch(error => {
-                    document.getElementById('currentUrl').textContent = `Error: ${error}`;
-                });
-            }
-
-            function updateUrl() {
-                const newUrl = document.getElementById('newUrl').value;
-                const apiUrl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=updateUrl&url=" + newUrl;
-
-                console.log("Updating URL:", newUrl);
-                console.log("Request URL:", apiUrl);
-
-                fetch(apiUrl, {
-                    method: 'GET'
-                })
-                .then(response => {
-                    console.log("Response status:", response.status);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                    console.log("Response data:", data);
-                    document.getElementById('currentUrl').textContent = `Current URL: ${newUrl}`;
-                    document.getElementById('newUrl').value = newUrl;
-                    alert('URL updated successfully!');
-                    AJS.dialog2("#url-config-dialog").hide(); // Close the dialog
-                })
-                .catch(error => {
-                    console.log("Error occurred:", error);
-                    alert(`Error: ${error}`);
-                });
-            }
-
-            // Automatically fetch the URL when the page loads
-            document.addEventListener("DOMContentLoaded", fetchUrl);
-
-            // Open the dialog when the web item is clicked
-            AJS.$(document).on('click', '#configuration-link', function(e) {
-                e.preventDefault();
-                AJS.dialog2("#url-config-dialog").show();
-            });
-
-            // Close the dialog when the cancel button is clicked
-            AJS.$(document).on('click', '#cancel-button', function(e) {
-                e.preventDefault();
-                AJS.dialog2("#url-config-dialog").hide();
-            });
-        </script>
+        <strong>Current URL:</strong>
+        <pre id="currentUrl">Loading...</pre>
+        
+        <!-- Input to update the URL -->
+        <div class="update-group">
+            <input type="text" id="newUrl" class="text medium-long-field" placeholder="Enter new API URL">
+            <button onclick="updateUrl()" class="aui-button aui-button-primary">Update URL</button>
+        </div>
     </div>
+
+    <script>
+        function fetchUrl() {
+            const apiUrl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Referer': window.location.href,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('currentUrl').textContent = `Current URL: ${data.apiUrl}`;
+                document.getElementById('newUrl').value = data.apiUrl;
+            })
+            .catch(error => {
+                document.getElementById('currentUrl').textContent = `Error: ${error}`;
+            });
+        }
+
+        function updateUrl() {
+            const newUrl = document.getElementById('newUrl').value;
+            const apiUrl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=updateUrl&url=" + newUrl;
+
+            console.log("Updating URL:", newUrl);
+            console.log("Request URL:", apiUrl);
+
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Referer': window.location.href
+                }
+            })
+            .then(response => {
+                console.log("Response status:", response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                console.log("Response data:", data);
+                document.getElementById('currentUrl').textContent = `Current URL: ${newUrl}`;
+                document.getElementById('newUrl').value = newUrl;
+                alert('URL updated successfully!');
+            })
+            .catch(error => {
+                console.log("Error occurred:", error);
+                alert(`Error: ${error}`);
+            });
+        }
+
+        // Automatically fetch the URL when the page loads
+        document.addEventListener("DOMContentLoaded", fetchUrl);
+    </script>
 </body>
 </html>
-```
-
-### Explanation:
-1. **Web Item Link:**
-   - Changed the link in the web item to `href="#"` to prevent redirection and trigger JavaScript instead.
-   
-2. **JavaScript Click Event:**
-   - Used `e.preventDefault()` to prevent the default behavior and ensure the modal opens without redirecting.
-
-These changes should ensure the modal dialog opens correctly without redirecting to an invalid URL. Let me know if this resolves the problem or if further adjustments are needed![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
