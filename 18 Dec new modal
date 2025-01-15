@@ -1,6 +1,6 @@
 #set($allowedProjectKeys = ["GCJDT", "LT", "NEW"])
 #if ($allowedProjectKeys.contains($project.key))
-<a id="show-popup" class="aui-button ">AI-ROM Analysis</a>
+<a id="show-popup" class="aui-button">AI-ROM Analysis</a>
 
 <!-- Modal Structure -->
 <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
@@ -22,186 +22,193 @@
 
 <script type="module">
 AJS.toInit(function() {
-    jQuery(document).ready(function() {
-        initStuff();
-    });
-
-    initStuff();
-
-    JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function(event, context, reason) {
-        if (reason === 'issue-created') {
-            console.log("New issue created, showing popup...");
-
-            // Show the popup and fetch data as you would on button click
-            var issueKey = getIssueKey();
-            if (!issueKey) {
-                console.log("Issue key not found.");
-                AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Issue key not found.</p>");
-                AJS.dialog2("#api-modal").show();
-                return;
-            }
-
-            var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
-            console.log("Fetching data from Jira API:", jiraApiUrl);
-
-            jQuery.ajax({
-                url: jiraApiUrl,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    console.log("Jira API response received:", response);
-                    var description = response.fields.description;
-                    if (!description) {
-                        console.log("Description not provided in the issue.");
-                        AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Description is not provided in the issue.</p>");
-                        AJS.dialog2("#api-modal").show();
-                        return;
-                    }
-
-                    var servletApiUrl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl";
-                    console.log("Fetching data from SERVLET API:", servletApiUrl);
-
-                    jQuery.ajax({
-                        url: servletApiUrl,
-                        type: 'GET',
-                        contentType: 'application/json',
-                        success: function(response) {
-                            var serverApiUrl = response.apiUrl;
-                            console.log("Fetched URL from servlet:", serverApiUrl);
-
-                            var payload = JSON.stringify({ user_story: description });
-                            var apiUrl = serverApiUrl;
-                            console.log("Sending data to external API:", apiUrl, payload);
-
-                            AJS.$("#api-modal").show();
-                            AJS.$("#api-response").html("<pre>Loading data...</pre>");
-
-                            jQuery.ajax({
-                                url: apiUrl,
-                                type: "POST",
-                                contentType: 'application/json',
-                                data: payload,
-                                success: function(apiResponse) {
-                                    console.log("External API response received:", apiResponse);
-                                    var cscore = apiResponse.NA.cscore;
-                                    var messages = apiResponse.NA.message;
-                                    var formattedData = "<p style='font-size: 1.2em;'><strong>SCORE:</strong> " + cscore + "</p>"
-                                        + "<p style='font-size: 1.2em;'><strong>MESSAGE:</strong> " + messages.join("<br>") + "</p>";
-                                    AJS.$("#api-response").html(formattedData);
-                                    AJS.dialog2("#api-modal").show();
-                                },
-                                error: function(xhr, status, error) {
-                                    console.log("Error in external API call:", status, error);
-                                    AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch data. Verify the ROM URL in Configuration. Status:" + xhr.status + ", Error: " + error + "</p>");
-                                    AJS.dialog2("#api-modal").show();
-                                }
-                            });
-                        },
-                        error: function(xhr, status, error) {
-                            console.log("Error in servlet API call:", status, error);
-                            AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch ROM API from servlet. Status:" + xhr.status + ", Error: " + error + "</p>");
-                            AJS.dialog2("#api-modal").show();
-                        }
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.log("Error in Jira API call:", status, error);
-                    AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch Jira issue data. Status:" + xhr.status + ", Error: " + error + "</p>");
-                    AJS.dialog2("#api-modal").show();
+    function initStuff() {
+        if (AJS.$("#show-popup").length && !AJS.$("#show-popup").data('events-attached')) {
+            // Function to extract the issue key
+            function getIssueKey() {
+                console.log("Extracting issue key...");
+                var url = window.location.href;
+                var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
+                var match = url.match(issueKeyPattern);
+                if (match) {
+                    return match[1];
                 }
-            });
-        }
-    });
-});
-</script>
 
-<script type="text/javascript">
-function initStuff() {
-    if (AJS.$("#show-popup").length && !AJS.$("#show-popup").data('events-attached')) {
-        // Function to extract the issue key
-        function getIssueKey() {
-            console.log("Extracting issue key...");
-            var url = window.location.href;
-            var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
-            var match = url.match(issueKeyPattern);
-            if (match) {
-                return match[1];
+                var issueKeyElement = AJS.$("#key-val");
+                if (issueKeyElement.length) {
+                    return issueKeyElement.text().trim();
+                }
+
+                var selectedIssueKey = AJS.$(".selected-issue-key").text();
+                if (selectedIssueKey) {
+                    return selectedIssueKey.trim();
+                }
+
+                return null;
             }
 
-            var issueKeyElement = AJS.$("#key-val");
-            if (issueKeyElement.length) {
-                return issueKeyElement.text().trim();
-            }
+            // Show the modal and fetch API data on button click
+            AJS.$("#show-popup").click(function() {
+                console.log("Button clicked!");
+                var issueKey = getIssueKey();
+                if (!issueKey) {
+                    console.log("Issue key not found.");
+                    AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Issue key not found.</p>");
+                    AJS.dialog2("#api-modal").show();
+                    return;
+                }
 
-            var selectedIssueKey = AJS.$(".selected-issue-key").text();
-            if (selectedIssueKey) {
-                return selectedIssueKey.trim();
-            }
+                var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+                console.log("Fetching data from Jira API:", jiraApiUrl);
 
-            return null;
-        }
+                jQuery.ajax({
+                    url: jiraApiUrl,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        console.log("Jira API response received:", response);
+                        var description = response.fields.description;
+                        if (!description) {
+                            console.log("Description not provided in the issue.");
+                            AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Description is not provided in the issue.</p>");
+                            AJS.dialog2("#api-modal").show();
+                            return;
+                        }
 
-        // Show the modal and fetch API data on button click
-        AJS.$("#show-popup").click(function() {
-            console.log("Button clicked!");
-            var issueKey = getIssueKey();
-            if (!issueKey) {
-                console.log("Issue key not found.");
-                AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Issue key not found.</p>");
-                AJS.dialog2("#api-modal").show();
-                return;
-            }
+                        var servletApiUrl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl";
+                        console.log("Fetching data from SERVLET API:", servletApiUrl);
 
-            var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
-            console.log("Fetching data from Jira API:", jiraApiUrl);
+                        jQuery.ajax({
+                            url: servletApiUrl,
+                            type: 'GET',
+                            contentType: 'application/json',
+                            success: function(response) {
+                                var serverApiUrl = response.apiUrl;
+                                console.log("Fetched URL from servlet:", serverApiUrl);
 
-            jQuery.ajax({
-                url: jiraApiUrl,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    console.log("Jira API response received:", response);
-                    var description = response.fields.description;
-                    if (!description) {
-                        console.log("Description not provided in the issue.");
-                        AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Description is not provided in the issue.</p>");
+                                var payload = JSON.stringify({ user_story: description });
+                                var apiUrl = serverApiUrl;
+                                console.log("Sending data to external API:", apiUrl, payload);
+
+                                AJS.$("#api-modal").show();
+                                AJS.$("#api-response").html("<pre>Loading data...</pre>");
+
+                                jQuery.ajax({
+                                    url: apiUrl,
+                                    type: "POST",
+                                    contentType: 'application/json',
+                                    data: payload,
+                                    success: function(apiResponse) {
+                                        console.log("External API response received:", apiResponse);
+                                        var cscore = apiResponse.NA.cscore;
+                                        var messages = apiResponse.NA.message;
+                                        var formattedData = "<p style='font-size: 1.2em;'><strong>SCORE:</strong> " + cscore + "</p>"
+                                            + "<p style='font-size: 1.2em;'><strong>MESSAGE:</strong> " + messages.join("<br>") + "</p>";
+                                        AJS.$("#api-response").html(formattedData);
+                                        AJS.dialog2("#api-modal").show();
+                                    },
+                                    error: function(xhr, status, error) {
+                                        console.log("Error in external API call:", status, error);
+                                        AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch data. Verify the ROM URL in Configuration. Status:" + xhr.status + ", Error: " + error + "</p>");
+                                        AJS.dialog2("#api-modal").show();
+                                    }
+                                });
+                            },
+                            error: function(xhr, status, error) {
+                                console.log("Error in servlet API call:", status, error);
+                                AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch ROM API from servlet. Status:" + xhr.status + ", Error: " + error + "</p>");
+                                AJS.dialog2("#api-modal").show();
+                            }
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("Error in Jira API call:", status, error);
+                        AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch Jira issue data. Status:" + xhr.status + ", Error: " + error + "</p>");
                         AJS.dialog2("#api-modal").show();
-                        return;
                     }
+                });
+            });
 
-                    var servletApiUrl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl";
-                    console.log("Fetching data from SERVLET API:", servletApiUrl);
+            AJS.$("#close-button, aui-dialog2-header-close").on("click", function() {
+                AJS.dialog2("#api-modal").hide();
+                setTimeout(function() {
+                    AJS.$("#api-modal").attr("aria-hidden", "true").hide();
+                    AJS.$("#api-response").html("Loading data...");
+                }, 300);
+            });
 
-                    jQuery.ajax({
-                        url: servletApiUrl,
-                        type: 'GET',
-                        contentType: 'application/json',
-                        success: function(response) {
-                            var serverApiUrl = response.apiUrl;
-                            console.log("Fetched URL from servlet:", serverApiUrl);
+            AJS.$("#show-popup").data('events-attached', true);
+        }
+    }
 
-                            var payload = JSON.stringify({ user_story: description });
-                            var apiUrl = serverApiUrl;
-                            console.log("Sending data to external API:", apiUrl, payload);
+    if (typeof jQuery != "undefined") {
+        jQuery(document).ready(function() {
+            initStuff();
+        });
+    }
 
-                            AJS.$("#api-modal").show();
-                            AJS.$("#api-response").html("<pre>Loading data...</pre>");
+    document.addEventListener("DOMContentLoaded", function() {
+        initStuff();
+        JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function(event, context, reason) {
+            console.log("NEW_CONTENT_ADDED event fired. Reason:", reason);
+            if (reason === 'issue-created') {
+                console.log("New issue created, showing popup...");
 
-                            jQuery.ajax({
-                                url: apiUrl,
-                                type: "POST",
-                                contentType: 'application/json',
-                                data: payload,
-                                success: function(apiResponse) {
-                                    console.log("External API response received:", apiResponse);
-                                    var cscore = apiResponse.NA.cscore;
-                                    var messages = apiResponse.NA.message;
-                                    var formattedData = "<p style='font-size: 1.2em;'><strong>SCORE:</strong> " + cscore + "</p>"
-                                        + "<p style='font-size: 1.2em;'><strong>MESSAGE:</strong> " + messages.join("<br>") + "</p>";
-                                    AJS.$("#api-response").html(formattedData);
-                                    AJS.dialog2("#api-modal").show();
-                                },
-                                error: function(xhr, status, error) {
-                                    console.log("Error in external API call:", status, error);
-                                    AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch data. Verify the ROM URL in Configuration. Status:" + xhr.status + ", Error: " + error + "</p>");
-                                    AJS.dialog2("#api-modal").[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/karthikseetharam/personalportal/tree/49552918652aa6d033d682016f75b818674a2a70/images%2FPull%20Request%20%23519_%20AWSA-2109%20Add%20device%20model%20script%20to%20standalone%20script%20executor.%20-%20Bitbucket_files%2Fbatch%282%29.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/cmpaxgg/Lab3/tree/48558f7f71245b46bca6ba1fcb33c4921badab6d/img%2FCreate%20Issue%20-%20Jira_files%2Fbatch%282%29.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
+                // Show the popup and fetch data as you would on button click
+                var issueKey = getIssueKey();
+                if (!issueKey) {
+                    console.log("Issue key not found.");
+                    AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Issue key not found.</p>");
+                    AJS.dialog2("#api-modal").show();
+                    return;
+                }
+
+                var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+                console.log("Fetching data from Jira API:", jiraApiUrl);
+
+                jQuery.ajax({
+                    url: jiraApiUrl,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        console.log("Jira API response received:", response);
+                        var description = response.fields.description;
+                        if (!description) {
+                            console.log("Description not provided in the issue.");
+                            AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Description is not provided in the issue.</p>");
+                            AJS.dialog2("#api-modal").show();
+                            return;
+                        }
+
+                        var servletApiUrl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl";
+                        console.log("Fetching data from SERVLET API:", servletApiUrl);
+
+                        jQuery.ajax({
+                            url: servletApiUrl,
+                            type: 'GET',
+                            contentType: 'application/json',
+                            success: function(response) {
+                                var serverApiUrl = response.apiUrl;
+                                console.log("Fetched URL from servlet:", serverApiUrl);
+
+                                var payload = JSON.stringify({ user_story: description });
+                                var apiUrl = serverApiUrl;
+                                console.log("Sending data to external API:", apiUrl, payload);
+
+                                AJS.$("#api-modal").show();
+                                AJS.$("#api-response").html("<pre>Loading data...</pre>");
+
+                                jQuery.ajax({
+                                    url: apiUrl,
+                                    type: "POST",
+                                    contentType: 'application/json',
+                                    data: payload,
+                                    success: function(apiResponse) {
+                                        console.log("External API response received:", apiResponse);
+                                        var cscore = apiResponse.NA.cscore;
+                                        var messages = apiResponse.NA.message;
+                                        var formattedData = "<p style='font-size: 1.2em;'><strong>SCORE:</strong> " + cscore + "</p>"
+                                            + "<p style='font-size: 1.2em;'><strong>MESSAGE:</strong> " + messages.join("<br>") + "</p>";
+                                        AJS.$("#api-response").html(formattedData);
+                                        AJS.dialog2("#api-modal").show();
+                                   [43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/karthikseetharam/personalportal/tree/49552918652aa6d033d682016f75b818674a2a70/images%2FPull%20Request%20%23519_%20AWSA-2109%20Add%20device%20model%20script%20to%20standalone%20script%20executor.%20-%20Bitbucket_files%2Fbatch%282%29.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/cmpaxgg/Lab3/tree/48558f7f71245b46bca6ba1fcb33c4921badab6d/img%2FCreate%20Issue%20-%20Jira_files%2Fbatch%282%29.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
