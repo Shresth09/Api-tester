@@ -1,149 +1,182 @@
-#set($allowedProjectKeys = ["GCJDT", "LT", "NEW"])
-#if ($allowedProjectKeys.contains($project.key))
+Absolutely, you can use the existing `IssueCRUD` servlet to handle the logic for displaying the popup when a new issue is created. We can modify your event listener class to make a request to this servlet, and update the servlet to handle the display logic.
 
-<script type="module">
-AJS.toInit(function() {
-    function initStuff() {
-        // Function to extract the issue key
-        function getIssueKey() {
-            console.log("Extracting issue key...");
-            var url = window.location.href;
-            var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
-            var match = url.match(issueKeyPattern);
-            if (match) {
-                return match[1];
-            }
+Here is how you can modify the existing components:
 
-            var issueKeyElement = AJS.$("#key-val");
-            if (issueKeyElement.length) {
-                return issueKeyElement.text().trim();
-            }
+### Step 1: Update the `IssueCreatedListener` class
 
-            var selectedIssueKey = AJS.$(".selected-issue-key").text();
-            if (selectedIssueKey) {
-                return selectedIssueKey.trim();
-            }
+Modify the `IssueCreatedListener` class to make an HTTP request to the existing `IssueCRUD` servlet when a new issue is created:
 
-            return null;
-        }
+```java
+package com.citi.cate.stash.listeners;
 
-        function showPopup(issueKey) {
-            if (!issueKey) {
-                console.log("Issue key not found.");
-                AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Issue key not found.</p>");
-                AJS.dialog2("#api-modal").show();
-                return;
-            }
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.event.issue.IssueEvent;
+import com.atlassian.jira.event.type.EventType;
+import com.atlassian.jira.issue.Issue;
+import org.springframework.stereotype.Component;
 
-            var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
-            console.log("Fetching data from Jira API:", jiraApiUrl);
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import com.atlassian.event.api.EventPublisher;
 
-            jQuery.ajax({
-                url: jiraApiUrl,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    console.log("Jira API response received:", response);
-                    var description = response.fields.description;
-                    if (!description) {
-                        console.log("Description not provided in the issue.");
-                        AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'>Description is not provided in the issue.</p>");
-                        AJS.dialog2("#api-modal").show();
-                        return;
-                    }
+@Component
+public class IssueCreatedListener {
 
-                    var servletApiUrl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl";
-                    console.log("Fetching data from SERVLET API:", servletApiUrl);
+    private final EventPublisher eventPublisher;
 
-                    jQuery.ajax({
-                        url: servletApiUrl,
-                        type: 'GET',
-                        contentType: 'application/json',
-                        success: function(response) {
-                            var serverApiUrl = response.apiUrl;
-                            console.log("Fetched URL from servlet:", serverApiUrl);
-
-                            var payload = JSON.stringify({ user_story: description });
-                            var apiUrl = serverApiUrl;
-                            console.log("Sending data to external API:", apiUrl, payload);
-
-                            AJS.$("#api-modal").show();
-                            AJS.$("#api-response").html("<pre>Loading data...</pre>");
-
-                            jQuery.ajax({
-                                url: apiUrl,
-                                type: "POST",
-                                contentType: 'application/json',
-                                data: payload,
-                                success: function(apiResponse) {
-                                    console.log("External API response received:", apiResponse);
-                                    var cscore = apiResponse.NA.cscore;
-                                    var messages = apiResponse.NA.message;
-                                    var formattedData = "<p style='font-size: 1.2em;'><strong>SCORE:</strong> " + cscore + "</p>"
-                                        + "<p style='font-size: 1.2em;'><strong>MESSAGE:</strong> " + messages.join("<br>") + "</p>";
-                                    AJS.$("#api-response").html(formattedData);
-                                    AJS.dialog2("#api-modal").show();
-                                },
-                                error: function(xhr, status, error) {
-                                    console.log("Error in external API call:", status, error);
-                                    AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch data. Verify the ROM URL in Configuration. Status:" + xhr.status + ", Error: " + error + "</p>");
-                                    AJS.dialog2("#api-modal").show();
-                                }
-                            });
-                        },
-                        error: function(xhr, status, error) {
-                            console.log("Error in servlet API call:", status, error);
-                            AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch ROM API from servlet. Status:" + xhr.status + ", Error: " + error + "</p>");
-                            AJS.dialog2("#api-modal").show();
-                        }
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.log("Error in Jira API call:", status, error);
-                    AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch Jira issue data. Status:" + xhr.status + ", Error: " + error + "</p>");
-                    AJS.dialog2("#api-modal").show();
-                }
-            });
-        }
-
-        // Triggering popup on issue created
-        JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function(event, context, reason) {
-            console.log("NEW_CONTENT_ADDED event fired. Reason:", reason);
-            if (reason === JIRA.CONTENT_ADDED_REASON.issueCreated) {
-                console.log("New issue created, showing popup...");
-                var issueKey = getIssueKey();
-                showPopup(issueKey);
-            }
-        });
+    public IssueCreatedListener(EventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
-    if (typeof jQuery != "undefined") {
-        jQuery(document).ready(function() {
-            initStuff();
-        });
+    @EventListener
+    public void onIssueEvent(IssueEvent issueEvent) {
+        if (issueEvent.getEventTypeId().equals(EventType.ISSUE_CREATED_ID)) {
+            Issue issue = issueEvent.getIssue();
+            System.out.println("Issue Created: " + issueEvent.getIssue().getKey());
+
+            HttpServletRequest request = ComponentAccessor.getComponent(HttpServletRequest.class);
+            System.out.println("Request: " + request.toString());
+
+            HttpSession session = request.getSession();
+            session.setAttribute("issueKey", issue.getKey());
+            System.out.println("Session: " + session.toString());
+
+            // Trigger the popup display by making an AJAX request to the existing IssueCRUD servlet
+            triggerPopup(issue);
+        }
     }
 
-    document.addEventListener("DOMContentLoaded", function() {
-        initStuff();
-    });
-});
-</script>
+    private void triggerPopup(Issue issue) {
+        // Construct the URL for the existing servlet that will display the popup
+        String baseUrl = ComponentAccessor.getApplicationProperties().getString("jira.baseurl");
+        String servletUrl = baseUrl + "/plugins/servlet/issuecrud?action=showPopup&issueKey=" + issue.getKey();
 
-<!-- Modal Structure -->
-<div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
-    <header class="aui-dialog2-header">
-        <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
-        <a class="aui-dialog2-header-close">
-            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-        </a>
-    </header>
-    <div class="aui-dialog2-content">
-        <div id="api-response">Loading data...</div>
-    </div>
-    <footer class="aui-dialog2-footer">
-        <div class="aui-dialog2-footer-actions">
-            <button id="close-button" class="aui-button aui-button-primary">Close</button>
-        </div>
-    </footer>
-</div>
-#end
+        try {
+            // Perform an HTTP GET request to the servlet
+            HttpURLConnection connection = (HttpURLConnection) new URL(servletUrl).openConnection();
+            connection.setRequestMethod("GET");
+            connection.getResponseCode();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+### Step 2: Update the `IssueCRUD` servlet
+
+Add the logic to handle the `showPopup` action in the `IssueCRUD` servlet:
+
+```java
+package com.example.plugins.tutorial.servlet;
+
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.security.groups.GroupManager;
+import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import com.atlassian.templaterenderer.TemplateRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class IssueCRUD extends HttpServlet {
+
+    private static final Logger log = LoggerFactory.getLogger(IssueCRUD.class);
+    private final TemplateRenderer templateRenderer;
+    private final PluginSettingsFactory pluginSettingsFactory;
+    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins.tutorial.servlet.IssueCRUD";
+    private static final String DEFAULT_API_URL = "def_url";
+
+    public IssueCRUD(TemplateRenderer templateRenderer, PluginSettingsFactory pluginSettingsFactory) {
+        this.templateRenderer = templateRenderer;
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+        ApplicationUser user = ComponentAccessor.getJiraAuthenticationContext().getLoggedInUser();
+        GroupManager groupManager = ComponentAccessor.getGroupManager();
+
+        if (user == null || !groupManager.isUserInGroup(user, "jira-administrators")) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write("You do not have permission to access this page.");
+            return;
+        }
+
+        String action = req.getParameter("action");
+
+        // Fetch the current URL
+        if ("getUrl".equals(action)) {
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            String apiUrl = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".apiUrl");
+            if (apiUrl == null) {
+                apiUrl = DEFAULT_API_URL;
+            }
+            resp.setContentType("application/json");
+            resp.getWriter().write("{\"apiUrl\": \"" + apiUrl + "\"}");
+        // Update the URL
+        } else if ("updateUrl".equals(action)) {
+            try {
+                String newUrl = req.getParameter("url");
+                PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+                pluginSettings.put(PLUGIN_STORAGE_KEY + ".apiUrl", newUrl);
+                resp.setContentType("text/plain");
+                resp.getWriter().write("URL updated successfully!");
+            } catch (Exception e) {
+                log.error("Error processing update URL request", e);
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.getWriter().write("Error processing request!");
+            }
+        // Show the popup when a new issue is created
+        } else if ("showPopup".equals(action)) {
+            String issueKey = req.getParameter("issueKey");
+            if (issueKey != null) {
+                req.setAttribute("issueKey", issueKey);
+                templateRenderer.render("templates/onload-popup.vm", resp.getWriter());
+            }
+        } else {
+            resp.setContentType("text/html;charset=utf-8");
+            templateRenderer.render("templates/issuecrud-page.vm", resp.getWriter());
+        }
+    }
+}
+```
+
+### Step 3: Update the `atlassian-plugin.xml`
+
+Ensure the servlet is properly registered in the `atlassian-plugin.xml`:
+
+```xml
+<atlassian-plugin key="ai-rom-plugin" name="AI-ROM Plugin" plugins-version="2">
+    <plugin-info>
+        <description>AI-ROM Plugin for JIRA</description>
+        <version>1.0</version>
+        <vendor name="Your Company" url="https://yourcompany.com"/>
+    </plugin-info>
+
+    <component key="issueCreatedListener" class="com.citi.cate.stash.listeners.IssueCreatedListener"/>
+
+    <servlet key="issueCRUD" name="Issue CRUD Servlet" class="com.example.plugins.tutorial.servlet.IssueCRUD">
+        <description>Servlet to manage issue CRUD operations</description>
+        <url-pattern>/plugins/servlet/issuecrud</url-pattern>
+    </servlet>
+
+    <!-- Web Panel for Button-Triggered Popup and Onload Popup -->
+    <web-panel key="AI-ROM-plugin" location="atl.jira.view.issue.right.context" weight="10">
+        <resource type="velocity" name="view" location="templates/popup.vm"/>
+        <resource type="velocity" name="onload-view" location="templates/onload-popup.vm"/>
+    </web-panel>
+</atlassian-plugin>
+```
+
+By following these steps, your event listener will trigger the existing `IssueCRUD` servlet to display the popup when a new issue is created. Let me know if you need any further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/ludopif/workshop-example/tree/b949c8b5080008d496a07c8d9dd55ce0bf6796b5/src%2Fmain%2Fjava%2Fcom%2Forange%2Ftodolist%2FTodosServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "4")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/wutongservice/wutongservice/tree/81d66d3cc06d362a355582d38d691f341db565da/ServerPlatform%2Fbase%2Fsrc%2Fmain%2Fjava%2Fcom%2Fborqs%2Fserver%2Fbase%2Fweb%2Fwebmethod%2FWebMethodServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "5")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/rodneylsp/java-json/tree/5ae7cc73d7563c1af4e1775d95ec83887c8b5b81/contatos%2Fsrc%2FContatosServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "6")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/smoeller1/BuRMA/tree/279976b0f2b29aaf17adb3ce61cd6fe9a9449fc6/src%2FMongoRestApp%2Fsrc%2Fedu%2Fumkc%2Fmongorestapp%2FUserServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "7")
