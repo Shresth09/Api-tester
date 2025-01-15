@@ -180,3 +180,125 @@ Ensure the servlet is properly registered in the `atlassian-plugin.xml`:
 ```
 
 By following these steps, your event listener will trigger the existing `IssueCRUD` servlet to display the popup when a new issue is created. Let me know if you need any further assistance![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/narniness/code/tree/3140ff84812e7d71be214013df4b3a944ca19ea1/PagerDutyIntegration%2Fsrc%2Fmain%2Fjava%2Fcom%2Fdt%2Fjira%2Fpagerduty%2Fintgt%2Fplugin%2Fservlet%2FPagerDutyServiceServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Polygor/web-store/tree/cc685d5cb05022fa23d81adbadecdd2623b5a3b0/src%2Fmain%2Fjava%2Fcom%2Fepam%2Fpolygor%2Fwebstore%2Fservlet%2FErrorHandler.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/masudio/masudio.com/tree/5efa964b920bc18639d835a4ade5e07ae352925f/src%2Fmain%2Fjava%2Fmasudio%2Fapp%2Ffirst%2FHelloServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/ludopif/workshop-example/tree/b949c8b5080008d496a07c8d9dd55ce0bf6796b5/src%2Fmain%2Fjava%2Fcom%2Forange%2Ftodolist%2FTodosServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "4")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/wutongservice/wutongservice/tree/81d66d3cc06d362a355582d38d691f341db565da/ServerPlatform%2Fbase%2Fsrc%2Fmain%2Fjava%2Fcom%2Fborqs%2Fserver%2Fbase%2Fweb%2Fwebmethod%2FWebMethodServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "5")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/rodneylsp/java-json/tree/5ae7cc73d7563c1af4e1775d95ec83887c8b5b81/contatos%2Fsrc%2FContatosServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "6")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/smoeller1/BuRMA/tree/279976b0f2b29aaf17adb3ce61cd6fe9a9449fc6/src%2FMongoRestApp%2Fsrc%2Fedu%2Fumkc%2Fmongorestapp%2FUserServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "7")
+
+
+
+
+
+
+
+
+
+
+
+
+
+Yes, you can register the listener using the `<listener>` tag in the `atlassian-plugin.xml` file. This approach will directly link the listener to the specific event type. Here’s how you can do it:
+
+1. **Update the `IssueCreatedListener` class to implement `InitialisingBean` and `DisposableBean` interfaces.**
+   
+   This ensures that the listener will be registered and unregistered correctly:
+
+   ```java
+   package com.citi.cate.stash.listeners;
+
+   import com.atlassian.event.api.EventPublisher;
+   import com.atlassian.jira.event.issue.IssueEvent;
+   import com.atlassian.jira.event.issue.IssueEventListener;
+   import com.atlassian.jira.event.type.EventType;
+   import com.atlassian.jira.issue.Issue;
+   import org.springframework.stereotype.Component;
+   import org.springframework.beans.factory.DisposableBean;
+   import org.springframework.beans.factory.InitializingBean;
+
+   @Component
+   public class IssueCreatedListener implements InitializingBean, DisposableBean, IssueEventListener {
+
+       private final EventPublisher eventPublisher;
+
+       public IssueCreatedListener(EventPublisher eventPublisher) {
+           this.eventPublisher = eventPublisher;
+       }
+
+       @Override
+       public void afterPropertiesSet() throws Exception {
+           eventPublisher.register(this);
+       }
+
+       @Override
+       public void destroy() throws Exception {
+           eventPublisher.unregister(this);
+       }
+
+       @EventListener
+       public void onIssueEvent(IssueEvent issueEvent) {
+           if (issueEvent.getEventTypeId().equals(EventType.ISSUE_CREATED_ID)) {
+               Issue issue = issueEvent.getIssue();
+               System.out.println("Issue Created: " + issueEvent.getIssue().getKey());
+
+               HttpServletRequest request = ComponentAccessor.getComponent(HttpServletRequest.class);
+               System.out.println("Request: " + request.toString());
+
+               HttpSession session = request.getSession();
+               session.setAttribute("issueKey", issue.getKey());
+               System.out.println("Session: " + session.toString());
+
+               // Trigger the popup display by making an AJAX request to the existing IssueCRUD servlet
+               triggerPopup(issue);
+           }
+       }
+
+       private void triggerPopup(Issue issue) {
+           // Construct the URL for the existing servlet that will display the popup
+           String baseUrl = ComponentAccessor.getApplicationProperties().getString("jira.baseurl");
+           String servletUrl = baseUrl + "/plugins/servlet/issuecrud?action=showPopup&issueKey=" + issue.getKey();
+
+           try {
+               // Perform an HTTP GET request to the servlet
+               HttpURLConnection connection = (HttpURLConnection) new URL(servletUrl).openConnection();
+               connection.setRequestMethod("GET");
+               connection.getResponseCode();
+           } catch (Exception e) {
+               e.printStackTrace();
+           }
+       }
+
+       @Override
+       public String[] getAcceptedParams() {
+           return new String[0];
+       }
+   }
+   ```
+
+2. **Update the `atlassian-plugin.xml` to use the `<listener>` tag:**
+
+   ```xml
+   <atlassian-plugin key="ai-rom-plugin" name="AI-ROM Plugin" plugins-version="2">
+       <plugin-info>
+           <description>AI-ROM Plugin for JIRA</description>
+           <version>1.0</version>
+           <vendor name="Your Company" url="https://yourcompany.com"/>
+       </plugin-info>
+
+       <listener key="issueCreatedListener" class="com.citi.cate.stash.listeners.IssueCreatedListener" name="IssueCreatedListener">
+           <event type="com.atlassian.jira.event.issue.IssueCreatedEvent"/>
+       </listener>
+
+       <servlet key="issueCRUD" name="Issue CRUD Servlet" class="com.example.plugins.tutorial.servlet.IssueCRUD">
+           <description>Servlet to manage issue CRUD operations</description>
+           <url-pattern>/plugins/servlet/issuecrud</url-pattern>
+       </servlet>
+
+       <!-- Web Panel for Button-Triggered Popup and Onload Popup -->
+       <web-panel key="AI-ROM-plugin" location="atl.jira.view.issue.right.context" weight="10">
+           <resource type="velocity" name="view" location="templates/popup.vm"/>
+           <resource type="velocity" name="onload-view" location="templates/onload-popup.vm"/>
+       </web-panel>
+   </atlassian-plugin>
+   ```
+
+3. **Modify the `IssueCRUD` servlet to handle the `showPopup` action as mentioned in the previous response.**
+
+By registering the listener this way, you ensure that the `IssueCreatedListener` is triggered specifically for the `IssueCreatedEvent`, making the integration cleaner and more efficient.
+
+Let me know if you have any further questions or need additional assistance!
