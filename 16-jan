@@ -119,8 +119,6 @@
         function updateUrl() {
             const newUrl = document.getElementById('newUrl').value;
             const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=updateUrl&url=" + newUrl;
-            console.log("Updating URL:", newUrl);
-            console.log("Request URL:", apiurl);
             fetch(apiurl, {
                 method: 'GET',
                 headers: {
@@ -128,21 +126,18 @@
                 }
             })
             .then(response => {
-                console.log("Response status:", response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
                 return response.text();
             })
             .then(data => {
-                console.log("Response data:", data);
                 document.getElementById('currentUrl').textContent = newUrl;
                 document.getElementById('currentUrl').className = "url-link";
                 document.getElementById('newUrl').value = newUrl;
                 alert('URL updated successfully!');
             })
             .catch(error => {
-                console.log("Error occurred:", error);
                 document.getElementById('currentUrl').textContent = `Error: ${error}`;
                 document.getElementById('currentUrl').className = "";
                 alert(`Error: ${error}`);
@@ -213,7 +208,6 @@
             const projectList = document.getElementById('projectList');
             selectedProjects = new Set(Array.from(projectList.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value));
             const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=applySelection&keys=" + Array.from(selectedProjects).join(",");
-            console.log("Applying selection:", Array.from(selectedProjects));
             fetch(apiurl, {
                 method: 'GET',
                 headers: {
@@ -221,7 +215,6 @@
                 }
             })
             .then(response => {
-                console.log("Response status:", response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
@@ -253,4 +246,6 @@
         document.addEventListener("DOMContentLoaded", fetchUrl);
         document.addEventListener("DOMContentLoaded", fetchProjects);
         document.addEventListener("DOMContentLoaded", fetchSelectedProjects);
-    </script[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/hubhack/hubhack.github.io/tree/3613c687a446afea34500da8889a75da3fbd77c3/source%2F_posts%2Fjs%2FHTML.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
+    </script>
+</body>
+</html>
