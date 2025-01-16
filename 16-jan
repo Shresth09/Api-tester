@@ -186,6 +186,10 @@ function filterProjectList(filter) {
   console.log("Filter applied: ", filter);
   const filteredProjects = allProjects.filter(project => project.toLowerCase().includes(filter));
   updateProjectList(filteredProjects);
+
+  if (filteredProjects.length === 0) {
+    document.getElementById('projectList').innerHTML = '<p>No projects found</p>';
+  }
 }
 
 function applySelection() {
