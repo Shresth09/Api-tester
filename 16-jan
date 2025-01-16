@@ -7,7 +7,69 @@
     <title>ROM URL Config</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        /* Your CSS styles here */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .aui-page-header-main {
+            padding-bottom: 1px;
+            border-bottom: 1px solid #ddd;
+            color: #292959;
+            font-family: Georgia, serif;
+        }
+
+        .text.medium-long-field, search-field {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .aui-button.aui-button-primary {
+            background-color: #0052cc;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .aui-button.aui-button-primary:hover {
+            background-color: #003d99;
+        }
+
+        .url-link {
+            color: #0052cc;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .current {
+            font-family: Georgia, serif;
+            color: gray;
+        }
+
+        .project-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
@@ -41,74 +103,135 @@
     let selectedProjects = []; // Array to store selected project keys
 
     function fetchUrl() {
-        // ... (Your existing fetchUrl function) ...
+        const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
+        fetch(apiurl, {
+            method: 'GET',
+            headers: {
+                'Referer': window.location.href,
+                "Content-Type": 'application/json' // Corrected typo
+            }
+        })
+        .then(response => {
+            if (!response.ok) { // Corrected condition
+                throw new Error('HTTP error! Status: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('currentUrl').textContent = data.apiurl;
+            document.getElementById('currentUrl').className = "url-link";
+            document.getElementById('newUrl').value = data.apiurl;
+        })
+        .catch(error => {
+            document.getElementById('currentUrl').textContent = "Error: " + error;
+            document.getElementById('currentUrl').className = "";
+        });
     }
 
     function updateUrl() {
-        // ... (Your existing updateUrl function) ...
+        const newUrl = document.getElementById('newUrl').value;
+        const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=updateUrl&url=" + newUrl;
+        console.log("Updating URL:", newUrl);
+        console.log("Request URL:", apiurl);
+
+        fetch(apiurl, {
+            method: 'GET',
+            headers: {
+                'Referer': window.location.href
+            }
+        })
+        .then(response => {
+            console.log("Response status:", response.status);
+            if (!response.ok) { // Corrected condition
+                throw new Error('HTTP error! Status: ' + response.status);
+            }
+            return response.text();
+        })
+        .then(data => {
+            console.log("Response data:", data);
+            document.getElementById('currentUrl').textContent = newUrl;
+            document.getElementById('currentUrl').className = "url-link";
+            document.getElementById('newUrl').value = newUrl;
+            alert("URL updated successfully!");
+        })
+        .catch(error => {
+            console.log("Error occurred:", error);
+            document.getElementById('currentUrl').textContent = "Error: " + error;
+            document.getElementById('currentUrl').className = "";
+            alert("Error: " + error);
+        });
     }
 
     function fetchProjects() {
-        // ... (Your existing fetchProjects function) ...
-        allProjects.forEach(project => {
-            const [key, name] = project.split("-");
-            const label = document.createElement('label');
-            const isChecked = selectedProjects.includes(key); 
-            label.innerHTML = `<input type="checkbox" value="${key}" ${isChecked ? 'checked' : ''}> ${key} - ${name}`;
-            projectList.appendChild(label);
-            projectList.appendChild(document.createElement('br'));
-        });
+        const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getProjects";
+        fetch(apiurl, {
+            method: 'GET',
+            headers: {
+                "Referer": window.location.href,
+                "Content-Type": 'text/plain'
+            }
+        })
+        .then(response => {
+            if (!response.ok) { // Corrected condition
+                throw new Error('HTTP error! Status: ' + response.status);
+            }
+            return response.text();
+        })
+        .then(data => {
+            const projectList = document.getElementById('projectList');
+            allProjects = data.split(",");
 
-        // Add event listener to checkboxes
-        const checkboxes = document.querySelectorAll('#projectList input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', () => {
-                updateSelectedProjects(checkbox.value, checkbox.checked);
+            allProjects.forEach(project => {
+                const [key, name] = project.split("-");
+                const label = document.createElement('label');
+                const isChecked = selectedProjects.includes(key);
+                label.innerHTML = `<input type="checkbox" value="${key}" ${isChecked ? 'checked' : ''}> ${key} - ${name}`;
+                projectList.appendChild(label);
+                projectList.appendChild(document.createElement('br'));
             });
+
+            // Add event listener to checkboxes
+            const checkboxes = document.querySelectorAll('#projectList input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    updateSelectedProjects(checkbox.value, checkbox.checked);
+                });
+            });
+        })
+        .catch(error => {
+            console.log("Error occurred:", error);
         });
     }
 
     function fetchSelectedProjects() {
-        // ... (Your existing fetchSelectedProjects function) ...
-        // Update selectedProjects array based on server response
-        selectedProjects = data.split(","); 
+        const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getSelectedProjects";
+        fetch(apiurl, {
+            method: 'GET',
+            headers: {
+                "Referer": window.location.href,
+                "Content-Type": 'text/plain'
+            }
+        })
+        .then(response => {
+            if (!response.ok) { // Corrected condition
+                throw new Error('HTTP error! Status: ' + response.status);
+            }
+            return response.text();
+        })
+        .then(data => {
+            const projectList = document.getElementById('projectList');
+            selectedProjects = data.split(",");
+        })
+        .catch(error => {
+            console.log("Error occurred:", error);
+        });
     }
 
     function updateSelectedProjects(key, isChecked) {
         if (isChecked) {
-            selectedProjects.push(key);
+            if (!selectedProjects.includes(key)) {
+                selectedProjects.push(key);
+            }
         } else {
             const index = selectedProjects.indexOf(key);
-            if (index > -1) {
-                selectedProjects.splice(index, 1);
-            }
-        }
-    }
-
-    function applySelection() {
-        // ... (Your existing applySelection function) ...
-    }
-
-    document.getElementById('projectSearch').addEventListener('input', function() {
-        const filter = this.value.toLowerCase();
-        const projectList = document.getElementById('projectList');
-        projectList.innerHTML = ''; 
-
-        allProjects.filter(project => project.toLowerCase().includes(filter)).forEach(project => {
-            const [key, name] = project.split("-");
-            const label = document.createElement('label');
-            const isChecked = selectedProjects.includes(key); 
-            label.innerHTML = `<input type="checkbox" value="${key}" ${isChecked ? 'checked' : ''}> ${key} - ${name}`;
-            projectList.appendChild(label);
-            projectList.appendChild(document.createElement('br'));
-        });
-    });
-
-    document.addEventListener("DOMContentLoaded", fetchUrl);
-    document.addEventListener("DOMContentLoaded", fetchProjects);
-    document.addEventListener("DOMContentLoaded", fetchSelectedProjects);
-
-</script>
-
-</body>
-</html>
+            if (index
