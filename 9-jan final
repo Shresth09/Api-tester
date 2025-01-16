@@ -362,14 +362,9 @@ public class IssueCRUD extends HttpServlet {
         document.getElementById('projectSearch').addEventListener('input', function() {
             const filter = this.value.toLowerCase();
             const projectList = document.getElementById('projectList');
-            const labels = projectList.getElementsByTagName('label');
-            Array.from(labels).forEach(label => {
-                if (label.textContent.toLowerCase().includes(filter)) {
-                    label.style.display = "";
-                } else {
-                    label.style.display = "none";
-                }
-            });
+            const labels = Array.from(projectList.getElementsByTagName('label'));
+            projectList.innerHTML = '';
+            labels.filter(label => label.textContent.toLowerCase().includes(filter)).forEach(label => projectList.appendChild(label));
         });
 
         document.addEventListener("DOMContentLoaded", fetchUrl);
@@ -377,4 +372,4 @@ public class IssueCRUD extends HttpServlet {
         document.addEventListener("DOMContentLoaded", fetchSelectedProjects);
     </script>
 </body>
-</html>
+</html> 
