@@ -122,7 +122,6 @@ public class IssueCRUD extends HttpServlet {
 
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -212,6 +211,8 @@ public class IssueCRUD extends HttpServlet {
     </div>
 
     <script>
+        let allProjects = [];
+
         function fetchUrl() {
             const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
             fetch(apiurl, {
@@ -288,8 +289,8 @@ public class IssueCRUD extends HttpServlet {
             })
             .then(data => {
                 const projectList = document.getElementById('projectList');
-                const projects = data.split(",");
-                projects.forEach(project => {
+                allProjects = data.split(",");
+                allProjects.forEach(project => {
                     const [key, name] = project.split(" - ");
                     const label = document.createElement('label');
                     label.innerHTML = `<input type="checkbox" value="${key}"> ${key} - ${name}`;
@@ -362,9 +363,14 @@ public class IssueCRUD extends HttpServlet {
         document.getElementById('projectSearch').addEventListener('input', function() {
             const filter = this.value.toLowerCase();
             const projectList = document.getElementById('projectList');
-            const labels = Array.from(projectList.getElementsByTagName('label'));
             projectList.innerHTML = '';
-            labels.filter(label => label.textContent.toLowerCase().includes(filter)).forEach(label => projectList.appendChild(label));
+            allProjects.filter(project => project.toLowerCase().includes(filter)).forEach(project => {
+                const [key, name] = project.split(" - ");
+                const label = document.createElement('label');
+                label.innerHTML = `<input type="checkbox" value="${key}"> ${key} - ${name}`;
+                projectList.appendChild(label);
+                projectList.appendChild(document.createElement('br'));
+            });
         });
 
         document.addEventListener("DOMContentLoaded", fetchUrl);
@@ -372,4 +378,4 @@ public class IssueCRUD extends HttpServlet {
         document.addEventListener("DOMContentLoaded", fetchSelectedProjects);
     </script>
 </body>
-</html> 
+</html>
