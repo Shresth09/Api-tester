@@ -189,20 +189,16 @@ function updateProjectList() {
 function filterProjectList(filter) {
   console.log("Filter applied: ", filter);
   const projectList = document.getElementById('projectList');
-  const labels = Array.from(projectList.querySelectorAll('label'));
-  
-  // Filter and sort the projects
-  const filteredLabels = labels.filter(label => {
+  const labels = projectList.querySelectorAll('label');
+
+  labels.forEach(label => {
     const projectName = label.textContent.toLowerCase();
-    return projectName.includes(filter);
+    if (projectName.includes(filter)) {
+      label.style.display = 'block';
+    } else {
+      label.style.display = 'none';
+    }
   });
-
-  // Clear the project list and append filtered labels at the top
-  projectList.innerHTML = '';
-  filteredLabels.forEach(label => projectList.appendChild(label));
-
-  // Append the rest of the labels
-  labels.filter(label => !filteredLabels.includes(label)).forEach(label => projectList.appendChild(label));
 }
 
 function applySelection() {
