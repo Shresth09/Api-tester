@@ -1,88 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Selection</title>
+    <title>ROM URL Config</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .search-field {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-        .project-list {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 10px;
-        }
+        /* Your CSS styles here */
     </style>
 </head>
 <body>
-    <div class="container">
+
+<div class="container">
+    <div class="aui-page-header-main">
+        <h2>AI-ROM URL Configuration</h2>
+    </div>
+
+    <div>
+        <h4 class="current">Current URL:</h4>
+        <pre id="currentUrl" class="url-link">Loading...</pre>
+    </div>
+
+    <div class="update-group">
+        <input type="text" id="newUrl" class="text medium-long-field" placeholder="Enter new API URL">
+        <button onclick="updateUrl()" class="aui-button aui-button-primary">Update URL</button>
+    </div>
+
+    <div>
         <h4>Select Project:</h4>
         <input type="text" id="projectSearch" class="search-field" placeholder="Search projects...">
         <div id="projectList" class="project-list">
-            <!-- Checkboxes will be populated dynamically -->
-        </div>
+            </div>
+        <button onclick="applySelection()" class="aui-button aui-button-primary">Apply</button>
     </div>
-    <script>
-        let allProjects = [];
-        let selectedProjects = new Set();
+</div>
 
-        function fetchProjects() {
-            // Example projects for demonstration
-            allProjects = ["PROJ-Project A", "PROJ-Project B", "PROJ-Project C", "PROJ-Project D"];
-            updateProjectList();
-        }
+<script>
+    let allProjects = [];
+    let selectedProjects = []; // Array to store selected project keys
 
-        function updateProjectList(filter = '') {
-            const projectList = document.getElementById('projectList');
-            projectList.innerHTML = '';
-            const filteredProjects = allProjects.filter(project => project.toLowerCase().includes(filter.toLowerCase()));
-            filteredProjects.forEach(project => {
-                const [key, name] = project.split("-");
-                const label = document.createElement('label');
-                label.innerHTML = `<input type="checkbox" value="${key}"> ${key} - ${name}`;
-                if (selectedProjects.has(key)) {
-                    label.querySelector('input[type="checkbox"]').checked = true;
-                }
-                label.querySelector('input[type="checkbox"]').addEventListener('change', function() {
-                    if (this.checked) {
-                        selectedProjects.add(key);
-                    } else {
-                        selectedProjects.delete(key);
-                    }
-                });
-                projectList.appendChild(label);
-                projectList.appendChild(document.createElement('br'));
-            });
-        }
+    function fetchUrl() {
+        // ... (Your existing fetchUrl function) ...
+    }
 
-        document.getElementById('projectSearch').addEventListener('input', function () {
-            const filter = this.value.toLowerCase();
-            updateProjectList(filter);
+    function updateUrl() {
+        // ... (Your existing updateUrl function) ...
+    }
+
+    function fetchProjects() {
+        // ... (Your existing fetchProjects function) ...
+        allProjects.forEach(project => {
+            const [key, name] = project.split("-");
+            const label = document.createElement('label');
+            const isChecked = selectedProjects.includes(key); 
+            label.innerHTML = `<input type="checkbox" value="${key}" ${isChecked ? 'checked' : ''}> ${key} - ${name}`;
+            projectList.appendChild(label);
+            projectList.appendChild(document.createElement('br'));
         });
 
-        document.addEventListener("DOMContentLoaded", fetchProjects);
-    </script>
+        // Add event listener to checkboxes
+        const checkboxes = document.querySelectorAll('#projectList input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                updateSelectedProjects(checkbox.value, checkbox.checked);
+            });
+        });
+    }
+
+    function fetchSelectedProjects() {
+        // ... (Your existing fetchSelectedProjects function) ...
+        // Update selectedProjects array based on server response
+        selectedProjects = data.split(","); 
+    }
+
+    function updateSelectedProjects(key, isChecked) {
+        if (isChecked) {
+            selectedProjects.push(key);
+        } else {
+            const index = selectedProjects.indexOf(key);
+            if (index > -1) {
+                selectedProjects.splice(index, 1);
+            }
+        }
+    }
+
+    function applySelection() {
+        // ... (Your existing applySelection function) ...
+    }
+
+    document.getElementById('projectSearch').addEventListener('input', function() {
+        const filter = this.value.toLowerCase();
+        const projectList = document.getElementById('projectList');
+        projectList.innerHTML = ''; 
+
+        allProjects.filter(project => project.toLowerCase().includes(filter)).forEach(project => {
+            const [key, name] = project.split("-");
+            const label = document.createElement('label');
+            const isChecked = selectedProjects.includes(key); 
+            label.innerHTML = `<input type="checkbox" value="${key}" ${isChecked ? 'checked' : ''}> ${key} - ${name}`;
+            projectList.appendChild(label);
+            projectList.appendChild(document.createElement('br'));
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", fetchUrl);
+    document.addEventListener("DOMContentLoaded", fetchProjects);
+    document.addEventListener("DOMContentLoaded", fetchSelectedProjects);
+
+</script>
+
 </body>
-</html>   
+</html>
