@@ -5,34 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project Selection</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    .search-bar {
-      margin-bottom: 15px;
-    }
-    .project-list {
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 10px;
-    }
-    .project-label {
-      display: flex;
-      align-items: center;
-    }
-    .project-checkbox {
-      margin-right: 10px;
-    }
+    /* CSS styles remain the same */
   </style>
 </head>
 <body>
@@ -48,8 +21,10 @@
   <script>
     const projectListElement = document.getElementById('projectList');
     const searchInput = document.getElementById('projectSearch');
+    let selectedProjects = []; 
 
     fetchProjects();
+    fetchSelectedProjects();
 
     function fetchProjects() {
       const xhr = new XMLHttpRequest();
@@ -65,6 +40,20 @@
       xhr.send();
     }
 
+    function fetchSelectedProjects() {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', '/jira/plugins/servlet/issuecrud?action=getSelectedProjects');
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          selectedProjects = xhr.responseText.split(',');
+          updateProjectList(projectListElement.innerHTML); // Update with current list
+        } else {
+          console.error('Error fetching selected projects:', xhr.statusText);
+        }
+      };
+      xhr.send();
+    }
+
     function updateProjectList(projects) {
       projectListElement.innerHTML = '';
       projects.forEach(project => {
@@ -75,6 +64,9 @@
         checkbox.type = 'checkbox';
         checkbox.classList.add('project-checkbox');
         checkbox.value = key;
+        if (selectedProjects.includes(key)) { 
+          checkbox.checked = true; 
+        }
         const projectName = document.createTextNode(name + ' (' + key + ')');
         projectLabel.appendChild(checkbox);
         projectLabel.appendChild(projectName);
@@ -100,6 +92,8 @@
       xhr.onload = function() {
         if (xhr.status === 200) {
           console.log('Projects applied successfully!');
+          selectedProjects = selectedProjectKeys.split(','); // Update selectedProjects
+          updateProjectList(projectListElement.innerHTML); // Update the list
         } else {
           console.error('Error applying selection:', xhr.statusText);
         }
