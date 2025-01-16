@@ -88,6 +88,7 @@
 
     <script>
         let allProjects = [];
+        let selectedProjects = [];
 
         function fetchUrl() {
             const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
@@ -118,8 +119,6 @@
         function updateUrl() {
             const newUrl = document.getElementById('newUrl').value;
             const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=updateUrl&url=" + newUrl;
-            console.log("Updating URL:", newUrl);
-            console.log("Request URL:", apiurl);
             fetch(apiurl, {
                 method: 'GET',
                 headers: {
@@ -127,21 +126,18 @@
                 }
             })
             .then(response => {
-                console.log("Response status:", response.status);
                 if (!response.ok) {
                     throw new Error('HTTP error! Status: ' + response.status);
                 }
                 return response.text();
             })
             .then(data => {
-                console.log("Response data:", data);
                 document.getElementById('currentUrl').textContent = newUrl;
                 document.getElementById('currentUrl').className = "url-link";
                 document.getElementById('newUrl').value = newUrl;
                 alert("URL updated successfully!");
             })
             .catch(error => {
-                console.log("Error occurred:", error);
                 document.getElementById('currentUrl').textContent = "Error: " + error;
                 document.getElementById('currentUrl').className = "";
                 alert("Error: " + error);
@@ -164,15 +160,8 @@
                 return response.text();
             })
             .then(data => {
-                const projectList = document.getElementById('projectList');
                 allProjects = data.split(",");
-                allProjects.forEach(project => {
-                    const [key, name] = project.split("-");
-                    const label = document.createElement('label');
-                    label.innerHTML = `<input type="checkbox" value="${key}"> ${key} - ${name}`;
-                    projectList.appendChild(label);
-                    projectList.appendChild(document.createElement('br'));
-                });
+                updateProjectList();
             })
             .catch(error => {
                 console.log("Error occurred:", error);
@@ -195,17 +184,26 @@
                 return response.text();
             })
             .then(data => {
-                const projectList = document.getElementById('projectList');
-                const selectedKeys = data.split(",");
-                selectedKeys.forEach(selectedKey => {
-                    const checkbox = projectList.querySelector(`input[value="${selectedKey}"]`);
-                    if (checkbox) {
-                        checkbox.checked = true;
-                    }
-                });
+                selectedProjects = data.split(",");
+                updateProjectList();
             })
             .catch(error => {
                 console.log("Error occurred:", error);
+            });
+        }
+
+        function updateProjectList() {
+            const projectList = document.getElementById('projectList');
+            projectList.innerHTML = '';
+            allProjects.forEach(project => {
+                const [key, name] = project.split("-");
+                const label = document.createElement('label');
+                label.innerHTML = `<input type="checkbox" value="${key}"> ${key} - ${name}`;
+                if (selectedProjects.includes(key)) {
+                    label.querySelector('input[type="checkbox"]').checked = true;
+                }
+                projectList.appendChild(label);
+                projectList.appendChild(document.createElement('br'));
             });
         }
 
@@ -213,7 +211,6 @@
             const projectList = document.getElementById('projectList');
             const selectedKeys = Array.from(projectList.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
             const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=applySelection&keys=" + selectedKeys.join(",");
-            console.log("Applying selection:", selectedKeys);
             fetch(apiurl, {
                 method: 'GET',
                 headers: {
@@ -221,7 +218,6 @@
                 }
             })
             .then(response => {
-                console.log("Response status:", response.status);
                 if (!response.ok) {
                     throw new Error('HTTP error! Status: ' + response.status);
                 }
@@ -231,20 +227,19 @@
                 alert('Projects applied successfully!');
             })
             .catch(error => {
-                console.log("Error occurred:", error);
                 alert("Error: " + error);
             });
         }
 
         document.getElementById('projectSearch').addEventListener('input', function () {
             const filter = this.value.toLowerCase();
+            const filteredProjects = allProjects.filter(project => project.toLowerCase().includes(filter));
             const projectList = document.getElementById('projectList');
             projectList.innerHTML = '';
-            allProjects.filter(project => project.toLowerCase().includes(filter)).forEach(project => {
-                const [key, name] = project.split('-');
+            filteredProjects.forEach(project => {
+                const [key, name] = project.split("-");
                 const label = document.createElement('label');
                 label.innerHTML = `<input type="checkbox" value="${key}"> ${key} - ${name}`;
-                const selectedProjects = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
                 if (selectedProjects.includes(key)) {
                     label.querySelector('input[type="checkbox"]').checked = true;
                 }
@@ -254,7 +249,6 @@
         });
 
         document.addEventListener("DOMContentLoaded", fetchUrl);
-        document.addEventListener("DOMContentLoaded", fetchProjects);
         document.addEventListener("DOMContentLoaded", fetchProjects);
         document.addEventListener("DOMContentLoaded", fetchSelectedProjects);
     </script>
