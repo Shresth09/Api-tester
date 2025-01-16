@@ -187,6 +187,7 @@ function updateProjectList() {
 }
 
 function filterProjectList(filter) {
+  console.log("Filter applied: ", filter);
   const projectList = document.getElementById('projectList');
   const labels = projectList.querySelectorAll('label');
 
@@ -233,12 +234,12 @@ document.addEventListener("DOMContentLoaded", function() {
   fetchUrl();
   fetchProjects();
   fetchSelectedProjects(); // Ensure this is called before updateProjectList
-});
 
-// Attach event listener to the search input
-document.getElementById('projectSearch').addEventListener('input', function() {
-  const filter = this.value.toLowerCase();
-  filterProjectList(filter);
+  // Attach event listener to the search input
+  document.getElementById('projectSearch').addEventListener('input', function() {
+    const filter = this.value.toLowerCase();
+    filterProjectList(filter);
+  });
 });
 </script>
 </body>
