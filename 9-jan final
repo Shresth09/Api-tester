@@ -1,7 +1,128 @@
-Got it! Let's update the HTML and JavaScript to achieve an expandable list with checkboxes and a search bar. We'll also make sure to store the selected projects and maintain them across page reloads.
+package com.example.plugins.tutorial.servlet;
 
-### Updated `issuecrud-page.vm` (HTML)
-```html
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import com.atlassian.templaterenderer.TemplateRenderer;
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.security.groups.GroupManager;
+import com.atlassian.jira.project.Project;
+import com.atlassian.jira.project.ProjectManager;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class IssueCRUD extends HttpServlet {
+    private static final Logger Log = LoggerFactory.getLogger(IssueCRUD.class);
+
+    private final TemplateRenderer templateRenderer;
+    private final PluginSettingsFactory pluginSettingsFactory;
+    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins.tutorial.servlet.IssueCRUD";
+    private static final String DEFAULT_API_URL = "default_URL";
+
+    public IssueCRUD(TemplateRenderer templateRenderer, PluginSettingsFactory pluginSettingsFactory) {
+        this.templateRenderer = templateRenderer;
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+        // Check if the user is an admin
+        ApplicationUser user = ComponentAccessor.getJiraAuthenticationContext().getLoggedInUser();
+        GroupManager groupManager = ComponentAccessor.getGroupManager();
+        if (user == null || !groupManager.isUserInGroup(user, "jira-administrators")) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write("You do not have permission to access this page.");
+            return;
+        }
+
+        String action = req.getParameter("action");
+
+        // Fetch the current URL
+        if ("getUrl".equals(action)) {
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            String apiurl = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".apiUrl");
+            if (apiurl == null) {
+                apiurl = DEFAULT_API_URL;
+            }
+            resp.setContentType("application/json");
+            resp.getWriter().write("{\"apiurl\":\"" + apiurl + "\"}");
+        }
+        // Update the URL
+        else if ("updateUrl".equals(action)) {
+            try {
+                String newUrl = req.getParameter("url");
+                PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+                pluginSettings.put(PLUGIN_STORAGE_KEY + ".apiUrl", newUrl);
+                resp.setContentType("text/plain");
+                resp.getWriter().write("URL updated successfully!");
+            } catch (Exception e) {
+                Log.error("Error processing update URL request", e);
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.getWriter().write("Error processing request!");
+            }
+        }
+        // Handle apply selection action
+        else if ("applySelection".equals(action)) {
+            String projectKeys = req.getParameter("keys");
+            // Store the selected project keys in PluginSettings
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            pluginSettings.put(PLUGIN_STORAGE_KEY + ".selectedProjects", projectKeys);
+            resp.setContentType("text/plain");
+            resp.getWriter().write("Projects applied successfully!");
+        }
+        // Fetch all projects
+        else if ("getProjects".equals(action)) {
+            ProjectManager projectManager = ComponentAccessor.getProjectManager();
+            List<Project> projects = projectManager.getProjectObjects();
+            String projectList = projects.stream()
+                .map(project -> project.getKey() + " - " + project.getName())
+                .collect(Collectors.joining(","));
+            resp.setContentType("text/plain");
+            resp.getWriter().write(projectList);
+        }
+        // Fetch selected projects
+        else if ("getSelectedProjects".equals(action)) {
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            String selectedProjects = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".selectedProjects");
+            if (selectedProjects == null) {
+                selectedProjects = "";
+            }
+            resp.setContentType("text/plain");
+            resp.getWriter().write(selectedProjects);
+        }
+        // Default action
+        else {
+            resp.setContentType("text/html; charset=utf-8");
+            templateRenderer.render("templates/issuecrud-page.vm", resp.getWriter());
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        doGet(req, resp);
+    }
+}
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,7 +185,6 @@ Got it! Let's update the HTML and JavaScript to achieve an expandable list with 
             border: 1px solid #ccc;
             border-radius: 4px;
             padding: 10px;
-            display: none;
         }
     </style>
 </head>
@@ -157,24 +277,25 @@ Got it! Let's update the HTML and JavaScript to achieve an expandable list with 
                 method: 'GET',
                 headers: {
                     'Referer': window.location.href,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'text/plain'
                 }
             })
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-                return response.json();
+                return response.text();
             })
             .then(data => {
                 const projectList = document.getElementById('projectList');
-                data.projects.forEach(project => {
+                const projects = data.split(",");
+                projects.forEach(project => {
+                    const [key, name] = project.split(" - ");
                     const label = document.createElement('label');
-                    label.innerHTML = `<input type="checkbox" value="${project.key}"> ${project.key} - ${project.name}`;
+                    label.innerHTML = `<input type="checkbox" value="${key}"> ${key} - ${name}`;
                     projectList.appendChild(label);
                     projectList.appendChild(document.createElement('br'));
                 });
-                projectList.style.display = "block";
             })
             .catch(error => {
                 console.log("Error occurred:", error);
@@ -187,18 +308,19 @@ Got it! Let's update the HTML and JavaScript to achieve an expandable list with 
                 method: 'GET',
                 headers: {
                     'Referer': window.location.href,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'text/plain'
                 }
             })
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-                return response.json();
+                return response.text();
             })
             .then(data => {
                 const projectList = document.getElementById('projectList');
-                data.selectedProjects.forEach(selectedKey => {
+                const selectedKeys = data.split(",");
+                selectedKeys.forEach(selectedKey => {
                     const checkbox = projectList.querySelector(`input[value="${selectedKey}"]`);
                     if (checkbox) {
                         checkbox.checked = true;
@@ -256,159 +378,3 @@ Got it! Let's update the HTML and JavaScript to achieve an expandable list with 
     </script>
 </body>
 </html>
-```
-
-### Updated `IssueCRUD.java` (Servlet)
-```java
-package com.example.plugins.tutorial.servlet;
-
-import com.atlassian.sal.api.pluginsettings.PluginSettings;
-import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-import com.atlassian.templaterenderer[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/hubhack/hubhack.github.io/tree/3613c687a446afea34500da8889a75da3fbd77c3/source%2F_posts%2Fjs%2FHTML.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
-
-
-
-
-
-
-
-
-Absolutely! Let's write the complete servlet code again, incorporating the new functionality to manage the selected projects.
-
-### Complete `IssueCRUD.java` (Servlet)
-```java
-package com.example.plugins.tutorial.servlet;
-
-import com.atlassian.sal.api.pluginsettings.PluginSettings;
-import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-import com.atlassian.templaterenderer.TemplateRenderer;
-import com.atlassian.jira.component.ComponentAccessor;
-import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.security.groups.GroupManager;
-import com.atlassian.jira.project.Project;
-import com.atlassian.jira.project.ProjectManager;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-
-public class IssueCRUD extends HttpServlet {
-    private static final Logger Log = LoggerFactory.getLogger(IssueCRUD.class);
-
-    private final TemplateRenderer templateRenderer;
-    private final PluginSettingsFactory pluginSettingsFactory;
-    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins.tutorial.servlet.IssueCRUD";
-    private static final String DEFAULT_API_URL = "default_URL";
-
-    public IssueCRUD(TemplateRenderer templateRenderer, PluginSettingsFactory pluginSettingsFactory) {
-        this.templateRenderer = templateRenderer;
-        this.pluginSettingsFactory = pluginSettingsFactory;
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setHeader("Access-Control-Allow-Origin", "*");
-        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-        // Check if the user is an admin
-        ApplicationUser user = ComponentAccessor.getJiraAuthenticationContext().getLoggedInUser();
-        GroupManager groupManager = ComponentAccessor.getGroupManager();
-        if (user == null || !groupManager.isUserInGroup(user, "jira-administrators")) {
-            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            resp.getWriter().write("You do not have permission to access this page.");
-            return;
-        }
-
-        String action = req.getParameter("action");
-
-        // Fetch the current URL
-        if ("getUrl".equals(action)) {
-            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-            String apiurl = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".apiUrl");
-            if (apiurl == null) {
-                apiurl = DEFAULT_API_URL;
-            }
-            resp.setContentType("application/json");
-            resp.getWriter().write("{\"apiurl\":\"" + apiurl + "\"}");
-        } 
-        // Update the URL
-        else if ("updateUrl".equals(action)) {
-            try {
-                String newUrl = req.getParameter("url");
-                PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-                pluginSettings.put(PLUGIN_STORAGE_KEY + ".apiUrl", newUrl);
-                resp.setContentType("text/plain");
-                resp.getWriter().write("URL updated successfully!");
-            } catch (Exception e) {
-                Log.error("Error processing update URL request", e);
-                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                resp.getWriter().write("Error processing request!");
-            }
-        }
-        // Handle apply selection action
-        else if ("applySelection".equals(action)) {
-            String[] projectKeys = req.getParameter("keys").split(",");
-            // Store the selected project keys in PluginSettings
-            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-            pluginSettings.put(PLUGIN_STORAGE_KEY + ".selectedProjects", String.join(",", projectKeys));
-            resp.setContentType("text/plain");
-            resp.getWriter().write("Projects applied successfully!");
-        }
-        // Fetch all projects
-        else if ("getProjects".equals(action)) {
-            ProjectManager projectManager = ComponentAccessor.getProjectManager();
-            List<Project> projects = projectManager.getProjectObjects();
-            List<JsonObject> projectList = projects.stream().map(project -> {
-                JsonObject projectJson = new JsonObject();
-                projectJson.addProperty("key", project.getKey());
-                projectJson.addProperty("name", project.getName());
-                return projectJson;
-            }).collect(Collectors.toList());
-            String jsonResponse = new Gson().toJson(projectList);
-            resp.setContentType("application/json");
-            resp.getWriter().write("{\"projects\":" + jsonResponse + "}");
-        }
-        // Fetch selected projects
-        else if ("getSelectedProjects".equals(action)) {
-            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-            String selectedProjects = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".selectedProjects");
-            if (selectedProjects == null) {
-                selectedProjects = "";
-            }
-            String[] selectedKeys = selectedProjects.split(",");
-            String jsonResponse = new Gson().toJson(Arrays.asList(selectedKeys));
-            resp.setContentType("application/json");
-            resp.getWriter().write("{\"selectedProjects\":" + jsonResponse + "}");
-        } 
-        // Default action
-        else {
-            resp.setContentType("text/html; charset=utf-8");
-            templateRenderer.render("templates/issuecrud-page.vm", resp.getWriter());
-        }
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        doGet(req, resp);
-    }
-}
-```
-
-This servlet code handles the following:
-1. **Admin Check**: Ensures only Jira administrators can access the page.
-2. **Fetch URL**: Retrieves the current API URL.
-3. **Update URL**: Updates the API URL.
-4. **Apply Selection**: Stores the selected project keys.
-5. **Fetch Projects**: Retrieves all projects with their keys and names.
-6. **Fetch Selected Projects**: Retrieves the selected project keys to maintain state across page reloads.
-
-Let me know if there are any additional modifications or features you'd like to add![43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/ludopif/workshop-example/tree/b949c8b5080008d496a07c8d9dd55ce0bf6796b5/src%2Fmain%2Fjava%2Fcom%2Forange%2Ftodolist%2FTodosServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/wutongservice/wutongservice/tree/81d66d3cc06d362a355582d38d691f341db565da/ServerPlatform%2Fbase%2Fsrc%2Fmain%2Fjava%2Fcom%2Fborqs%2Fserver%2Fbase%2Fweb%2Fwebmethod%2FWebMethodServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/rodneylsp/java-json/tree/5ae7cc73d7563c1af4e1775d95ec83887c8b5b81/contatos%2Fsrc%2FContatosServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/smoeller1/BuRMA/tree/279976b0f2b29aaf17adb3ce61cd6fe9a9449fc6/src%2FMongoRestApp%2Fsrc%2Fedu%2Fumkc%2Fmongorestapp%2FUserServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "4")
