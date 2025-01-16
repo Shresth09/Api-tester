@@ -108,11 +108,11 @@
             method: 'GET',
             headers: {
                 'Referer': window.location.href,
-                "Content-Type": 'application/json' // Corrected typo
+                "Content-Type": 'application/json' 
             }
         })
         .then(response => {
-            if (!response.ok) { // Corrected condition
+            if (!response.ok) { 
                 throw new Error('HTTP error! Status: ' + response.status);
             }
             return response.json();
@@ -142,7 +142,7 @@
         })
         .then(response => {
             console.log("Response status:", response.status);
-            if (!response.ok) { // Corrected condition
+            if (!response.ok) { 
                 throw new Error('HTTP error! Status: ' + response.status);
             }
             return response.text();
@@ -172,7 +172,7 @@
             }
         })
         .then(response => {
-            if (!response.ok) { // Corrected condition
+            if (!response.ok) { 
                 throw new Error('HTTP error! Status: ' + response.status);
             }
             return response.text();
@@ -213,7 +213,7 @@
             }
         })
         .then(response => {
-            if (!response.ok) { // Corrected condition
+            if (!response.ok) { 
                 throw new Error('HTTP error! Status: ' + response.status);
             }
             return response.text();
@@ -229,9 +229,10 @@
 
     function updateSelectedProjects(key, isChecked) {
         if (isChecked) {
-            if (!selectedProjects.includes(key)) {
-                selectedProjects.push(key);
+            if (!selectedProjects.includes(key)) { 
+                selectedProjects.push(key); 
             }
         } else {
             const index = selectedProjects.indexOf(key);
-            if (index
+            if (index > -1) {
+                selected
