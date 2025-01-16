@@ -55,10 +55,11 @@
             updateProjectList();
         }
 
-        function updateProjectList() {
+        function updateProjectList(filter = '') {
             const projectList = document.getElementById('projectList');
             projectList.innerHTML = '';
-            allProjects.forEach(project => {
+            const filteredProjects = allProjects.filter(project => project.toLowerCase().includes(filter.toLowerCase()));
+            filteredProjects.forEach(project => {
                 const [key, name] = project.split("-");
                 const label = document.createElement('label');
                 label.innerHTML = `<input type="checkbox" value="${key}"> ${key} - ${name}`;
@@ -67,7 +68,9 @@
                 }
                 label.querySelector('input[type="checkbox"]').addEventListener('change', function() {
                     if (this.checked) {
-                        selectedProjects.push(key);
+                        if (!selectedProjects.includes(key)) {
+                            selectedProjects.push(key);
+                        }
                     } else {
                         selectedProjects = selectedProjects.filter(item => item !== key);
                     }
@@ -79,26 +82,7 @@
 
         document.getElementById('projectSearch').addEventListener('input', function () {
             const filter = this.value.toLowerCase();
-            const filteredProjects = allProjects.filter(project => project.toLowerCase().includes(filter));
-            const projectList = document.getElementById('projectList');
-            projectList.innerHTML = '';
-            filteredProjects.forEach(project => {
-                const [key, name] = project.split("-");
-                const label = document.createElement('label');
-                label.innerHTML = `<input type="checkbox" value="${key}"> ${key} - ${name}`;
-                if (selectedProjects.includes(key)) {
-                    label.querySelector('input[type="checkbox"]').checked = true;
-                }
-                label.querySelector('input[type="checkbox"]').addEventListener('change', function() {
-                    if (this.checked) {
-                        selectedProjects.push(key);
-                    } else {
-                        selectedProjects = selectedProjects.filter(item => item !== key);
-                    }
-                });
-                projectList.appendChild(label);
-                projectList.appendChild(document.createElement('br'));
-            });
+            updateProjectList(filter);
         });
 
         document.addEventListener("DOMContentLoaded", fetchProjects);
