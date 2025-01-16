@@ -1,209 +1,124 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>ROM URL Config</title>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<style>
-
-body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
-  padding: 20px;
-  background-color: #f4f4f4;
-}
-
-.container {
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.aui-page-header-main {
-  padding-bottom: 1px;
-  border-bottom: 1px solid #ddd;
-  color: #292959;
-  font-family: Georgia, serif;
-}
-
-.text.medium-long-field, search-field {
-  width: 100%;
-  padding: 8px;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  margin-bottom: 15px;
-}
-
-.aui-button.aui-button-primary {
-  background-color: #0052cc;
-  color: #fff;
-  padding: 10px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.aui-button.aui-button-primary:hover {
-  background-color: #003d99;
-}
-
-.url-link {
-  color: #0052cc;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.current {
-  font-family: Georgia, serif;
-  color: gray;
-}
-
-.project-list {
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 10px;
-}
-
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Selection</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .search-bar {
+      margin-bottom: 15px;
+    }
+    .project-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+    }
+    .project-label {
+      display: flex;
+      align-items: center;
+    }
+    .project-checkbox {
+      margin-right: 10px;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <h2>Select Projects</h2>
+    <div class="search-bar">
+      <input type="text" id="projectSearch" class="search-field" placeholder="Search projects...">
+    </div>
+    <div class="project-list" id="projectList"></div>
+    <button onclick="applySelection()">Apply</button>
+  </div>
 
-<div class="container">
+  <script>
+    const projectListElement = document.getElementById('projectList');
+    const searchInput = document.getElementById('projectSearch');
 
-<div class="aui-page-header-main">
+    fetchProjects();
 
-<h2>AI-ROM URL Configuration</h2>
-
-</div>
-
-<div>
-
-<h4 class="current">Current URL:</h4>
-
-<pre id="currentUrl" class="url-link">Loading...</pre>
-
-</div>
-
-<div class="update-group">
-
-<input type="text" id="newUrl" class="text medium-long-field" placeholder="Enter new API URL">
-
-<button onclick="updateUrl()" class="aui-button aui-button-primary">Update URL</button>
-
-</div>
-
-<div>
-
-<h4>Select Project:</h4>
-
-<input type="text" id="projectSearch" class="search-field" placeholder="Search projects...">
-
-<div id="projectList" class="project-list">
-
-</div>
-
-<button onclick="applySelection()" class="aui-button aui-button-primary">Apply</button>
-
-</div>
-
-</div>
-
-<script>
-
-let allProjects = [];
-let selectedProjects = []; 
-
-function fetchUrl() {
-  // ... (unchanged)
-}
-
-function updateUrl() {
-  // ... (unchanged)
-}
-
-function fetchProjects() {
-  // ... (unchanged)
-}
-
-function fetchSelectedProjects() {
-  const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getSelectedProjects";
-  fetch(apiurl, {
-    method: 'GET',
-    headers: {
-      'Referer': window.location.href,
-      'Content-Type': 'text/plain'
+    function fetchProjects() {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', '/jira/plugins/servlet/issuecrud?action=getProjects');
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          const projectData = xhr.responseText.split(',');
+          updateProjectList(projectData);
+        } else {
+          console.error('Error fetching projects:', xhr.statusText);
+        }
+      };
+      xhr.send();
     }
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('HTTP error! Status: $(response.status)');
+
+    function updateProjectList(projects) {
+      projectListElement.innerHTML = '';
+      projects.forEach(project => {
+        const [key, name] = project.split(' ');
+        const projectLabel = document.createElement('label');
+        projectLabel.classList.add('project-label');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.classList.add('project-checkbox');
+        checkbox.value = key;
+        const projectName = document.createTextNode(name + ' (' + key + ')');
+        projectLabel.appendChild(checkbox);
+        projectLabel.appendChild(projectName);
+        projectListElement.appendChild(projectLabel);
+        projectListElement.appendChild(document.createElement('br'));
+      });
     }
-    return response.text();
-  })
-  .then(data => {
-    selectedProjects = data.split(","); 
-    updateProjectList(); 
-  })
-  .catch(error => {
-    console.log("Error occurred:", error);
-  });
-}
 
-function updateProjectList(filter = '') {
-  const projectList = document.getElementById('projectList');
-  projectList.innerHTML = ''; 
-
-  const filteredProjects = allProjects.filter(project => {
-    const [key, name] = project.split("-");
-    return (name + key).toLowerCase().includes(filter.toLowerCase());
-  });
-
-  filteredProjects.forEach(project => {
-    const [key, name] = project.split("-");
-    const label = document.createElement('label');
-    const checkbox = document.createElement('input');
-    checkbox.type = "checkbox";
-    checkbox.value = key;
-    if (selectedProjects.includes(key)) { 
-      checkbox.checked = true; 
+    function getSelectedProjects() {
+      const selectedProjects = [];
+      const checkboxes = document.querySelectorAll('.project-checkbox:checked');
+      for (const checkbox of checkboxes) {
+        selectedProjects.push(checkbox.value);
+      }
+      return selectedProjects.join(',');
     }
-    label.appendChild(checkbox);
-    label.appendChild(document.createTextNode(` ${key} - ${name}`));
-    projectList.appendChild(label);
-    projectList.appendChild(document.createElement('br'));
-  });
-}
 
-function applySelection() {
-  // ... (unchanged)
-}
+    function applySelection() {
+      const selectedProjectKeys = getSelectedProjects();
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/jira/plugins/servlet/issuecrud?action=applySelection');
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          console.log('Projects applied successfully!');
+        } else {
+          console.error('Error applying selection:', xhr.statusText);
+        }
+      };
+      xhr.send(`keys=${selectedProjectKeys}`);
+    }
 
-document.getElementById('projectSearch').addEventListener('input', function() {
-  const filter = this.value;
-  updateProjectList(filter); 
-});
-
-document.addEventListener("DOMContentLoaded", fetchUrl);
-document.addEventListener("DOMContentLoaded", fetchProjects);
-document.addEventListener("DOMContentLoaded", fetchSelectedProjects);
-
-</script>
-
+    searchInput.addEventListener('input', function() {
+      const filter = this.value.toLowerCase();
+      const projects = document.querySelectorAll('.project-label');
+      projects.forEach(project => {
+        const projectName = project.textContent.toLowerCase();
+        if (projectName.includes(filter)) {
+          project.style.display = 'block';
+        } else {
+          project.style.display = 'none';
+        }
+      });
+    });
+  </script>
 </body>
-
 </html>
