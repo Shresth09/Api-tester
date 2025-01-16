@@ -31,8 +31,16 @@
       xhr.open('GET', '/jira/plugins/servlet/issuecrud?action=getProjects');
       xhr.onload = function() {
         if (xhr.status === 200) {
-          const projectData = xhr.responseText.split(',');
-          updateProjectList(projectData);
+          try {
+            const projectData = JSON.parse(xhr.responseText); 
+            if (Array.isArray(projectData)) {
+              updateProjectList(projectData);
+            } else {
+              console.error('Invalid project data format:', xhr.responseText);
+            }
+          } catch (error) {
+            console.error('Error parsing project data:', error);
+          }
         } else {
           console.error('Error fetching projects:', xhr.statusText);
         }
@@ -46,7 +54,7 @@
       xhr.onload = function() {
         if (xhr.status === 200) {
           selectedProjects = xhr.responseText.split(',');
-          updateProjectList(projectListElement.innerHTML); // Update with current list
+          updateProjectList(projectListElement.innerHTML); 
         } else {
           console.error('Error fetching selected projects:', xhr.statusText);
         }
@@ -92,8 +100,8 @@
       xhr.onload = function() {
         if (xhr.status === 200) {
           console.log('Projects applied successfully!');
-          selectedProjects = selectedProjectKeys.split(','); // Update selectedProjects
-          updateProjectList(projectListElement.innerHTML); // Update the list
+          selectedProjects = selectedProjectKeys.split(','); 
+          updateProjectList(projectListElement.innerHTML); 
         } else {
           console.error('Error applying selection:', xhr.statusText);
         }
