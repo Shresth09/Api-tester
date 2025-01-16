@@ -58,8 +58,8 @@
       xhr.open('GET', '/jira/plugins/servlet/issuecrud?action=getProjects');
       xhr.onload = function() {
         if (xhr.status === 200) {
-          const projectData = xhr.responseText.split(',');
-          updateProjectList(projectData);
+          const projectData = xhr.responseText.split(','); 
+          updateProjectList(projectData); 
         } else {
           console.error('Error fetching projects:', xhr.statusText);
         }
@@ -92,8 +92,7 @@
         checkbox.classList.add('project-checkbox');
         checkbox.value = key;
 
-        // Set checkbox checked state based on selectedProjects
-        if (selectedProjects.includes(key)) {
+        if (selectedProjects.includes(key)) { 
           checkbox.checked = true; 
         }
 
