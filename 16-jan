@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROM URL Config</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .aui-page-header-main {
+            padding-bottom: 1px;
+            border-bottom: 1px solid #ddd;
+            color: #292959;
+            font-family: Georgia, serif;
+        }
+        .text.medium-long-field, .search-field {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .aui-button.aui-button-primary {
+            background-color: #0052cc;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .aui-button.aui-button-primary:hover {
+            background-color: #003d99;
+        }
+        .url-link {
+            color: #0052cc;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .current {
+            font-family: Georgia, serif;
+            color: gray;
+        }
+        .project-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="aui-page-header-main">
+            <h2>AI-ROM URL Configuration</h2>
+        </div>
+        <div>
+            <h4 class="current">Current URL:</h4>
+            <pre id="currentUrl" class="url-link">Loading...</pre>
+        </div>
+        <div class="update-group">
+            <input type="text" id="newUrl" class="text medium-long-field" placeholder="Enter new API URL">
+            <button onclick="updateUrl()" class="aui-button aui-button-primary">Update URL</button>
+        </div>
+        <div>
+            <h4>Select Project:</h4>
+            <input type="text" id="projectSearch" class="search-field" placeholder="Search projects...">
+            <div id="projectList" class="project-list">
+                <!-- Checkboxes will be populated dynamically -->
+            </div>
+            <button onclick="applySelection()" class="aui-button aui-button-primary">Apply</button>
+        </div>
+    </div>
+
+    <script>
+        let allProjects = [];
+        let selectedProjects = new Set();
+
+        function fetchUrl() {
+            const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
+            fetch(apiurl, {
+                method: 'GET',
+                headers: {
+                    'Referer': window.location.href,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('currentUrl').textContent = data.apiurl;
+                document.getElementById('currentUrl').className = "url-link";
+                document.getElementById('newUrl').value = data.apiurl;
+            })
+            .catch(error => {
+                document.getElementById('currentUrl').textContent = `Error: ${error}`;
+                document.getElementById('currentUrl').className = "";
+            });
+        }
+
+        function updateUrl() {
+            const newUrl = document.getElementById('newUrl').value;
+            const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=updateUrl&url=" + newUrl;
+            console.log("Updating URL:", newUrl);
+            console.log("Request URL:", apiurl);
+            fetch(apiurl, {
+                method: 'GET',
+                headers: {
+                    'Referer': window.location.href
+                }
+            })
+            .then(response => {
+                console.log("Response status:", response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                console.log("Response data:", data);
+                document.getElementById('currentUrl').textContent = newUrl;
+                document.getElementById('currentUrl').className = "url-link";
+                document.getElementById('newUrl').value = newUrl;
+                alert('URL updated successfully!');
+            })
+            .catch(error => {
+                console.log("Error occurred:", error);
+                document.getElementById('currentUrl').textContent = `Error: ${error}`;
+                document.getElementById('currentUrl').className = "";
+                alert(`Error: ${error}`);
+            });
+        }
+
+        function fetchProjects() {
+            const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getProjects";
+            fetch(apiurl, {
+                method: 'GET',
+                headers: {
+                    'Referer': window.location.href,
+                    'Content-Type': 'text/plain'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                allProjects = data.split(",");
+                updateProjectCheckboxes();
+            })
+            .catch(error => {
+                console.log("Error occurred:", error);
+            });
+        }
+
+        function fetchSelectedProjects() {
+            const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getSelectedProjects";
+            fetch(apiurl, {
+                method: 'GET',
+                headers: {
+                    'Referer': window.location.href,
+                    'Content-Type': 'text/plain'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                selectedProjects = new Set(data.split(","));
+                updateProjectCheckboxes();
+            })
+            .catch(error => {
+                console.log("Error occurred:", error);
+            });
+        }
+
+        function updateProjectCheckboxes() {
+            const projectList = document.getElementById('projectList');
+            projectList.innerHTML = '';
+            allProjects.forEach(project => {
+                const [key, name] = project.split(" - ");
+                const label = document.createElement('label');
+                label.innerHTML = `<input type="checkbox" value="${key}" ${selectedProjects.has(key) ? 'checked' : ''}> ${key} - ${name}`;
+                projectList.appendChild(label);
+                projectList.appendChild(document.createElement('br'));
+            });
+        }
+
+        function applySelection() {
+            const projectList = document.getElementById('projectList');
+            selectedProjects = new Set(Array.from(projectList.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value));
+            const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=applySelection&keys=" + Array.from(selectedProjects).join(",");
+            console.log("Applying selection:", Array.from(selectedProjects));
+            fetch(apiurl, {
+                method: 'GET',
+                headers: {
+                    'Referer': window.location.href
+                }
+            })
+            .then(response => {
+                console.log("Response status:", response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                alert('Projects applied successfully!');
+                updateProjectCheckboxes();
+            })
+            .catch(error => {
+                console.log("Error occurred:", error);
+                alert(`Error: ${error}`);
+            });
+        }
+
+        document.getElementById('projectSearch').addEventListener('input', function() {
+            const filter = this.value.toLowerCase();
+            const projectList = document.getElementById('projectList');
+            projectList.innerHTML = '';
+            allProjects.filter(project => project.toLowerCase().includes(filter)).forEach(project => {
+                const [key, name] = project.split(" - ");
+                const label = document.createElement('label');
+                label.innerHTML = `<input type="checkbox" value="${key}" ${selectedProjects.has(key) ? 'checked' : ''}> ${key} - ${name}`;
+                projectList.appendChild(label);
+                projectList.appendChild(document.createElement('br'));
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", fetchUrl);
+        document.addEventListener("DOMContentLoaded", fetchProjects);
+        document.addEventListener("DOMContentLoaded", fetchSelectedProjects);
+    </script[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/hubhack/hubhack.github.io/tree/3613c687a446afea34500da8889a75da3fbd77c3/source%2F_posts%2Fjs%2FHTML.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
