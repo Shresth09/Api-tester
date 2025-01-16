@@ -1,3 +1,77 @@
+package com.example.plugins.servlet;
+
+import com.atlassian.plugin.settings.PluginSettings;
+import com.atlassian.plugin.settings.PluginSettingsFactory;
+import com.atlassian.sal.api.component.ComponentLocator;
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.project.Project;
+import com.atlassian.jira.project.ProjectManager;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class ProjectSelectionServlet extends HttpServlet {
+
+    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins";
+    private final PluginSettingsFactory pluginSettingsFactorySelectionServlet(PluginSettingsFactory pluginSettingsFactory) {
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String action = req.getParameter("action");
+
+        // Fetch all projects
+        if ("getProjects".equals(action)) {
+            ProjectManager projectManager = ComponentAccessor.getProjectManager();
+            List<Project> projects = projectManager.getProjectObjects();
+            String projectList = projects.stream()
+                .map(project -> project.getKey() + "-" + project.getName())
+                .collect(Collectors.joining(","));
+
+            resp.setContentType("text/plain");
+            resp.getWriter().write(projectList);
+
+        // Fetch the selected projects
+        } else if ("getSelectedProjects".equals(action)) {
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            String selectedProjects = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".selectedProjects");
+
+            if (selectedProjects == null) {
+                selectedProjects = "";
+            }
+
+            resp.setContentType("text/plain");
+            resp.getWriter().write(selectedProjects);
+
+        // Apply the selected projects
+        } else if ("applySelection".equals(action)) {
+            String projectKeys = req.getParameter("keys");
+
+            // Store the selected project keys in PluginSettings
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            pluginSettings.put(PLUGIN_STORAGE_KEY + ".selectedProjects", projectKeys);
+
+            resp.setContentType("text/plain");
+            resp.getWriter().write("Projects applied successfully!");
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -34,7 +108,7 @@
 
 <script>
 let allProjects = [];
-let selectedProjects = []; 
+let selectedProjects = [];
 
 function fetchUrl() {
   const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
@@ -222,80 +296,3 @@ document.getElementById('projectSearch').addEventListener('input', function() {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-package com.example.plugins.servlet;
-
-import com.atlassian.plugin.settings.PluginSettings;
-import com.atlassian.plugin.settings.PluginSettingsFactory;
-import com.atlassian.sal.api.component.ComponentLocator;
-import com.atlassian.jira.component.ComponentAccessor;
-import com.atlassian.jira.project.Project;
-import com.atlassian.jira.project.ProjectManager;
-
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class ProjectSelectionServlet extends HttpServlet {
-
-    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins";
-    private final PluginSettingsFactory pluginSettingsFactory;
-
-    public ProjectSelectionServlet(PluginSettingsFactory pluginSettingsFactory) {
-        this.pluginSettingsFactory = pluginSettingsFactory;
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String action = req.getParameter("action");
-
-        // Fetch the selected projects
-        if ("getSelectedProjects".equals(action)) {
-            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-            String selectedProjects = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".selectedProjects");
-
-            if (selectedProjects == null) {
-                selectedProjects = "";
-            }
-
-            resp.setContentType("text/plain");
-            resp.getWriter().write(selectedProjects);
-
-        // Fetch all projects
-        } else if ("getProjects".equals(action)) {
-            ProjectManager projectManager = ComponentAccessor.getProjectManager();
-            List<Project> projects = projectManager.getProjectObjects();
-            String projectList = projects.stream()
-                .map(project -> project.getKey() + "-" + project.getName())
-                .collect(Collectors.joining(","));
-
-            resp.setContentType("text/plain");
-            resp.getWriter().write(projectList);
-
-        // Apply the selected projects
-        } else if ("applySelection".equals(action)) {
-            String projectKeys = req.getParameter("keys");
-
-            // Store the selected project keys in PluginSettings
-            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-            pluginSettings.put(PLUGIN_STORAGE_KEY + ".selectedProjects", projectKeys);
-
-            resp.setContentType("text/plain");
-            resp.getWriter().write("Projects applied successfully!");
-        }
-    }
-}
