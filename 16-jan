@@ -168,10 +168,13 @@ function updateProjectList() {
     checkbox.value = key;
 
     // Check if the project is selected
-    checkbox.checked = selectedProjects.includes(key);
+    if (selectedProjects.includes(key)) {
+      checkbox.checked = true;
+    }
     console.log("Project Key: ", key, ", Checked: ", checkbox.checked);
 
-    label.innerHTML = checkbox.outerHTML + " " + key + " - " + name;
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(" " + key + " - " + name));
     projectList.appendChild(label);
     projectList.appendChild(document.createElement('br'));
   });
