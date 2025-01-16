@@ -2,60 +2,37 @@
 <html lang="en">
 
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>ROM URL Config</title>
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 </head>
+
 <body>
-
 <div class="container">
+  <div class="aui-page-header-main">
+    <h2>AI-ROM URL Configuration</h2>
+  </div>
 
-<div class="aui-page-header-main">
+  <div>
+    <h4 class="current">Current URL:</h4>
+    <pre id="currentUrl" class="url-link">Loading...</pre>
+  </div>
 
-<h2>AI-ROM URL Configuration</h2>
+  <div class="update-group">
+    <input type="text" id="newUrl" class="text medium-long-field" placeholder="Enter new API URL">
+    <button onclick="updateUrl()" class="aui-button aui-button-primary">Update URL</button>
+  </div>
 
-</div>
-
-<div>
-
-<h4 class="current">Current URL:</h4>
-
-<pre id="currentUrl" class="url-link">Loading...</pre>
-
-</div>
-
-<div class="update-group">
-
-<input type="text" id="newUrl" class="text medium-long-field" placeholder="Enter new API URL">
-
-<button onclick="updateUrl()" class="aui-button aui-button-primary">Update URL</button>
-
-</div>
-
-<div>
-
-<h4>Select Project:</h4>
-
-<input type="text" id="projectSearch" class="search-field" placeholder="Search projects...">
-
-<div id="projectList" class="project-list">
-
-</div>
-
-<button onclick="applySelection()" class="aui-button aui-button-primary">Apply</button>
-
-</div>
-
+  <div>
+    <h4>Select Project:</h4>
+    <input type="text" id="projectSearch" class="search-field" placeholder="Search projects...">
+    <div id="projectList" class="project-list"></div>
+    <button onclick="applySelection()" class="aui-button aui-button-primary">Apply</button>
+  </div>
 </div>
 
 <script>
-
 let allProjects = [];
 let selectedProjects = []; 
 
@@ -230,17 +207,18 @@ function applySelection() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", fetchUrl);
-document.addEventListener("DOMContentLoaded", fetchProjects);
-document.addEventListener("DOMContentLoaded", fetchSelectedProjects);
+// Ensure functions are called on page load
+document.addEventListener("DOMContentLoaded", function() {
+  fetchUrl();
+  fetchProjects();
+  fetchSelectedProjects(); // Ensure this is called before updateProjectList
+});
 
+// Attach event listener to the search input
 document.getElementById('projectSearch').addEventListener('input', function() {
   const filter = this.value.toLowerCase();
   filterProjectList(filter);
 });
-
 </script>
-
 </body>
-
 </html>
