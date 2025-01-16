@@ -1,7 +1,3 @@
-Absolutely! Let's start from scratch and put everything together.
-
-### Updated `issuecrud-page.vm` (HTML)
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -174,16 +170,16 @@ Absolutely! Let's start from scratch and put everything together.
         function applySelection() {
             const dropdown = document.getElementById('projectDropdown');
             const selectedKeys = Array.from(dropdown.selectedOptions).map(option => option.value);
-            const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=applySelection";
+            const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=applySelection&keys=" + selectedKeys.join(",");
+            console.log("Applying selection:", selectedKeys);
             fetch(apiurl, {
-                method: 'POST',
+                method: 'GET',
                 headers: {
-                    'Referer': window.location.href,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ projectKeys: selectedKeys })
+                    'Referer': window.location.href
+                }
             })
             .then(response => {
+                console.log("Response status:", response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
@@ -203,72 +199,6 @@ Absolutely! Let's start from scratch and put everything together.
     </script>
 </body>
 </html>
-```
-
-### Updated `IssueCRUD.java` (Servlet)
-```java
-package com.example.plugins.tutorial.servlet;
-
-import com.atlassian.sal.api.pluginsettings.PluginSettings;
-import com.atlassian.jira.component.ComponentAccessor;
-import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.security.groups.GroupManager;
-import com.atlassian.jira.project.Project;
-import com.atlassian.jira.project.ProjectManager;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class IssueCRUD extends HttpServlet {
-    private static final Logger Log = LoggerFactory.getLogger(IssueCRUD.class);
-
-    private final TemplateRenderer templateRenderer;
-    private final PluginSettingsFactory pluginSettingsFactory;
-    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins.tutorial.servlet.IssueCRUD";
-    private static final String DEFAULT_API_URL = "default_URL";
-
-    public IssueCRUD(TemplateRenderer templateRenderer, PluginSettingsFactory pluginSettingsFactory) {
-        this.templateRenderer = templateRenderer;
-        this.pluginSettingsFactory = pluginSettingsFactory;
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.setHeader("Access-Control-Allow-Origin", "*");
-        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-        // Check if the user is an admin
-        ApplicationUser user = ComponentAccessor.getJiraAuthenticationContext().getLoggedInUser();
-        GroupManager groupManager = ComponentAccessor.getGroupManager();
-        if (user == null || !groupManager.isUserInGroup(user, "jira-administrators")) {
-            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            resp.getWriter().write("You do not have permission to access this page.");
-            return;
-        }
-
-        String action = req.getParameter("action");
-
-        // Fetch the current URL
-        if ("getUrl".equals(action)) {
-            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-            String apiurl = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".apiUrl");
-            if (apiurl == null) {
-                apiurl = DEFAULT_API_URL;
-            }
-            resp.setContentType("application/json");
-           [43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/hubhack/hubhack.github.io/tree/3613c687a446afea34500da8889a75da3fbd77c3/source%2F_posts%2Fjs%2FHTML.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/ludopif/workshop-example/tree/b949c8b5080008d496a07c8d9dd55ce0bf6796b5/src%2Fmain%2Fjava%2Fcom%2Forange%2Ftodolist%2FTodosServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/wutongservice/wutongservice/tree/81d66d3cc06d362a355582d38d691f341db565da/ServerPlatform%2Fbase%2Fsrc%2Fmain%2Fjava%2Fcom%2Fborqs%2Fserver%2Fbase%2Fweb%2Fwebmethod%2FWebMethodServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/rodneylsp/java-json/tree/5ae7cc73d7563c1af4e1775d95ec83887c8b5b81/contatos%2Fsrc%2FContatosServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "4")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/smoeller1/BuRMA/tree/279976b0f2b29aaf17adb3ce61cd6fe9a9449fc6/src%2FMongoRestApp%2Fsrc%2Fedu%2Fumkc%2Fmongorestapp%2FUserServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "5")
-
-
-
-
-
 
 
 
@@ -284,18 +214,13 @@ import com.atlassian.templaterenderer.TemplateRenderer;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.security.groups.GroupManager;
-import com.atlassian.jira.project.Project;
-import com.atlassian.jira.project.ProjectManager;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.gson.Gson;
 
 public class IssueCRUD extends HttpServlet {
     private static final Logger Log = LoggerFactory.getLogger(IssueCRUD.class);
@@ -353,7 +278,7 @@ public class IssueCRUD extends HttpServlet {
         }
         // Handle apply selection action
         else if ("applySelection".equals(action)) {
-            String[] projectKeys = new Gson().fromJson(req.getParameter("projectKeys"), String[].class);
+            String[] projectKeys = req.getParameter("keys").split(",");
             // Process the project keys as needed
             // For example, store them in PluginSettings or use them in some other logic
             // This is just an example:
