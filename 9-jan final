@@ -1,9 +1,13 @@
+Absolutely! Let's start from scratch and put everything together.
+
+### Updated `issuecrud-page.vm` (HTML)
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fetch and Update URL</title>
+    <title>ROM URL Config</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
@@ -14,15 +18,17 @@
         }
         .container {
             max-width: 100%;
-            margin: 0;
+            margin: 0 auto;
             padding: 20px;
             background-color: #fff;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
         .aui-page-header-main {
-            padding-bottom: 15px;
+            padding-bottom: 1px;
             border-bottom: 1px solid #ddd;
+            color: #292959;
+            font-family: Georgia, serif;
         }
         .text.medium-long-field {
             width: 100%;
@@ -48,27 +54,38 @@
             text-decoration: underline;
             cursor: pointer;
         }
+        .current {
+            font-family: Georgia, serif;
+            color: gray;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="aui-page-header-main">
-            <h2>AI-RQM URL Configuration</h2>
+            <h2>AI-ROM URL Configuration</h2>
         </div>
-        <strong>Current URL:</strong>
-        <pre id="currentUrl" class="url-link">Loading...</pre>
-        
-        <!-- Input to update the URL -->
+        <div>
+            <h4 class="current">Current URL:</h4>
+            <pre id="currentUrl" class="url-link">Loading...</pre>
+        </div>
         <div class="update-group">
             <input type="text" id="newUrl" class="text medium-long-field" placeholder="Enter new API URL">
             <button onclick="updateUrl()" class="aui-button aui-button-primary">Update URL</button>
+        </div>
+        <div>
+            <h4>Select Project:</h4>
+            <select id="projectDropdown" multiple class="text medium-long-field">
+                <!-- Options will be populated dynamically -->
+            </select>
+            <button onclick="applySelection()" class="aui-button aui-button-primary">Apply</button>
         </div>
     </div>
 
     <script>
         function fetchUrl() {
-            const apiUrl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
-            fetch(apiUrl, {
+            const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
+            fetch(apiurl, {
                 method: 'GET',
                 headers: {
                     'Referer': window.location.href,
@@ -82,24 +99,22 @@
                 return response.json();
             })
             .then(data => {
-                document.getElementById('currentUrl').textContent = data.apiUrl;
-                document.getElementById('currentUrl').className = "url-link"; // Apply the link style
-                document.getElementById('newUrl').value = data.apiUrl;
+                document.getElementById('currentUrl').textContent = data.apiurl;
+                document.getElementById('currentUrl').className = "url-link";
+                document.getElementById('newUrl').value = data.apiurl;
             })
             .catch(error => {
                 document.getElementById('currentUrl').textContent = `Error: ${error}`;
-                document.getElementById('currentUrl').className = ""; // Remove link style
+                document.getElementById('currentUrl').className = "";
             });
         }
 
         function updateUrl() {
             const newUrl = document.getElementById('newUrl').value;
-            const apiUrl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=updateUrl&url=" + newUrl;
-
+            const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=updateUrl&url=" + newUrl;
             console.log("Updating URL:", newUrl);
-            console.log("Request URL:", apiUrl);
-
-            fetch(apiUrl, {
+            console.log("Request URL:", apiurl);
+            fetch(apiurl, {
                 method: 'GET',
                 headers: {
                     'Referer': window.location.href
@@ -115,141 +130,137 @@
             .then(data => {
                 console.log("Response data:", data);
                 document.getElementById('currentUrl').textContent = newUrl;
-                document.getElementById('currentUrl').className = "url-link"; // Apply the link style
+                document.getElementById('currentUrl').className = "url-link";
                 document.getElementById('newUrl').value = newUrl;
                 alert('URL updated successfully!');
             })
             .catch(error => {
                 console.log("Error occurred:", error);
                 document.getElementById('currentUrl').textContent = `Error: ${error}`;
-                document.getElementById('currentUrl').className = ""; // Remove link style
+                document.getElementById('currentUrl').className = "";
                 alert(`Error: ${error}`);
             });
         }
 
-        // Automatically fetch the URL when the page loads
+        function fetchProjects() {
+            const apiurl = window.location.origin + "/jira/rest/api/2/project";
+            fetch(apiurl, {
+                method: 'GET',
+                headers: {
+                    'Referer': window.location.href,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const dropdown = document.getElementById('projectDropdown');
+                data.forEach(project => {
+                    const option = document.createElement('option');
+                    option.value = project.key;
+                    option.text = `${project.key} - ${project.name}`;
+                    dropdown.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.log("Error occurred:", error);
+            });
+        }
+
+        function applySelection() {
+            const dropdown = document.getElementById('projectDropdown');
+            const selectedKeys = Array.from(dropdown.selectedOptions).map(option => option.value);
+            const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=applySelection";
+            fetch(apiurl, {
+                method: 'POST',
+                headers: {
+                    'Referer': window.location.href,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ projectKeys: selectedKeys })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                alert('Projects applied successfully!');
+            })
+            .catch(error => {
+                console.log("Error occurred:", error);
+                alert(`Error: ${error}`);
+            });
+        }
+
         document.addEventListener("DOMContentLoaded", fetchUrl);
+        document.addEventListener("DOMContentLoaded", fetchProjects);
     </script>
 </body>
 </html>
+```
 
+### Updated `IssueCRUD.java` (Servlet)
+```java
+package com.example.plugins.tutorial.servlet;
 
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.security.groups.GroupManager;
+import com.atlassian.jira.project.Project;
+import com.atlassian.jira.project.ProjectManager;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Popup</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            padding: 20px;
-        }
-        .url-link {
-            color: #0052cc;
-            text-decoration: underline;
-        }
-    </style>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-    <div class="container">
-        <h2>Popup Configuration</h2>
-        <button id="fetch-data-btn">Fetch Data</button>
-        <div id="api-response"><pre>Loading data...</pre></div>
-    </div>
+public class IssueCRUD extends HttpServlet {
+    private static final Logger Log = LoggerFactory.getLogger(IssueCRUD.class);
 
-    <script>
-        var apiUrl = '';
+    private final TemplateRenderer templateRenderer;
+    private final PluginSettingsFactory pluginSettingsFactory;
+    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins.tutorial.servlet.IssueCRUD";
+    private static final String DEFAULT_API_URL = "default_URL";
 
-        function fetchApiUrl() {
-            const urlEndpoint = '/jira/plugins/servlet/issuecrud?action=getUrl';
+    public IssueCRUD(TemplateRenderer templateRenderer, PluginSettingsFactory pluginSettingsFactory) {
+        this.templateRenderer = templateRenderer;
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
 
-            $.ajax({
-                url: urlEndpoint,
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                success: function(response) {
-                    apiUrl = response.apiUrl;
-                    console.log("Fetched URL from servlet:", apiUrl);
-                    // You can now use apiUrl wherever needed
-                },
-                error: function(xhr, status, error) {
-                    console.log("Error fetching URL from servlet:", status, error);
-                }
-            });
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+        // Check if the user is an admin
+        ApplicationUser user = ComponentAccessor.getJiraAuthenticationContext().getLoggedInUser();
+        GroupManager groupManager = ComponentAccessor.getGroupManager();
+        if (user == null || !groupManager.isUserInGroup(user, "jira-administrators")) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write("You do not have permission to access this page.");
+            return;
         }
 
-        // Call fetchApiUrl to fetch and store the URL in apiUrl
-        fetchApiUrl();
-    </script>
-</body>
-</html>
+        String action = req.getParameter("action");
 
-
-
-
-
-
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Popup</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            padding: 20px;
-        }
-        .url-link {
-            color: #0052cc;
-            text-decoration: underline;
-        }
-    </style>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-    <div class="container">
-        <h2>Popup Configuration</h2>
-        <button id="fetch-data-btn">Fetch Data</button>
-        <div id="api-response"><pre>Loading data...</pre></div>
-    </div>
-
-    <script>
-        var apiUrl = '';
-
-        function fetchApiUrl() {
-            const urlEndpoint = '/jira/plugins/servlet/issuecrud?action=getUrl';
-
-            jQuery.ajax({
-                url: urlEndpoint,
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                success: function(response) {
-                    apiUrl = response.apiUrl;
-                    console.log("Fetched URL from servlet:", apiUrl);
-                    // You can now use apiUrl wherever needed
-                },
-                error: function(xhr, status, error) {
-                    console.log("Error fetching URL from servlet:", status, error);
-                }
-            });
-        }
-
-        // Call fetchApiUrl to fetch and store the URL in apiUrl
-        fetchApiUrl();
-    </script>
-</body>
-</html>
+        // Fetch the current URL
+        if ("getUrl".equals(action)) {
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            String apiurl = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".apiUrl");
+            if (apiurl == null) {
+                apiurl = DEFAULT_API_URL;
+            }
+            resp.setContentType("application/json");
+           [43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/hubhack/hubhack.github.io/tree/3613c687a446afea34500da8889a75da3fbd77c3/source%2F_posts%2Fjs%2FHTML.md?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/ludopif/workshop-example/tree/b949c8b5080008d496a07c8d9dd55ce0bf6796b5/src%2Fmain%2Fjava%2Fcom%2Forange%2Ftodolist%2FTodosServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/wutongservice/wutongservice/tree/81d66d3cc06d362a355582d38d691f341db565da/ServerPlatform%2Fbase%2Fsrc%2Fmain%2Fjava%2Fcom%2Fborqs%2Fserver%2Fbase%2Fweb%2Fwebmethod%2FWebMethodServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/rodneylsp/java-json/tree/5ae7cc73d7563c1af4e1775d95ec83887c8b5b81/contatos%2Fsrc%2FContatosServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "4")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/smoeller1/BuRMA/tree/279976b0f2b29aaf17adb3ce61cd6fe9a9449fc6/src%2FMongoRestApp%2Fsrc%2Fedu%2Fumkc%2Fmongorestapp%2FUserServlet.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "5")
