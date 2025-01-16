@@ -1,77 +1,3 @@
-package com.example.plugins.servlet;
-
-import com.atlassian.plugin.settings.PluginSettings;
-import com.atlassian.plugin.settings.PluginSettingsFactory;
-import com.atlassian.sal.api.component.ComponentLocator;
-import com.atlassian.jira.component.ComponentAccessor;
-import com.atlassian.jira.project.Project;
-import com.atlassian.jira.project.ProjectManager;
-
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class ProjectSelectionServlet extends HttpServlet {
-
-    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins";
-    private final PluginSettingsFactory pluginSettingsFactorySelectionServlet(PluginSettingsFactory pluginSettingsFactory) {
-        this.pluginSettingsFactory = pluginSettingsFactory;
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String action = req.getParameter("action");
-
-        // Fetch all projects
-        if ("getProjects".equals(action)) {
-            ProjectManager projectManager = ComponentAccessor.getProjectManager();
-            List<Project> projects = projectManager.getProjectObjects();
-            String projectList = projects.stream()
-                .map(project -> project.getKey() + "-" + project.getName())
-                .collect(Collectors.joining(","));
-
-            resp.setContentType("text/plain");
-            resp.getWriter().write(projectList);
-
-        // Fetch the selected projects
-        } else if ("getSelectedProjects".equals(action)) {
-            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-            String selectedProjects = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".selectedProjects");
-
-            if (selectedProjects == null) {
-                selectedProjects = "";
-            }
-
-            resp.setContentType("text/plain");
-            resp.getWriter().write(selectedProjects);
-
-        // Apply the selected projects
-        } else if ("applySelection".equals(action)) {
-            String projectKeys = req.getParameter("keys");
-
-            // Store the selected project keys in PluginSettings
-            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
-            pluginSettings.put(PLUGIN_STORAGE_KEY + ".selectedProjects", projectKeys);
-
-            resp.setContentType("text/plain");
-            resp.getWriter().write("Projects applied successfully!");
-        }
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -112,6 +38,7 @@ let selectedProjects = [];
 
 function fetchUrl() {
   const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getUrl";
+  console.log("Fetching URL from: ", apiurl);
 
   fetch(apiurl, {
     method: 'GET',
@@ -121,17 +48,20 @@ function fetchUrl() {
     }
   })
   .then(response => {
+    console.log("URL Fetch Response: ", response);
     if (!response.ok) {
       throw new Error('HTTP error! Status: ' + response.status);
     }
     return response.json();
   })
   .then(data => {
+    console.log("Fetched URL Data: ", data);
     document.getElementById('currentUrl').textContent = data.apiurl;
     document.getElementById('currentUrl').className = "url-link";
     document.getElementById('newUrl').value = data.apiurl;
   })
   .catch(error => {
+    console.log("Error Fetching URL: ", error);
     document.getElementById('currentUrl').textContent = "Error: " + error;
     document.getElementById('currentUrl').className = "";
   });
@@ -140,6 +70,7 @@ function fetchUrl() {
 function updateUrl() {
   const newUrl = document.getElementById('newUrl').value;
   const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=updateUrl&url=" + newUrl;
+  console.log("Updating URL to: ", newUrl);
 
   fetch(apiurl, {
     method: 'GET',
@@ -148,18 +79,21 @@ function updateUrl() {
     }
   })
   .then(response => {
+    console.log("URL Update Response: ", response);
     if (!response.ok) {
       throw new Error('HTTP error! Status: ' + response.status);
     }
     return response.text();
   })
   .then(data => {
+    console.log("URL Update Data: ", data);
     document.getElementById('currentUrl').textContent = newUrl;
     document.getElementById('currentUrl').className = "url-link";
     document.getElementById('newUrl').value = newUrl;
     alert("URL updated successfully!");
   })
   .catch(error => {
+    console.log("Error Updating URL: ", error);
     document.getElementById('currentUrl').textContent = "Error: " + error;
     document.getElementById('currentUrl').className = "";
     alert("Error: " + error);
@@ -168,6 +102,7 @@ function updateUrl() {
 
 function fetchProjects() {
   const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getProjects";
+  console.log("Fetching Projects from: ", apiurl);
 
   fetch(apiurl, {
     method: 'GET',
@@ -177,22 +112,25 @@ function fetchProjects() {
     }
   })
   .then(response => {
+    console.log("Projects Fetch Response: ", response);
     if (!response.ok) {
       throw new Error('HTTP error! Status: ' + response.status);
     }
     return response.text();
   })
   .then(data => {
+    console.log("Fetched Projects Data: ", data);
     allProjects = data.split(",");
     updateProjectList(); 
   })
   .catch(error => {
-    console.log("Error occurred:", error);
+    console.log("Error Fetching Projects: ", error);
   });
 }
 
 function fetchSelectedProjects() {
   const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=getSelectedProjects";
+  console.log("Fetching Selected Projects from: ", apiurl);
 
   fetch(apiurl, {
     method: 'GET',
@@ -202,17 +140,19 @@ function fetchSelectedProjects() {
     }
   })
   .then(response => {
+    console.log("Selected Projects Fetch Response: ", response);
     if (!response.ok) {
       throw new Error('HTTP error! Status: ' + response.status);
     }
     return response.text();
   })
   .then(data => {
+    console.log("Fetched Selected Projects Data: ", data);
     selectedProjects = data.split(",");
     updateProjectList(); 
   })
   .catch(error => {
-    console.log("Error occurred:", error);
+    console.log("Error Fetching Selected Projects: ", error);
   });
 }
 
@@ -259,6 +199,7 @@ function filterProjectList(filter) {
 function applySelection() {
   const selectedKeys = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
   const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=applySelection&keys=" + selectedKeys.join(",");
+  console.log("Applying Selected Projects: ", selectedKeys);
 
   fetch(apiurl, {
     method: 'GET',
@@ -267,16 +208,18 @@ function applySelection() {
     }
   })
   .then(response => {
+    console.log("Apply Selection Response: ", response);
     if (!response.ok) {
       throw new Error('HTTP error! Status: ' + response.status);
     }
     return response.text();
   })
   .then(data => {
+    console.log("Apply Selection Data: ", data);
     alert('Projects applied successfully!'); 
   })
   .catch(error => {
-    console.log("Error occurred:", error);
+    console.log("Error Applying Selection: ", error);
     alert("Error: " + error);
   });
 }
