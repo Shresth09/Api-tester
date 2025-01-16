@@ -29,6 +29,7 @@
     <input type="text" id="projectSearch" class="search-field" placeholder="Search projects...">
     <div id="projectList" class="project-list"></div>
     <button onclick="applySelection()" class="aui-button aui-button-primary">Apply</button>
+    <label><input type="checkbox" id="selectAll" onclick="selectAllProjects(this)"> Select All</label>
   </div>
 </div>
 
@@ -188,7 +189,7 @@ function filterProjectList(filter) {
   updateProjectList(filteredProjects);
 
   if (filteredProjects.length === 0) {
-    document.getElementById('projectList').innerHTML = '<p>No projects found</p>';
+    document.getElementById('projectList').innerHTML = '<p style="color: red; font-weight: bold;">No projects found</p>';
   }
 }
 
@@ -217,6 +218,15 @@ function applySelection() {
   .catch(error => {
     console.log("Error Applying Selection: ", error);
     alert("Error: " + error);
+  });
+}
+
+function selectAllProjects(source) {
+  const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+  checkboxes.forEach(checkbox => {
+    if (checkbox !== source) {
+      checkbox.checked = source.checked;
+    }
   });
 }
 
