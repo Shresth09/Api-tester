@@ -85,4 +85,4 @@
         document.addEventListener("DOMContentLoaded", fetchProjects);
     </script>
 </body>
-</html>
+</html> 
