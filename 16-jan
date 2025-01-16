@@ -65,6 +65,13 @@
                 if (selectedProjects.includes(key)) {
                     label.querySelector('input[type="checkbox"]').checked = true;
                 }
+                label.querySelector('input[type="checkbox"]').addEventListener('change', function() {
+                    if (this.checked) {
+                        selectedProjects.push(key);
+                    } else {
+                        selectedProjects = selectedProjects.filter(item => item !== key);
+                    }
+                });
                 projectList.appendChild(label);
                 projectList.appendChild(document.createElement('br'));
             });
@@ -82,6 +89,13 @@
                 if (selectedProjects.includes(key)) {
                     label.querySelector('input[type="checkbox"]').checked = true;
                 }
+                label.querySelector('input[type="checkbox"]').addEventListener('change', function() {
+                    if (this.checked) {
+                        selectedProjects.push(key);
+                    } else {
+                        selectedProjects = selectedProjects.filter(item => item !== key);
+                    }
+                });
                 projectList.appendChild(label);
                 projectList.appendChild(document.createElement('br'));
             });
