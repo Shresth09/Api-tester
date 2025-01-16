@@ -111,6 +111,7 @@
                 document.getElementById('newUrl').value = data.apiurl;
             })
             .catch(error => {
+                console.error("Error fetching URL:", error);
                 document.getElementById('currentUrl').textContent = "Error: " + error;
                 document.getElementById('currentUrl').className = "";
             });
@@ -142,7 +143,7 @@
                 alert("URL updated successfully!");
             })
             .catch(error => {
-                console.log("Error occurred:", error);
+                console.error("Error updating URL:", error);
                 document.getElementById('currentUrl').textContent = "Error: " + error;
                 document.getElementById('currentUrl').className = "";
                 alert("Error: " + error);
@@ -165,12 +166,11 @@
                 return response.text();
             })
             .then(data => {
-                const projectList = document.getElementById('projectList');
                 allProjects = data.split(",");
                 updateProjectList();
             })
             .catch(error => {
-                console.log("Error occurred:", error);
+                console.error("Error fetching projects:", error);
             });
         }
 
@@ -195,7 +195,7 @@
                 updateProjectList();
             })
             .catch(error => {
-                console.log("Error occurred:", error);
+                console.error("Error fetching selected projects:", error);
             });
         }
 
@@ -239,6 +239,7 @@
                 alert('Projects applied successfully!');
             })
             .catch(error => {
+                console.error("Error applying selection:", error);
                 alert("Error: " + error);
             });
         }
@@ -251,7 +252,6 @@
         document.addEventListener("DOMContentLoaded", fetchUrl);
         document.addEventListener("DOMContentLoaded", fetchProjects);
         document.addEventListener("DOMContentLoaded", fetchSelectedProjects);
-
     </script>
 </body>
 </html>
