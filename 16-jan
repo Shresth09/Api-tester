@@ -156,11 +156,13 @@ function fetchSelectedProjects() {
   });
 }
 
-function updateProjectList() {
+function updateProjectList(filteredProjects = []) {
   const projectList = document.getElementById('projectList');
   projectList.innerHTML = '';
 
-  allProjects.forEach(project => {
+  const projectsToDisplay = filteredProjects.length ? filteredProjects : allProjects;
+
+  projectsToDisplay.forEach(project => {
     const [key, name] = project.split("-");
     const label = document.createElement('label');
     const checkbox = document.createElement('input');
@@ -178,27 +180,12 @@ function updateProjectList() {
     projectList.appendChild(label);
     projectList.appendChild(document.createElement('br'));
   });
-
-  // Apply search filter if it's active
-  const filter = document.getElementById('projectSearch').value.toLowerCase();
-  if (filter) {
-    filterProjectList(filter);
-  }
 }
 
 function filterProjectList(filter) {
   console.log("Filter applied: ", filter);
-  const projectList = document.getElementById('projectList');
-  const labels = projectList.querySelectorAll('label');
-
-  labels.forEach(label => {
-    const projectName = label.textContent.toLowerCase();
-    if (projectName.includes(filter)) {
-      label.style.display = 'block';
-    } else {
-      label.style.display = 'none';
-    }
-  });
+  const filteredProjects = allProjects.filter(project => project.toLowerCase().includes(filter));
+  updateProjectList(filteredProjects);
 }
 
 function applySelection() {
