@@ -168,7 +168,8 @@ function updateProjectList() {
     checkbox.value = key;
 
     // Check if the project is selected
-    checkbox.checked = selectedProjects.includes(key); 
+    checkbox.checked = selectedProjects.includes(key);
+    console.log("Project Key: ", key, ", Checked: ", checkbox.checked);
 
     label.innerHTML = checkbox.outerHTML + " " + key + " - " + name;
     projectList.appendChild(label);
