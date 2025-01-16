@@ -164,11 +164,16 @@ function fetchSelectedProjects() {
   });
 }
 
-function updateProjectList() {
+function updateProjectList(filter = '') {
   const projectList = document.getElementById('projectList');
   projectList.innerHTML = ''; 
 
-  allProjects.forEach(project => {
+  const filteredProjects = allProjects.filter(project => {
+    const [key, name] = project.split("-");
+    return (name + key).toLowerCase().includes(filter.toLowerCase());
+  });
+
+  filteredProjects.forEach(project => {
     const [key, name] = project.split("-");
     const label = document.createElement('label');
     const checkbox = document.createElement('input');
@@ -189,7 +194,7 @@ function applySelection() {
 }
 
 document.getElementById('projectSearch').addEventListener('input', function() {
-  const filter = this.value.toLowerCase();
+  const filter = this.value;
   updateProjectList(filter); 
 });
 
