@@ -44,10 +44,9 @@
             <!-- Checkboxes will be populated dynamically -->
         </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         let allProjects = [];
-        let selectedProjects = [];
+        let selectedProjects = new Set();
 
         function fetchProjects() {
             // Example projects for demonstration
@@ -63,16 +62,14 @@
                 const [key, name] = project.split("-");
                 const label = document.createElement('label');
                 label.innerHTML = `<input type="checkbox" value="${key}"> ${key} - ${name}`;
-                if (selectedProjects.includes(key)) {
+                if (selectedProjects.has(key)) {
                     label.querySelector('input[type="checkbox"]').checked = true;
                 }
                 label.querySelector('input[type="checkbox"]').addEventListener('change', function() {
                     if (this.checked) {
-                        if (!selectedProjects.includes(key)) {
-                            selectedProjects.push(key);
-                        }
+                        selectedProjects.add(key);
                     } else {
-                        selectedProjects = selectedProjects.filter(item => item !== key);
+                        selectedProjects.delete(key);
                     }
                 });
                 projectList.appendChild(label);
