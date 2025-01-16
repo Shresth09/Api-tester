@@ -5,7 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project Selection</title>
   <style>
-    /* CSS styles remain the same */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .search-bar {
+      margin-bottom: 15px;
+    }
+    .project-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+    }
+    .project-label {
+      display: flex;
+      align-items: center;
+    }
+    .project-checkbox {
+      margin-right: 10px;
+    }
   </style>
 </head>
 <body>
@@ -64,9 +91,12 @@
         checkbox.type = 'checkbox';
         checkbox.classList.add('project-checkbox');
         checkbox.value = key;
-        if (selectedProjects.includes(key)) { 
+
+        // Set checkbox checked state based on selectedProjects
+        if (selectedProjects.includes(key)) {
           checkbox.checked = true; 
         }
+
         const projectName = document.createTextNode(name + ' (' + key + ')');
         projectLabel.appendChild(checkbox);
         projectLabel.appendChild(projectName);
