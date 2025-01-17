@@ -1,4 +1,3 @@
-<!-- Placeholder for allowed project keys -->
 <script>
   var allowedProjectKeys = []; // Global variable to hold the allowed project keys
 
@@ -22,32 +21,33 @@
     });
   }
 
+  // Function to render the popup conditionally
   function renderPopup() {
     var projectKey = "${project.key}";
     if (allowedProjectKeys.indexOf(projectKey) > -1) {
-      jQuery("#popup-container").html(`
-        <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
-        <!-- Modal Structure -->
-        <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
-          <header class="aui-dialog2-header">
-            <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
-            <a class="aui-dialog2-header-close">
-              <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-            </a>
-          </header>
-          <div class="aui-dialog2-content">
-            <div id="api-response">Loading data...</div>
-          </div>
-          <footer class="aui-dialog2-footer">
-            <div class="aui-dialog2-footer-actions">
-              <button id="close-button" class="aui-button aui-button-primary">Close</button>
+      jQuery("body").append(`
+        <div id="popup-container">
+          <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
+          <!-- Modal Structure -->
+          <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+            <header class="aui-dialog2-header">
+              <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
+              <a class="aui-dialog2-header-close">
+                <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+              </a>
+            </header>
+            <div class="aui-dialog2-content">
+              <div id="api-response">Loading data...</div>
             </div>
-          </footer>
+            <footer class="aui-dialog2-footer">
+              <div class="aui-dialog2-footer-actions">
+                <button id="close-button" class="aui-button aui-button-primary">Close</button>
+              </div>
+            </footer>
+          </div>
         </div>
       `);
       initStuff();
-    } else {
-      jQuery("#popup-container").html("");
     }
   }
 
@@ -55,8 +55,6 @@
     fetchAllowedProjectKeys();
   });
 </script>
-
-<div id="popup-container"></div>
 
 <script type="module">
   AJS.toInit(function() {
