@@ -22,7 +22,6 @@
     });
   }
 
-  // Function to render the popup conditionally
   function renderPopup() {
     var projectKey = "${project.key}";
     if (allowedProjectKeys.indexOf(projectKey) > -1) {
@@ -57,7 +56,6 @@
   });
 </script>
 
-<!-- The popup container -->
 <div id="popup-container"></div>
 
 <script type="module">
@@ -196,7 +194,3 @@
     });
   });
 </script>
-
-#else
-
-#end
