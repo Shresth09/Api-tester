@@ -1,27 +1,26 @@
-<script type="text/javascript">
-    // This script will fetch the allowed project keys from the servlet 
-    // and store them in a global variable 
-    var allowedProjectKeys; 
+You're absolutely right! The issue lies in how you're trying to use the allowedProjectKeys variable within the Velocity template.
+Problem:
+ * You're defining allowedProjectKeys within a JavaScript block inside the Velocity template.
+ * Velocity templates are rendered on the server-side, while JavaScript executes on the client-side.
+ * Therefore, Velocity cannot directly access or use variables defined within JavaScript.
+Solution:
+ * Pass Data from Servlet to Velocity:
+   * In your Servlet: When handling the request for /plugins/servlet/issuecrud?action=getSelectedProjects, instead of just returning the projectKeys as a string, include them in the response object that will be passed to the Velocity template.
+     Map<String, Object> context = new HashMap<>(); 
+context.put("allowedProjectKeys", projectKeys.split(",")); 
+return VelocityUtils.getRenderedTemplate("templates/popup.vm", context, request, response); 
 
-    AJS.toInit(function() {
-        jQuery.ajax({
-            url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getSelectedProjects",
-            type: 'GET',
-            dataType: 'json',
-            success: function (response) {
-                allowedProjectKeys = response.projectKeys.split(","); 
-            },
-            error: function (xhr, status, error) {
-                console.error("Error fetching allowed project keys:", status, error);
-                // Handle the error, for example, display a generic message 
-                allowedProjectKeys = []; 
-            }
-        });
-    });
-</script>
-
-#if (${project.key} in $allowedProjectKeys) 
+ * Access Data in Velocity:
+   * In your popup.vm template, you can now directly access the allowedProjectKeys variable:
+     #if (${project.key} in $allowedProjectKeys) 
     <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
 #else
     <p>This functionality is not available for this project.</p> 
-#end 
+#end
+
+Explanation:
+ * The servlet now passes the allowedProjectKeys list as part of the context to the Velocity template.
+ * This allows the Velocity template to access and use the list directly in its conditional logic.
+By making this change, you'll be able to correctly check the allowed project keys and control the visibility of your button within the Velocity template.
+Remember to adapt this approach to your specific servlet implementation and data handling.
+I hope this revised solution addresses the issue you're facing!
