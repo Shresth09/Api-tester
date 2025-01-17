@@ -1,6 +1,52 @@
+#set($allowedProjectKeys = "")
+<script>
+  jQuery(document).ready(function() {
+    var apiurl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getSelectedProjects";
+
+    jQuery.ajax({
+      url: apiurl,
+      type: 'GET',
+      contentType: 'text/plain',
+      success: function(data) {
+        var allowedProjectKeys = data.split(",");
+        $allowedProjectKeys = allowedProjectKeys;
+        renderPopup();
+      },
+      error: function(xhr, status, error) {
+        console.log("Error fetching allowed project keys: ", error);
+      }
+    });
+
+    function renderPopup() {
+      if ($allowedProjectKeys.indexOf("${project.key}") > -1) {
+        jQuery("#popup-container").html(`
+          <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
+          <!-- Modal Structure -->
+          <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+            <header class="aui-dialog2-header">
+              <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
+              <a class="aui-dialog2-header-close">
+                <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+              </a>
+            </header>
+            <div class="aui-dialog2-content">
+              <div id="api-response">Loading data...</div>
+            </div>
+            <footer class="aui-dialog2-footer">
+              <div class="aui-dialog2-footer-actions">
+                <button id="close-button" class="aui-button aui-button-primary">Close</button>
+              </div>
+            </footer>
+          </div>
+        `);
+        initStuff();
+      }
+    }
+  });
+</script>
+
 #if ($allowedProjectKeys.contains($project.key))
 <div id="popup-container">
-  <!-- Your existing popup structure goes here -->
   <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
   <!-- Modal Structure -->
   <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
@@ -21,7 +67,6 @@
   </div>
 </div>
 #else
-<!-- Optional: You can show a message if the project key is not allowed -->
 <p>Project key is not allowed.</p>
 #end
 
