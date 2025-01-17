@@ -1,53 +1,24 @@
-#set($jsonResponse = "NEW,OT")
-#set($allowedProjectKeys = $jsonResponse.split(","))
+#set($apiUrl = $request.getContextPath() + '/plugins/servlet/issuecrud?action=getSelectedProjects')
+<span>API URL: $apiUrl</span><br/>
+
+#set($allowedProjectKeys = "NEW,OT".split(",")) ## Temporarily using a hardcoded value for debugging
+<span>Allowed Project Keys: $allowedProjectKeys</span><br/>
 
 ## Define a flag to indicate if the project key is allowed
 #set($isAllowed = false)
 
 ## Check each allowed project key for an exact match
 #foreach($allowedProjectKey in $allowedProjectKeys)
+    <span>Checking Project Key: $allowedProjectKey</span><br/>
     #if($allowedProjectKey.trim() == $project.key.trim())
         #set($isAllowed = true)
     #end
 #end
 
-#if($isAllowed)
-  ## Your code here
-#end
-
-
-
-
-
-
-#set($allowedProjectKeys = [])
-
-#try
-    ## Fetch API URL
-    #set($apiUrl = $request.getContextPath() + '/plugins/servlet/issuecrud?action=getSelectedProjects')
-    $log.info("API URL: $apiUrl")
-    
-    ## Make HTTP Request
-    #set($jsonResponse = $httpClient.get($apiUrl))
-    $log.info("JSON Response: $jsonResponse")
-
-    ## Split JSON Response
-    #set($allowedProjectKeys = $jsonResponse.split(","))
-    $log.info("Allowed Project Keys: $allowedProjectKeys")
-#catch($e)
-    $log.error("Error in processing: $e")
-#end
-
-## Define a flag to indicate if the project key is allowed
-#set($isAllowed = false)
-
-## Check each allowed project key for an exact match
-#foreach($allowedProjectKey in $allowedProjectKeys)
-    #if($allowedProjectKey.trim() == $project.key.trim())
-        #set($isAllowed = true)
-    #end
-#end
+<span>Is Allowed: $isAllowed</span><br/>
 
 #if($isAllowed)
-  ## Your code here
+    <span>Project key $project.key is allowed.</span><br/>
+#else
+    <span>Project key $project.key is not allowed.</span><br/>
 #end
