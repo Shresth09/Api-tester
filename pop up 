@@ -23,3 +23,18 @@ else if ("getSelectedProjectsJson".equals(action)) {
 #set($dummy = $log.debug("API URL: $apiUrl"))
 #set($dummy = $log.debug("JSON Response: $jsonResponse"))
 #set($dummy = $log.debug("Allowed Project Keys: $allowedProjectKeys"))
+
+
+
+
+#set($apiUrl = "$request.getScheme()://$request.getServerName():$request.getServerPort()" + $request.getContextPath() + '/plugins/servlet/issuecrud?action=getSelectedProjects')
+
+#set($jsonResponse = $http.get($apiUrl)) 
+
+#if ($jsonResponse && $jsonResponse.statusCode == 200)
+    #set($allowedProjectKeys = $jsonResponse.body.trim().split(",")) 
+#else
+    #log.error("Failed to fetch allowed project keys from API: " + $apiUrl + ". Status Code: " + $jsonResponse.statusCode) 
+    #set($allowedProjectKeys = []) 
+#end
+
