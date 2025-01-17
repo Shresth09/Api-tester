@@ -2,7 +2,7 @@
   var allowedProjectKeys = []; // Global variable to hold the allowed project keys
 
   // Function to fetch allowed project keys and set the value
-  function fetchAllowedProjectKeys() {
+  function fetchAllowedProjectKeys(callback) {
     var apiurl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getSelectedProjects";
 
     jQuery.ajax({
@@ -13,7 +13,9 @@
         console.log("Received project keys from servlet:", data); // Log the received project keys
         allowedProjectKeys = data.split(",");
         console.log("Splitted project keys from servlet:", allowedProjectKeys);
-        renderPopup();
+        if (typeof callback === "function") {
+          callback();
+        }
       },
       error: function(xhr, status, error) {
         console.log("Error fetching allowed project keys: ", error);
@@ -21,40 +23,48 @@
     });
   }
 
-  // Function to render the popup conditionally
-  function renderPopup() {
+  function checkProjectKey() {
     var projectKey = "${project.key}";
-    if (allowedProjectKeys.indexOf(projectKey) > -1) {
-      jQuery("body").append(`
-        <div id="popup-container">
-          <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
-          <!-- Modal Structure -->
-          <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
-            <header class="aui-dialog2-header">
-              <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
-              <a class="aui-dialog2-header-close">
-                <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-              </a>
-            </header>
-            <div class="aui-dialog2-content">
-              <div id="api-response">Loading data...</div>
-            </div>
-            <footer class="aui-dialog2-footer">
-              <div class="aui-dialog2-footer-actions">
-                <button id="close-button" class="aui-button aui-button-primary">Close</button>
-              </div>
-            </footer>
-          </div>
-        </div>
-      `);
-      initStuff();
-    }
+    return allowedProjectKeys.indexOf(projectKey) > -1;
   }
 
   jQuery(document).ready(function() {
-    fetchAllowedProjectKeys();
+    fetchAllowedProjectKeys(function() {
+      if (checkProjectKey()) {
+        renderPopup();
+      } else {
+        // If project key is not allowed, remove the panel by not rendering any content
+        console.log("Project key is not allowed.");
+      }
+    });
   });
+
+  function renderPopup() {
+    jQuery("#popup-container").html(`
+      <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
+      <!-- Modal Structure -->
+      <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+        <header class="aui-dialog2-header">
+          <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
+          <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+          </a>
+        </header>
+        <div class="aui-dialog2-content">
+          <div id="api-response">Loading data...</div>
+        </div>
+        <footer class="aui-dialog2-footer">
+          <div class="aui-dialog2-footer-actions">
+            <button id="close-button" class="aui-button aui-button-primary">Close</button>
+          </div>
+        </footer>
+      </div>
+    `);
+    initStuff();
+  }
 </script>
+
+<div id="popup-container"></div>
 
 <script type="module">
   AJS.toInit(function() {
@@ -106,7 +116,7 @@
           url: jiraApiUrl,
           type: 'GET',
           dataType: 'json',
-          success: function (response) {
+          success: function(response) {
             console.log("Jira API response received:", response);
             var description = response.fields.description;
             if (!description) {
@@ -175,7 +185,6 @@
       });
 
       AJS.$("#show-popup").data('events-attached', true);
-
     }
   }
 
