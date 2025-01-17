@@ -24,3 +24,40 @@ Explanation:
 By making this change, you'll be able to correctly check the allowed project keys and control the visibility of your button within the Velocity template.
 Remember to adapt this approach to your specific servlet implementation and data handling.
 I hope this revised solution addresses the issue you're facing!
+
+
+
+
+
+
+
+
+
+
+
+else if ("getSelectedProjects".equals(action)) {
+    PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+    String selectedProjects = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".selectedProjects");
+
+    if (selectedProjects == null || selectedProjects.isEmpty()) {
+        // No selected projects, return an empty list
+        List<String> allowedProjectKeys = new ArrayList<>(); 
+
+        // Prepare the response data
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("allowedProjectKeys", allowedProjectKeys);
+
+        // Render the Velocity template with the data
+        renderTemplate(req, resp, "templates/popup.vm", responseData);
+    } else {
+        // Split the selected projects string into a list
+        List<String> allowedProjectKeys = Arrays.asList(selectedProjects.split(",")); 
+
+        // Prepare the response data
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("allowedProjectKeys", allowedProjectKeys);
+
+        // Render the Velocity template with the data
+        renderTemplate(req, resp, "templates/popup.vm", responseData);
+    }
+}
