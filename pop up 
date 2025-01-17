@@ -14,3 +14,40 @@
 #if($isAllowed)
   ## Your code here
 #end
+
+
+
+
+
+
+#set($allowedProjectKeys = [])
+
+#try
+    ## Fetch API URL
+    #set($apiUrl = $request.getContextPath() + '/plugins/servlet/issuecrud?action=getSelectedProjects')
+    $log.info("API URL: $apiUrl")
+    
+    ## Make HTTP Request
+    #set($jsonResponse = $httpClient.get($apiUrl))
+    $log.info("JSON Response: $jsonResponse")
+
+    ## Split JSON Response
+    #set($allowedProjectKeys = $jsonResponse.split(","))
+    $log.info("Allowed Project Keys: $allowedProjectKeys")
+#catch($e)
+    $log.error("Error in processing: $e")
+#end
+
+## Define a flag to indicate if the project key is allowed
+#set($isAllowed = false)
+
+## Check each allowed project key for an exact match
+#foreach($allowedProjectKey in $allowedProjectKeys)
+    #if($allowedProjectKey.trim() == $project.key.trim())
+        #set($isAllowed = true)
+    #end
+#end
+
+#if($isAllowed)
+  ## Your code here
+#end
