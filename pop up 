@@ -1,7 +1,6 @@
-#set($allowedProjectKeys = [""]) <!-- Placeholder for allowed project keys -->
-
-<!-- Function to fetch allowed project keys and set the value -->
 <script>
+  var allowedProjectKeys = []; // Global variable to hold the allowed project keys
+
   jQuery(document).ready(function() {
     function fetchAllowedProjectKeys() {
       var apiurl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getSelectedProjects";
@@ -12,10 +11,9 @@
         contentType: 'text/plain',
         success: function(data) {
           console.log("Received project keys from servlet:", data); // Log the received project keys
-          var allowedProjectKeys2 = data.split(",");
-          console.log("Splitted project keys from servlet:", allowedProjectKeys2);
-          // Render the popup with the fetched keys
-          renderPopup(allowedProjectKeys2);
+          allowedProjectKeys = data.split(",");
+          console.log("Splitted project keys from servlet:", allowedProjectKeys);
+          renderPopup();
         },
         error: function(xhr, status, error) {
           console.log("Error fetching allowed project keys: ", error);
@@ -25,9 +23,9 @@
 
     fetchAllowedProjectKeys();
 
-    function renderPopup(allowedProjectKeys2) {
+    function renderPopup() {
       var projectKey = "${project.key}";
-      if (allowedProjectKeys2.indexOf(projectKey) > -1) {
+      if (allowedProjectKeys.indexOf(projectKey) > -1) {
         jQuery("#popup-container").html(`
           <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
           <!-- Modal Structure -->
@@ -56,7 +54,6 @@
   });
 </script>
 
-<!-- The popup container -->
 <div id="popup-container"></div>
 
 <script type="module">
