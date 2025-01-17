@@ -47,7 +47,7 @@
       `);
       initStuff();
     } else {
-      jQuery("#popup-container").html("<p>Project key is not allowed.</p>");
+      jQuery("#popup-container").html("");
     }
   }
 
@@ -125,7 +125,7 @@
               type: 'GET',
               contentType: 'application/json',
               success: function(response) {
-                var serverApiUrl = response.apiUrl;
+                var serverApiUrl = response.apiurl; // Ensure the correct field name
                 console.log("Fetched URL from servlet:", serverApiUrl);
                 var payload = JSON.stringify({user_story: description});
                 var apiUrl = serverApiUrl;
