@@ -5,3 +5,7 @@
 #set($jsonResponse = $httpClient.get($apiUrl))
 
 #set($allowedProjectKeys = $jsonResponse.split(","))
+
+#if ($allowedProjectKeys.contains($project.key))
+  <!-- Your code here -->
+#end
