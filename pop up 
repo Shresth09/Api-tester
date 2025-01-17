@@ -1,5 +1,5 @@
 <!-- Placeholder for allowed project keys -->
-#set($allowedProjectKeys = "")
+#set($allowedProjectKeys = [])
 
 <!-- Function to fetch allowed project keys -->
 <script>
@@ -14,8 +14,8 @@
         success: function(data) {
           console.log("Received project keys from servlet:", data); // Log the received project keys
           var allowedProjectKeys = data.split(",");
-          // Setting the values to the placeholder
-          $allowedProjectKeys = allowedProjectKeys;
+          // Convert JavaScript array to a string and set to Velocity variable
+          #set($allowedProjectKeys = allowedProjectKeys)
           // Call the render function to display the popup
           renderPopup();
         },
@@ -29,7 +29,7 @@
 
     function renderPopup() {
       var projectKey = "${project.key}";
-      if ($allowedProjectKeys.indexOf(projectKey) > -1) {
+      if ($allowedProjectKeys.contains(projectKey)) {
         jQuery("#popup-container").html(`
           <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
           <!-- Modal Structure -->
