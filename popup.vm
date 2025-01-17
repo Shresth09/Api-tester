@@ -1,0 +1,149 @@
+#if ($allowedProjectKeys.contains($project.key))
+<div id="popup-container">
+  <!-- Your existing popup structure goes here -->
+  <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
+  <!-- Modal Structure -->
+  <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+    <header class="aui-dialog2-header">
+      <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
+      <a class="aui-dialog2-header-close">
+        <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+      </a>
+    </header>
+    <div class="aui-dialog2-content">
+      <div id="api-response">Loading data...</div>
+    </div>
+    <footer class="aui-dialog2-footer">
+      <div class="aui-dialog2-footer-actions">
+        <button id="close-button" class="aui-button aui-button-primary">Close</button>
+      </div>
+    </footer>
+  </div>
+</div>
+#else
+<!-- Optional: You can show a message if the project key is not allowed -->
+<p>Project key is not allowed.</p>
+#end
+
+<script type="module">
+  AJS.toInit(function() {
+    jQuery(document).ready(function() {
+      initStuff();
+    });
+  });
+</script>
+
+<script type="text/javascript">
+  function initStuff() {
+    if (AJS.$("#show-popup").length && !AJS.$("#show-popup").data('events-attached')) {
+      // Function to extract the issue key
+      function getIssueKey() {
+        var url = window.location.href;
+        var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
+        var match = url.match(issueKeyPattern);
+        if (match) {
+          return match[1];
+        }
+        var issueKeyElement = AJS.$("#key-val");
+        if (issueKeyElement.length) {
+          return issueKeyElement.text().trim();
+        }
+        var selectedIssueKey = AJS.$(".selected-issue-key").text();
+        if (selectedIssueKey) {
+          return selectedIssueKey.trim();
+        }
+        return null;
+      }
+
+      // Show the modal and fetch API data on button click
+      AJS.$("#show-popup").click(function() {
+        var issuekey = getIssueKey();
+        if (!issuekey) {
+          AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'> Issue key not found. </p>");
+          AJS.dialog2("#api-modal").show();
+          return;
+        }
+
+        var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issuekey;
+        jQuery.ajax({
+          url: jiraApiUrl,
+          type: 'GET',
+          dataType: 'json',
+          success: function(response) {
+            var description = response.fields.description;
+            if (!description) {
+              AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'> Description is not provided in the issue. </p>");
+              AJS.dialog2("#api-modal").show();
+              return;
+            }
+
+            var servletApiurl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl";
+            jQuery.ajax({
+              url: servletApiurl,
+              type: 'GET',
+              contentType: 'application/json',
+              success: function(response) {
+                var serverApiUrl = response.apiUrl;
+                var payload = JSON.stringify({ user_story: description });
+                var apiurl = serverApiUrl;
+                AJS.$("#api-modal").show();
+                AJS.$("#api-response").html("<pre>Loading data...</pre>");
+                jQuery.ajax({
+                  url: apiurl,
+                  type: "POST",
+                  contentType: 'application/json',
+                  data: payload,
+                  success: function(apiResponse) {
+                    var cscore = apiResponse.NA.cscore;
+                    var messages = apiResponse.NA.message;
+                    var formattedData = "<p style='font-size: 1.2em;'><strong>SCORE:</strong> " + cscore + "</p>" +
+                                        "<p style='font-size: 1.2em;'><strong>MESSAGE:</strong> " + messages.join("<br>") + "</p>";
+                    AJS.$("#api-response").html(formattedData);
+                    AJS.dialog2("#api-modal").show();
+                  },
+                  error: function(xhr, status, error) {
+                    AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch data. Verify the ROM URL in Configuration. Status: " +
+                                                xhr.status + ", Error: " + error + "</p>");
+                    AJS.dialog2("#api-modal").show();
+                  }
+                });
+              },
+              error: function(xhr, status, error) {
+                AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch ROM API from servlet. Status: " +
+                                            xhr.status + ", Error: " + error + "</p>");
+                AJS.dialog2("#api-modal").show();
+              }
+            });
+          },
+          error: function(xhr, status, error) {
+            AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch Jira issue data. Status: " + xhr.status + ", Error: " + error + "</p>");
+            AJS.dialog2("#api-modal").show();
+          }
+        });
+      });
+
+      AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
+        AJS.dialog2("#api-modal").hide();
+        setTimeout(function() {
+          AJS.$("#api-modal").attr("aria-hidden", "true").hide();
+          AJS.$("#api-response").html("Loading data...");
+        }, 300);
+      });
+
+      AJS.$("#show-popup").data('events-attached', true);
+    }
+  }
+
+  if (typeof jQuery !== "undefined") {
+    jQuery(document).ready(function() {
+      initStuff();
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    initStuff();
+    JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
+      initStuff();
+    });
+  });
+</script>
