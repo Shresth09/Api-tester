@@ -1,5 +1,5 @@
 <!-- Placeholder for allowed project keys -->
-#set($allowedProjectKeys = [])
+#set($allowedProjectKeys = "")
 
 <!-- Function to fetch allowed project keys -->
 <script>
@@ -12,6 +12,7 @@
         type: 'GET',
         contentType: 'text/plain',
         success: function(data) {
+          console.log("Received project keys from servlet:", data); // Log the received project keys
           var allowedProjectKeys = data.split(",");
           // Setting the values to the placeholder
           $allowedProjectKeys = allowedProjectKeys;
@@ -25,33 +26,40 @@
     }
 
     fetchAllowedProjectKeys();
+
+    function renderPopup() {
+      var projectKey = "${project.key}";
+      if ($allowedProjectKeys.indexOf(projectKey) > -1) {
+        jQuery("#popup-container").html(`
+          <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
+          <!-- Modal Structure -->
+          <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+            <header class="aui-dialog2-header">
+              <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
+              <a class="aui-dialog2-header-close">
+                <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+              </a>
+            </header>
+            <div class="aui-dialog2-content">
+              <div id="api-response">Loading data...</div>
+            </div>
+            <footer class="aui-dialog2-footer">
+              <div class="aui-dialog2-footer-actions">
+                <button id="close-button" class="aui-button aui-button-primary">Close</button>
+              </div>
+            </footer>
+          </div>
+        `);
+        initStuff();
+      } else {
+        jQuery("#popup-container").html("<p>Project key is not allowed.</p>");
+      }
+    }
   });
 </script>
 
-#if ($allowedProjectKeys.contains($project.key))
-<div id="popup-container">
-  <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
-  <!-- Modal Structure -->
-  <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
-    <header class="aui-dialog2-header">
-      <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
-      <a class="aui-dialog2-header-close">
-        <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-      </a>
-    </header>
-    <div class="aui-dialog2-content">
-      <div id="api-response">Loading data...</div>
-    </div>
-    <footer class="aui-dialog2-footer">
-      <div class="aui-dialog2-footer-actions">
-        <button id="close-button" class="aui-button aui-button-primary">Close</button>
-      </div>
-    </footer>
-  </div>
-</div>
-#else
-<p>Project key is not allowed.</p>
-#end
+<!-- The popup container -->
+<div id="popup-container"></div>
 
 <script type="module">
   AJS.toInit(function() {
