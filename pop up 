@@ -1,5 +1,7 @@
+#set($allowedProjectKeys = [])
+
 <script>
-  var allowedProjectKeys = []; // Global variable to hold the allowed project keys
+  var allowedProjectKeys = [];
 
   // Function to fetch allowed project keys and set the value
   function fetchAllowedProjectKeys(callback) {
@@ -33,10 +35,7 @@
       if (checkProjectKey()) {
         renderPopup();
       } else {
-        // If project key is not allowed, remove the panel by not rendering any content
         console.log("Project key is not allowed.");
-        // Remove the panel by removing its container element
-        jQuery("#popup-container").remove();
       }
     });
   });
@@ -66,7 +65,31 @@
   }
 </script>
 
-<div id="popup-container"></div>
+<div id="popup-container">
+#if($allowedProjectKeys.contains($project.key))
+  <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
+
+  <!-- Modal Structure -->
+  <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+    <header class="aui-dialog2-header">
+      <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
+      <a class="aui-dialog2-header-close">
+        <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+      </a>
+    </header>
+    <div class="aui-dialog2-content">
+      <div id="api-response">Loading data...</div>
+    </div>
+    <footer class="aui-dialog2-footer">
+      <div class="aui-dialog2-footer-actions">
+        <button id="close-button" class="aui-button aui-button-primary">Close</button>
+      </div>
+    </footer>
+  </div>
+#else
+  <p>Project key is not allowed.</p>
+#end
+</div>
 
 <script type="module">
   AJS.toInit(function() {
