@@ -6,7 +6,6 @@
   // Function to fetch allowed project keys and set the value
   function fetchAllowedProjectKeys(callback) {
     var apiurl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getSelectedProjects";
-
     jQuery.ajax({
       url: apiurl,
       type: 'GET',
@@ -33,9 +32,12 @@
   jQuery(document).ready(function() {
     fetchAllowedProjectKeys(function() {
       if (checkProjectKey()) {
+        jQuery("#plugin-container").show();
         renderPopup();
       } else {
+        // If project key is not allowed, hide the plugin container
         console.log("Project key is not allowed.");
+        jQuery("#plugin-container").hide();
       }
     });
   });
@@ -65,30 +67,31 @@
   }
 </script>
 
-<div id="popup-container">
-#if($allowedProjectKeys.contains($project.key))
-  <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
+<div id="plugin-container" style="display: none;">
+  <div id="popup-container">
+  #if($allowedProjectKeys.contains($project.key))
+    <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
 
-  <!-- Modal Structure -->
-  <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
-    <header class="aui-dialog2-header">
-      <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
-      <a class="aui-dialog2-header-close">
-        <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-      </a>
-    </header>
-    <div class="aui-dialog2-content">
-      <div id="api-response">Loading data...</div>
-    </div>
-    <footer class="aui-dialog2-footer">
-      <div class="aui-dialog2-footer-actions">
-        <button id="close-button" class="aui-button aui-button-primary">Close</button>
+    <!-- Modal Structure -->
+    <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+      <header class="aui-dialog2-header">
+        <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
+        <a class="aui-dialog2-header-close">
+          <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
+      </header>
+      <div class="aui-dialog2-content">
+        <div id="api-response">Loading data...</div>
       </div>
-    </footer>
+      <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+          <button id="close-button" class="aui-button aui-button-primary">Close</button>
+        </div>
+      </footer>
+    </div>
+  #else
+  #end
   </div>
-#else
-  <p>Project key is not allowed.</p>
-#end
 </div>
 
 <script type="module">
@@ -221,8 +224,4 @@
 
   document.addEventListener("DOMContentLoaded", function() {
     initStuff();
-    JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
-      initStuff();
-    });
-  });
-</script>
+    JIRA[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/karthikseetharam/personalportal/tree/49552918652aa6d033d682016f75b818674a2a70/images%2FPull%20Request%20%23519_%20AWSA-2109%20Add%20device%20model%20script%20to%20standalone%20script%20executor.%20-%20Bitbucket_files%2Fbatch%282%29.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/cmpaxgg/Lab3/tree/48558f7f71245b46bca6ba1fcb33c4921badab6d/img%2FCreate%20Issue%20-%20Jira_files%2Fbatch%282%29.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/andmikey/andmikey.github.io/tree/a09f5641b6f7f3c6105e34089762fe9087ae0e00/Coursework_files%2Fbatch.js?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
