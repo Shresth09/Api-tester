@@ -1,66 +1,16 @@
-#set($allowedProjectKeys = [])
-
-#set($apiUrl = $json.fetch($request.getContextPath() + '/plugins/servlet/issuecrud?action=getSelectedProjects'))
-
-#set($jsonResponse = $httpClient.get($apiUrl))
-
-#set($allowedProjectKeys = $jsonResponse.split(","))
-
-#if ($allowedProjectKeys.contains($project.key))
-  <!-- Your code here -->
-#end
-
-
-Thanks for sharing that detail. Given that you don't encounter errors when `$allowedProjectKeys` is set to an empty array, it seems the issue may lie with the fetching and parsing of the API response.
-
-Here are a couple of debugging steps and alternative approaches:
-
-1. **Check the API Response**: Add some logging to see if the API call is returning the expected results.
-    ```vm
-    #set($apiUrl = $json.fetch($request.getContextPath() + '/plugins/servlet/issuecrud?action=getSelectedProjects'))
-
-    #set($jsonResponse = $httpClient.get($apiUrl))
-
-    ## Log the API response
-    $log.info("API Response: $jsonResponse")
-    ```
-
-2. **Directly Assigning for Debugging**: For debugging purposes, try directly assigning a comma-separated string to `$jsonResponse` to check if the parsing works as expected.
-    ```vm
-    #set($jsonResponse = "NEW,OT")
-    #set($allowedProjectKeys = $jsonResponse.split(","))
-
-    ## Log the parsed keys
-    $log.info("Allowed Project Keys: $allowedProjectKeys")
-    ```
-
-3. **Error Handling**: Add error handling around the HTTP request to catch any issues with the API call.
-    ```vm
-    #set($apiUrl = $json.fetch($request.getContextPath() + '/plugins/servlet/issuecrud?action=getSelectedProjects'))
-
-    #set($jsonResponse = "")
-    #try
-        #set($jsonResponse = $httpClient.get($apiUrl))
-    #catch($e)
-        $log.error("Error fetching API response: $e")
-    #end
-
-    #set($allowedProjectKeys = $jsonResponse.split(","))
-    ```
-
-By incorporating these steps, you should be able to better understand where the issue lies and ensure the API response is handled correctly. Let me know if these steps help or if there are any error messages you come across during this process.
-
-
-
-
-
-
 #set($jsonResponse = "NEW,OT")
 #set($allowedProjectKeys = $jsonResponse.split(","))
 
-## Convert the array to a string with comma-separated values
-#set($allowedProjectKeysString = $allowedProjectKeys.join(","))
+## Define a flag to indicate if the project key is allowed
+#set($isAllowed = false)
 
-#if ($allowedProjectKeysString.indexOf($project.key) != -1)
+## Check each allowed project key for an exact match
+#foreach($allowedProjectKey in $allowedProjectKeys)
+    #if($allowedProjectKey.trim() == $project.key.trim())
+        #set($isAllowed = true)
+    #end
+#end
+
+#if($isAllowed)
   ## Your code here
 #end
