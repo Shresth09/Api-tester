@@ -1,0 +1,27 @@
+<script type="text/javascript">
+    // This script will fetch the allowed project keys from the servlet 
+    // and store them in a global variable 
+    var allowedProjectKeys; 
+
+    AJS.toInit(function() {
+        jQuery.ajax({
+            url: AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getSelectedProjects",
+            type: 'GET',
+            dataType: 'json',
+            success: function (response) {
+                allowedProjectKeys = response.projectKeys.split(","); 
+            },
+            error: function (xhr, status, error) {
+                console.error("Error fetching allowed project keys:", status, error);
+                // Handle the error, for example, display a generic message 
+                allowedProjectKeys = []; 
+            }
+        });
+    });
+</script>
+
+#if (${project.key} in $allowedProjectKeys) 
+    <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
+#else
+    <p>This functionality is not available for this project.</p> 
+#end 
