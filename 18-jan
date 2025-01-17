@@ -95,3 +95,101 @@ else if ("loadPopup".equals(action)) {
 By following this approach, you'll ensure that the `popup.vm` content is loaded and inserted into the DOM dynamically, only when needed, without being appended to the end of the `issuecrud-page.vm`.
 
 Try implementing these changes and let me know if it resolves the issue!
+
+
+
+
+
+
+
+
+
+
+
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.project.Project;
+import com.atlassian.jira.project.ProjectManager;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.templaterenderer.TemplateRenderer;
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+public class IssueCRUD extends HttpServlet {
+    private static final Logger Log = LoggerFactory.getLogger(IssueCRUD.class);
+    private final TemplateRenderer templateRenderer;
+    private final PluginSettingsFactory pluginSettingsFactory;
+    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins.tutorial.servlet.IssueCRUD";
+
+    public IssueCRUD(TemplateRenderer templateRenderer, PluginSettingsFactory pluginSettingsFactory) {
+        this.templateRenderer = templateRenderer;
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        resp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        resp.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+        String action = req.getParameter("action");
+        if ("getProjects".equals(action)) {
+            ProjectManager projectManager = ComponentAccessor.getProjectManager();
+            List<Project> projects = projectManager.getProjectObjects();
+            String projectList = projects.stream()
+                    .map(project -> project.getKey() + "-" + project.getName())
+                    .collect(Collectors.joining(","));
+            resp.setContentType("text/plain");
+            resp.getWriter().write(projectList);
+        } else if ("getSelectedProjects".equals(action)) {
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            String selectedProjects = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".selectedProjects");
+            if (selectedProjects == null) {
+                selectedProjects = "";
+            }
+            resp.setContentType("text/plain");
+            resp.getWriter().write(selectedProjects);
+        } else if ("applySelection".equals(action)) {
+            String projectKeys = req.getParameter("keys");
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            pluginSettings.put(PLUGIN_STORAGE_KEY + ".selectedProjects", projectKeys);
+            resp.setContentType("text/plain");
+            resp.getWriter().write("Projects applied successfully!");
+
+            // Call setPopup to render popup.vm
+            setPopup(resp);
+        } else {
+            resp.setContentType("text/html; charset=utf-8");
+            templateRenderer.render("templates/issuecrud-page.vm", resp.getWriter());
+        }
+    }
+
+    private void setPopup(HttpServletResponse resp) throws IOException {
+        PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+        String selectedProjects = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".selectedProjects");
+        List<String> allowedProjectKeys = new ArrayList<>();
+        if (selectedProjects != null && !selectedProjects.isEmpty()) {
+            allowedProjectKeys = Arrays.asList(selectedProjects.split(","));
+        }
+        Map<String, Object> context = new HashMap<>();
+        context.put("allowedProjectKeys", allowedProjectKeys);
+        Log.info("Context for popup: " + context);
+
+        // Set content type and render popup.vm
+        resp.setContentType("text/html; charset=utf-8");
+        templateRenderer.render("templates/popup.vm", context, resp.getWriter());
+    }
+}
