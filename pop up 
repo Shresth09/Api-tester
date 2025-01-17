@@ -1,59 +1,63 @@
+<!-- Placeholder for allowed project keys -->
 <script>
   var allowedProjectKeys = []; // Global variable to hold the allowed project keys
 
-  jQuery(document).ready(function() {
-    function fetchAllowedProjectKeys() {
-      var apiurl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getSelectedProjects";
+  // Function to fetch allowed project keys and set the value
+  function fetchAllowedProjectKeys() {
+    var apiurl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getSelectedProjects";
 
-      jQuery.ajax({
-        url: apiurl,
-        type: 'GET',
-        contentType: 'text/plain',
-        success: function(data) {
-          console.log("Received project keys from servlet:", data); // Log the received project keys
-          allowedProjectKeys = data.split(",");
-          console.log("Splitted project keys from servlet:", allowedProjectKeys);
-          renderPopup();
-        },
-        error: function(xhr, status, error) {
-          console.log("Error fetching allowed project keys: ", error);
-        }
-      });
-    }
-
-    fetchAllowedProjectKeys();
-
-    function renderPopup() {
-      var projectKey = "${project.key}";
-      if (allowedProjectKeys.indexOf(projectKey) > -1) {
-        jQuery("#popup-container").html(`
-          <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
-          <!-- Modal Structure -->
-          <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
-            <header class="aui-dialog2-header">
-              <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
-              <a class="aui-dialog2-header-close">
-                <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-              </a>
-            </header>
-            <div class="aui-dialog2-content">
-              <div id="api-response">Loading data...</div>
-            </div>
-            <footer class="aui-dialog2-footer">
-              <div class="aui-dialog2-footer-actions">
-                <button id="close-button" class="aui-button aui-button-primary">Close</button>
-              </div>
-            </footer>
-          </div>
-        `);
-        initStuff();
-      } else {
-        jQuery("#popup-container").html("<p>Project key is not allowed.</p>");
+    jQuery.ajax({
+      url: apiurl,
+      type: 'GET',
+      contentType: 'text/plain',
+      success: function(data) {
+        console.log("Received project keys from servlet:", data); // Log the received project keys
+        allowedProjectKeys = data.split(",");
+        console.log("Splitted project keys from servlet:", allowedProjectKeys);
+        renderPopup();
+      },
+      error: function(xhr, status, error) {
+        console.log("Error fetching allowed project keys: ", error);
       }
+    });
+  }
+
+  // Function to render the popup conditionally
+  function renderPopup() {
+    var projectKey = "${project.key}";
+    if (allowedProjectKeys.indexOf(projectKey) > -1) {
+      jQuery("#popup-container").html(`
+        <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
+        <!-- Modal Structure -->
+        <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+          <header class="aui-dialog2-header">
+            <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
+            <a class="aui-dialog2-header-close">
+              <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+            </a>
+          </header>
+          <div class="aui-dialog2-content">
+            <div id="api-response">Loading data...</div>
+          </div>
+          <footer class="aui-dialog2-footer">
+            <div class="aui-dialog2-footer-actions">
+              <button id="close-button" class="aui-button aui-button-primary">Close</button>
+            </div>
+          </footer>
+        </div>
+      `);
+      initStuff();
+    } else {
+      jQuery("#popup-container").html("<p>Project key is not allowed.</p>");
     }
+  }
+
+  jQuery(document).ready(function() {
+    fetchAllowedProjectKeys();
   });
 </script>
 
+<!-- The popup container -->
 <div id="popup-container"></div>
 
 <script type="module">
