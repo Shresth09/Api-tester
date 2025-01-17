@@ -49,3 +49,18 @@ Here are a couple of debugging steps and alternative approaches:
     ```
 
 By incorporating these steps, you should be able to better understand where the issue lies and ensure the API response is handled correctly. Let me know if these steps help or if there are any error messages you come across during this process.
+
+
+
+
+
+
+#set($jsonResponse = "NEW,OT")
+#set($allowedProjectKeys = $jsonResponse.split(","))
+
+## Convert the array to a string with comma-separated values
+#set($allowedProjectKeysString = $allowedProjectKeys.join(","))
+
+#if ($allowedProjectKeysString.indexOf($project.key) != -1)
+  ## Your code here
+#end
