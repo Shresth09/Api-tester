@@ -104,3 +104,39 @@ private void renderTemplate(HttpServletRequest req, HttpServletResponse resp, St
     VelocityContext velocityContext = new VelocityContext(context);
     templateRenderer.render(templatePath, velocityContext, resp.getWriter());
 }
+
+
+
+
+
+
+
+
+
+
+#&#&#&#&#&#&#&#&#&#&#&#&#&&#
+##&&#&#&#&#&#&#&#&#&#&#&##&&#
+
+else if ("getSelectedProjects".equals(action)) {
+    PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+    String selectedProjects = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".selectedProjects");
+
+    List<String> allowedProjectKeys = new ArrayList<>();
+
+    if (selectedProjects != null && !selectedProjects.isEmpty()) {
+        allowedProjectKeys = Arrays.asList(selectedProjects.split(","));
+    }
+
+    Map<String, Object> context = new HashMap<>();
+    context.put("allowedProjectKeys", allowedProjectKeys);
+
+    renderTemplate(req, resp, "templates/popup.vm", context);
+}
+
+private void renderTemplate(HttpServletRequest req, HttpServletResponse resp, String templatePath, Map<String, Object> context) throws IOException {
+    resp.setContentType("text/html; charset=utf-8");
+
+    VelocityContext velocityContext = new VelocityContext(context);
+    templateRenderer.render(templatePath, velocityContext, resp.getWriter()); 
+}
+ 
