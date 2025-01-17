@@ -35,6 +35,8 @@
       } else {
         // If project key is not allowed, remove the panel by not rendering any content
         console.log("Project key is not allowed.");
+        // Remove the panel by removing its container element
+        jQuery("#popup-container").remove();
       }
     });
   });
