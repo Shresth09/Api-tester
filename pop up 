@@ -22,3 +22,44 @@
 #else
     <span>Project key $project.key is not allowed.</span><br/>
 #end
+
+
+
+
+
+
+
+## Directly print context path to verify if it's working
+<span>Context Path: ${request.getContextPath()}</span><br/>
+
+## Manually construct the API URL as a fallback
+#set($contextPath = "/your-jira-context-path") ## Replace this with your actual context path if needed
+#set($apiUrl = $contextPath + '/plugins/servlet/issuecrud?action=getSelectedProjects')
+<span>API URL: $apiUrl</span><br/>
+
+## Fetching the JSON Response
+#set($jsonResponse = $httpClient.get($apiUrl))
+<span>JSON Response: $jsonResponse</span><br/>
+
+## Splitting the JSON Response into Project Keys
+#set($allowedProjectKeys = $jsonResponse.split(","))
+<span>Allowed Project Keys: $allowedProjectKeys</span><br/>
+
+## Define a flag to indicate if the project key is allowed
+#set($isAllowed = false)
+
+## Check each allowed project key for an exact match
+#foreach($allowedProjectKey in $allowedProjectKeys)
+    <span>Checking Project Key: $allowedProjectKey</span><br/>
+    #if($allowedProjectKey.trim() == $project.key.trim())
+        #set($isAllowed = true)
+    #end
+#end
+
+<span>Is Allowed: $isAllowed</span><br/>
+
+#if($isAllowed)
+    <span>Project key $project.key is allowed.</span><br/>
+#else
+    <span>Project key $project.key is not allowed.</span><br/>
+#end
