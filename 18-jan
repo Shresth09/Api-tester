@@ -88,3 +88,47 @@ Modify the `atlassian-plugin.xml` to use the custom condition class to control t
 By following these steps, you can conditionally display the web panel based on the presence of the current project key in the list of allowed project keys, all defined within `atlassian-plugin.xml`.
 
 Give this approach a try, and let me know if it resolves your issue or if you need any further assistance!
+
+
+
+
+
+
+import com.atlassian.plugin.PluginParseException;
+import com.atlassian.plugin.web.Condition;
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+public class ProjectKeyCondition implements Condition {
+    private final PluginSettingsFactory pluginSettingsFactory;
+    private static final String PLUGIN_STORAGE_KEY = "com.example.plugins.tutorial.servlet.IssueCRUD";
+    private String projectKey;
+
+    public ProjectKeyCondition(PluginSettingsFactory pluginSettingsFactory) {
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
+
+    @Override
+    public void init(Map<String, String> params) throws PluginParseException {
+        this.projectKey = params.get("projectKey");
+    }
+
+    @Override
+    public boolean shouldDisplay(Map<String, Object> context) {
+        HttpServletRequest request = (HttpServletRequest) context.get("req");
+        String projectKey = (String) context.get("projectKey");
+
+        PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+        String selectedProjects = (String) pluginSettings.get(PLUGIN_STORAGE_KEY + ".selectedProjects");
+
+        if (selectedProjects != null && !selectedProjects.isEmpty()) {
+            List<String> allowedProjectKeys = Arrays.asList(selectedProjects.split(","));
+            return allowedProjectKeys.contains(projectKey);
+        }
+        return false;
+    }
+}
