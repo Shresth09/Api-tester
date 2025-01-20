@@ -1,76 +1,44 @@
-<web-resource key="walkme-resources" name="WalkMe Resources">
-    <dependency>com.atlassian.auiplugin:ajs</dependency>
-    <context>jira.view.issue</context>
-    <resource type="velocity" name="view" location="templates/popup.vm"/>
-</web-resource>
+Great question! In the example I provided, the `displayCustomMessage` function is intended to log the message to the console. 
 
+To show a flag in the Jira UI when a new issue is created, you can use the Atlassian API to create a flag. Here's an example using Jira's JavaScript API to display a flag with a custom message:
 
-=================================
+1. **Add JavaScript to your plugin**: Create a JavaScript file in your plugin project.
 
+2. **Modify your plugin code**: Adjust your plugin code to include a JavaScript file that handles the flag creation.
 
-<div>
-    <button id="walkme-button">WalkMe</button>
-</div>
+Here's an example of the JavaScript code to display the flag:
 
-<!-- Modal Structure -->
-<div id="walkme-modal" class="aui-dialog2 aui-dialog2-medium aui-dialog2-centered" role="dialog" aria-hidden="true" style="display:none;">
-    <header class="aui-dialog2-header">
-        <h2 class="aui-dialog2-header-main">API Response</h2>
-        <a class="aui-dialog2-header-close">
-            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-        </a>
-    </header>
-    <div class="aui-dialog2-content">
-        <p id="api-response"></p>
-    </div>
-    <footer class="aui-dialog2-footer">
-        <div class="aui-dialog2-footer-actions">
-            <button id="close-button" class="aui-button aui-button-primary">Close</button>
-        </div>
-    </footer>
-</div>
-
-<script type="text/javascript">
-    AJS.$(document).ready(function() {
-        // Log to verify script execution
-        console.log("Document ready. Script loaded.");
-
-        // Attach click event to the button
-        AJS.$("#walkme-button").on("click", function() {
-            // Log button click event
-            console.log("Button clicked.");
-
-            // Make the AJAX GET request
-            AJS.$.ajax({
-                url: 'https://jsonplaceholder.typicode.com/posts/1', // Example public API endpoint
-                type: 'GET',
-                success: function(response) {
-                    // Log successful response
-                    console.log("API response received:", response);
-
-                    // Set the response in the modal
-                    AJS.$("#api-response").text(JSON.stringify(response));
-                    
-                    // Show the modal
-                    AJS.dialog2("#walkme-modal").show();
-                },
-                error: function(error) {
-                    // Log error response
-                    console.log("API error occurred:", error);
-
-                    // Handle any errors
-                    AJS.$("#api-response").text('Error: ' + error.statusText);
-                    
-                    // Show the modal
-                    AJS.dialog2("#walkme-modal").show();
-                }
+```javascript
+AJS.toInit(function () {
+    // Listen for issue created event
+    JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function (e, context, reason) {
+        if (reason === JIRA.CONTENT_ADDED_REASON.issueCreated) {
+            // Display custom flag
+            AJS.flag({
+                type: 'info',
+                title: 'Custom Message',
+                body: 'Issue has been created successfully with your custom message.',
+                close: 'auto'
             });
-        });
-
-        // Attach click event to the modal close button
-        AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
-            // Hide the modal
-            AJS.dialog2("#walkme-modal").hide();
-        });
+        }
     });
-</script>
+});
+```
+
+3. **Include the JavaScript file in your plugin**: Ensure the JavaScript file is included in your plugin descriptor (atlassian-plugin.xml).
+
+Here's an example snippet of the `atlassian-plugin.xml` file:
+
+```xml
+<web-resource key="my-custom-flag-resource" name="My Custom Flag Resource">
+    <dependency>com.atlassian.auiplugin:ajs</dependency>
+    <resource type="download" name="my-custom-flag.js" location="/js/my-custom-flag.js"/>
+    <context>atl.general</context>
+</web-resource>
+```
+
+4. **Deploy your plugin**: Package and deploy your plugin to your Jira instance. Make sure your plugin is enabled.
+
+With these steps, whenever a new issue is created, a custom flag with your message will be displayed in the Jira UI.
+
+Does this help? Let me know if you need further assistance or if there's anything more specific you'd like to know!
