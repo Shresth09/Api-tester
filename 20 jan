@@ -1,3 +1,10 @@
+const selectedKeys = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
+selectedProjects = selectedKeys; // This ensures that the selected projects list is updated
+const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=applySelection&keys=" + selectedProjects.join(",");
+
+
+
+
 You're right, this could be an issue because `issuecrud-page.vm` is hosted independently through the servlet, while `popup.vm` is integrated as a web panel in JIRA. The key is to ensure that the context you set for the web panel is properly passed and rendered within JIRA.
 
 ### Solution:
