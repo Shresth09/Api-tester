@@ -1,6 +1,78 @@
-const selectedKeys = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
-selectedProjects = selectedKeys; // This ensures that the selected projects list is updated
-const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=applySelection&keys=" + selectedProjects.join(",");
+Understood! Let's update your code to ensure that the list is always maintained independently of the search results. We will modify the `applySelection` function and add event listeners to checkboxes to handle adding and removing projects from `selectedProjects`.
+
+1. Update the `applySelection` function:
+```javascript
+function applySelection() {
+    const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=applySelection&keys=" + selectedProjects.join(",");
+
+    fetch(apiurl, {
+        method: 'GET',
+        headers: {
+            "Referer": window.location.href
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('HTTP error! Status: ' + response.status);
+        }
+        return response.text();
+    })
+    .then(data => {
+        alert('Projects applied successfully!');
+        loadPopupContent();
+    })
+    .catch(error => {
+        console.log("Error Applying Selection: ", error);
+        alert("Error: " + error);
+    });
+}
+```
+
+2. Add event listeners to checkboxes for maintaining `selectedProjects`:
+```javascript
+function updateProjectList(filteredProjects = []) {
+    const projectList = document.getElementById('projectList');
+    projectList.innerHTML = '';
+
+    const projectsToDisplay = filteredProjects.length ? filteredProjects : allProjects;
+
+    projectsToDisplay.forEach(project => {
+        const label = document.createElement('label');
+        const [key, name] = project.split("-");
+        const checkbox = document.createElement('input');
+        checkbox.type = "checkbox";
+        checkbox.value = key;
+
+        // Check if the project is selected
+        if (selectedProjects.includes(key)) {
+            checkbox.checked = true;
+        }
+
+        // Add event listener to handle checkbox changes
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                if (!selectedProjects.includes(this.value)) {
+                    selectedProjects.push(this.value);
+                }
+            } else {
+                const index = selectedProjects.indexOf(this.value);
+                if (index > -1) {
+                    selectedProjects.splice(index, 1);
+                }
+            }
+        });
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(key + " - " + name));
+        projectList.appendChild(label);
+        projectList.appendChild(document.createElement('br'));
+    });
+}
+```
+
+By adding these event listeners, we ensure that the `selectedProjects` list is always updated based on the user's checkbox interactions, independent of the search results. 
+
+If you need any more tweaks or have questions, just let me know!
 
 
 
