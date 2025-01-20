@@ -1,3 +1,30 @@
+function selectAllProjects(source) {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        if (checkbox !== source) {
+            checkbox.checked = source.checked;
+
+            // Update selectedProjects based on the "Select All" checkbox
+            if (source.checked) {
+                if (!selectedProjects.includes(checkbox.value)) {
+                    selectedProjects.push(checkbox.value);
+                }
+            } else {
+                const index = selectedProjects.indexOf(checkbox.value);
+                if (index > -1) {
+                    selectedProjects.splice(index, 1);
+                }
+            }
+        }
+    });
+}
+
+
+
+
+
+
+
 Understood! Let's update your code to ensure that the list is always maintained independently of the search results. We will modify the `applySelection` function and add event listeners to checkboxes to handle adding and removing projects from `selectedProjects`.
 
 1. Update the `applySelection` function:
