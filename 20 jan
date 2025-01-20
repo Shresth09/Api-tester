@@ -1,0 +1,112 @@
+You're right, this could be an issue because `issuecrud-page.vm` is hosted independently through the servlet, while `popup.vm` is integrated as a web panel in JIRA. The key is to ensure that the context you set for the web panel is properly passed and rendered within JIRA.
+
+### Solution:
+We need to ensure that `allowedProjectKeys` is correctly passed and accessible when rendering `popup.vm` within the web panel context. To achieve this, you can utilize JIRA's context parameters and a context provider to set these variables.
+
+#### Step-by-Step Solution:
+
+1. **Create a Context Provider:**
+   Create a custom context provider class to set the necessary context variables for `popup.vm`.
+
+2. **Update `atlassian-plugin.xml`:**
+   Register the context provider for the web panel.
+
+### Step 1: Create a Custom Context Provider
+
+Create a custom context provider class that sets `allowedProjectKeys` and other required variables.
+
+```java
+import com.atlassian.plugin.web.ContextProvider;
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class PopupContextProvider implements ContextProvider {
+    private final PluginSettingsFactory pluginSettingsFactory;
+
+    public PopupContextProvider(PluginSettingsFactory pluginSettingsFactory) {
+        this.pluginSettingsFactory = pluginSettingsFactory;
+    }
+
+    @Override
+    public void init(Map<String, String> params) {
+        // Initialization if needed
+    }
+
+    @Override
+    public Map<String, Object> getContextMap(Map<String, Object> context) {
+        HttpServletRequest request = (HttpServletRequest) context.get("request");
+        PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+        String selectedProjects = (String) pluginSettings.get("com.example.plugins.tutorial.servlet.IssueCRUD.selectedProjects");
+
+        List<String> allowedProjectKeys = new ArrayList<>();
+        if (selectedProjects != null && !selectedProjects.isEmpty()) {
+            allowedProjectKeys = Arrays.asList(selectedProjects.split(","));
+        }
+
+        context.put("allowedProjectKeys", allowedProjectKeys);
+        context.put("projectKey", request.getParameter("projectKey")); // Pass projectKey if available
+
+        return context;
+    }
+}
+```
+
+### Step 2: Update `atlassian-plugin.xml`
+
+Register the context provider for the web panel to ensure the context is set correctly.
+
+```xml
+<atlassian-plugin key="your-plugin-key" name="Your Plugin Name" plugins-version="2">
+    <!-- Web Panel Definition -->
+    <web-panel key="popup-web-panel" location="atl.jira.view.issue.right.context" weight="100">
+        <description>Popup Web Panel</description>
+        <context-provider class="com.example.plugins.PopupContextProvider"/>
+        <resource name="view" type="velocity" location="templates/popup.vm"/>
+    </web-panel>
+
+    <!-- Servlet Definition -->
+    <servlet key="issuecrud-servlet" name="Issue CRUD Servlet" class="com.example.plugins.IssueCRUDServlet">
+        <description>This servlet handles Issue CRUD operations.</description>
+        <url-pattern>/plugins/servlet/issuecrud</url-pattern>
+    </servlet>
+</atlassian-plugin>
+```
+
+### Explanation:
+1. **PopupContextProvider:**
+   - Fetches `selectedProjects` and splits them into `allowedProjectKeys`.
+   - Sets `allowedProjectKeys` and `projectKey` in the context map.
+
+2. **atlassian-plugin.xml:**
+   - Registers the context provider for the web panel, ensuring the context is available when rendering `popup.vm`.
+
+### Example `popup.vm` Template:
+
+Ensure that `popup.vm` uses the context variables set by the context provider.
+
+```vm
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Popup</title>
+</head>
+<body>
+    <span>Allowed Key From Popup VM File: $allowedProjectKeys</span></br>
+    <span>Project Key: $projectKey</span></br>
+    #if ($allowedProjectKeys.contains($projectKey))
+        <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
+    #else
+        <span>This project is not allowed.</span>
+    #end
+</body>
+</html>
+```
+
+By creating a custom context provider and updating your plugin descriptor, you ensure that `allowedProjectKeys` and `projectKey` are correctly passed and accessible within `popup.vm` when it's rendered as a web panel in JIRA. Give this approach a try and let me know if it resolves your issue or if you need further assistance!
