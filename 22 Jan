@@ -47,3 +47,33 @@ Here's how you can integrate the JavaScript code into your Jira plugin to dynami
 With this setup, when the Quick Create Issue modal is shown, it will add the "Custom Button" next to the Visual and Text buttons, and clicking it will display an alert with "Hello World."
 
 Let me know if there's anything else you'd like to add or any other assistance you need!
+
+
+
+
+
+
+
+AJS.$(document).ready(function() {
+    console.log('JavaScript file loaded successfully!');
+
+    // Wait for the issue create modal to be shown
+    AJS.$(document).on('dialogcreated', function(event, dialog) {
+        console.log('Dialog created event triggered');
+
+        if (dialog.$el.attr('id') === 'create-issue-dialog') {
+            console.log('Create Issue Dialog detected');
+
+            // Add custom button next to Visual and Text buttons
+            var button = '<button id="customButton" class="aui-button aui-button-primary">Custom Button</button>';
+            AJS.$('.aui-buttons').append(button);
+            console.log('Custom button added');
+
+            // Add event listener to the custom button
+            AJS.$(document).on('click', '#customButton', function() {
+                alert('Hello World');
+                console.log('Custom button clicked');
+            });
+        }
+    });
+});
