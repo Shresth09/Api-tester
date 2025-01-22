@@ -1,79 +1,35 @@
-Great question! The HTML code for the modal might not be directly accessible if you're using Jira Cloud since it’s largely managed by Atlassian. However, you can add the button using JavaScript and jQuery, which is often the preferred way to manipulate the DOM in Jira plugins.
+<!-- Web panel to display content on the right context of an issue view -->
+<web-panel key="AI-ROM-plugin" location="atl.jira.view.issue.right.context" weight="10">
+    <!-- Context provider class for the web panel -->
+    <context-provider class="com.example.plugins.PopupContextProvider"/>
+    <!-- Velocity template resource for the web panel -->
+    <resource type="velocity" name="view" location="templates/popup.vm"/>
+</web-panel>
 
-Here's how you can integrate the JavaScript code into your Jira plugin to dynamically add the button:
+<!-- Web section for User License Helper in the admin applications section -->
+<web-section name="User License Helper" key="ai-ram-config-websection-key" location="admin_applications_section" weight="1000">
+    <label key="URL-CONFIGURATION"/>
+</web-section>
 
-1. **Create the JavaScript file:**
-   - Create a new JavaScript file, for example, `custom-button.js`, and add the following code:
+<!-- Web item for Configuration under User License Helper -->
+<web-item name="Configuration" key="configuration" section="admin_applications_section/ai-ram-config-websection-key" weight="1000">
+    <label key="Configure-RQM-URL"/>
+    <!-- Link to the configuration servlet -->
+    <link linkId="configuration-Link">/plugins/servlet/issuecrud</link>
+</web-item>
 
-   ```javascript
-   AJS.$(document).ready(function() {
-       // Wait for the issue create modal to be shown
-       AJS.$(document).on('dialogcreated', function(event, dialog) {
-           if (dialog.$el.attr('id') === 'create-issue-dialog') {
-               // Add custom button next to Visual and Text buttons
-               var button = '<button id="customButton" class="aui-button aui-button-primary">Custom Button</button>';
-               AJS.$('.aui-buttons').append(button);
-               
-               // Add event listener to the custom button
-               AJS.$(document).on('click', '#customButton', function() {
-                   alert('Hello World');
-               });
-           }
-       });
-   });
-   ```
+<!-- Internationalization resource bundle -->
+<resource type="i18n" name="i18n" location="AI_Plugin_Key"/>
 
-2. **Update your atlassian-plugin.xml:**
-   - You need to include this JavaScript file in your plugin's descriptor file (`atlassian-plugin.xml`):
+<!-- Servlet for Issue CRUD operations -->
+<servlet name="Issue CRUD" i18n-name-key="issue-crud.name" key="issue-crud" class="com.example.plugins.tutorial.servlet.IssueCRUD">
+    <description key="issue-crud.description">The Issue CRUD Plugin</description>
+    <url-pattern>/issuecrud</url-pattern>
+    <!-- Parameters for the servlet -->
+    <param name="templateRenderer" value="templateRenderer"/>
+    <param name="pluginSettingsFactory" value="pluginSettingsFactory"/>
+</servlet>
 
-   ```xml
-   <web-resource key="custom-button-resources" name="Custom Button Resources">
-       <dependency>com.atlassian.auiplugin:ajs</dependency>
-       <resource type="download" name="custom-button.js" location="js/custom-button.js"/>
-       <context>atl.general</context>
-   </web-resource>
-   ```
-
-3. **Package your plugin:**
-   - Make sure you package your plugin with the new JavaScript file included. If you're using `atlas-mvn`, the command might look something like:
-
-   ```sh
-   atlas-mvn package
-   ```
-
-4. **Deploy your plugin:**
-   - Upload your plugin to your Jira instance.
-
-With this setup, when the Quick Create Issue modal is shown, it will add the "Custom Button" next to the Visual and Text buttons, and clicking it will display an alert with "Hello World."
-
-Let me know if there's anything else you'd like to add or any other assistance you need!
-
-
-
-
-
-
-
-AJS.$(document).ready(function() {
-    console.log('JavaScript file loaded successfully!');
-
-    // Wait for the issue create modal to be shown
-    AJS.$(document).on('dialogcreated', function(event, dialog) {
-        console.log('Dialog created event triggered');
-
-        if (dialog.$el.attr('id') === 'create-issue-dialog') {
-            console.log('Create Issue Dialog detected');
-
-            // Add custom button next to Visual and Text buttons
-            var button = '<button id="customButton" class="aui-button aui-button-primary">Custom Button</button>';
-            AJS.$('.aui-buttons').append(button);
-            console.log('Custom button added');
-
-            // Add event listener to the custom button
-            AJS.$(document).on('click', '#customButton', function() {
-                alert('Hello World');
-                console.log('Custom button clicked');
-            });
-        }
-    });
-});
+<!-- Component imports for template renderer and plugin settings factory -->
+<component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
+<component-import key="templateRenderer" interface="com.atlassian.templaterenderer.TemplateRenderer"/>
