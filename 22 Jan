@@ -1,0 +1,49 @@
+Great question! The HTML code for the modal might not be directly accessible if you're using Jira Cloud since it’s largely managed by Atlassian. However, you can add the button using JavaScript and jQuery, which is often the preferred way to manipulate the DOM in Jira plugins.
+
+Here's how you can integrate the JavaScript code into your Jira plugin to dynamically add the button:
+
+1. **Create the JavaScript file:**
+   - Create a new JavaScript file, for example, `custom-button.js`, and add the following code:
+
+   ```javascript
+   AJS.$(document).ready(function() {
+       // Wait for the issue create modal to be shown
+       AJS.$(document).on('dialogcreated', function(event, dialog) {
+           if (dialog.$el.attr('id') === 'create-issue-dialog') {
+               // Add custom button next to Visual and Text buttons
+               var button = '<button id="customButton" class="aui-button aui-button-primary">Custom Button</button>';
+               AJS.$('.aui-buttons').append(button);
+               
+               // Add event listener to the custom button
+               AJS.$(document).on('click', '#customButton', function() {
+                   alert('Hello World');
+               });
+           }
+       });
+   });
+   ```
+
+2. **Update your atlassian-plugin.xml:**
+   - You need to include this JavaScript file in your plugin's descriptor file (`atlassian-plugin.xml`):
+
+   ```xml
+   <web-resource key="custom-button-resources" name="Custom Button Resources">
+       <dependency>com.atlassian.auiplugin:ajs</dependency>
+       <resource type="download" name="custom-button.js" location="js/custom-button.js"/>
+       <context>atl.general</context>
+   </web-resource>
+   ```
+
+3. **Package your plugin:**
+   - Make sure you package your plugin with the new JavaScript file included. If you're using `atlas-mvn`, the command might look something like:
+
+   ```sh
+   atlas-mvn package
+   ```
+
+4. **Deploy your plugin:**
+   - Upload your plugin to your Jira instance.
+
+With this setup, when the Quick Create Issue modal is shown, it will add the "Custom Button" next to the Visual and Text buttons, and clicking it will display an alert with "Hello World."
+
+Let me know if there's anything else you'd like to add or any other assistance you need!
