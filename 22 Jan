@@ -33,3 +33,56 @@
 <!-- Component imports for template renderer and plugin settings factory -->
 <component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
 <component-import key="templateRenderer" interface="com.atlassian.templaterenderer.TemplateRenderer"/>
+
+
+
+
+
+
+
+
+Here are the notes from yesterday call: 
+
+
+
+
+How can we make it avail for all the sdlc projects. By templates etc...
+
+
+We need to make sure it is only for user story and no other issue type.
+
+
+Line 62 - 67:
+
+Make sure to it makes sense the error message...
+
+
+Line 81- make sure to check for the length..
+
+Line 114: check error message with Venice
+
+
+
+Fetch long description to see how long it will take.
+
+
+Check if for each user it is making a call for the url we are fetching.
+
+
+Get a openion on the ui....
+
+On the modal...
+
+Ai-rqm "plugin" -  should we simply call rqm or other name.
+
+Ai - right name ?
+
+How do we handle if we want this to be part of a validation.
+
+
+Check for the api response time....
+
+Under the widget we can add previous score.
+
+
+Who is going to test it( roberto team or anyone else ?).
