@@ -329,7 +329,9 @@ document.getElementById('projectList').innerHTML = '<p style="color: red; font-w
 
 function applySelection() {
 
-const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=applySelection&keys=" + selected Projects.join(",");
+const isSelectAllChecked = document.getElementById('selectAll').checked;
+    const projectKeys = isSelectAllChecked ? "SELECT-ALL-CHECKED" : selectedProjects.join(",");
+    const apiurl = window.location.origin + "/jira/plugins/servlet/issuecrud?action=applySelection&keys=" + projectKeys;
 
 fetch(apiurl, {
 
