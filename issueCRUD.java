@@ -136,16 +136,17 @@ resp.getWriter().write(selectedProjects);
 // Apply the selected projects
 
 } else if ("applySelection".equals(action)) {
-
-String projectkeys req.getParameter("keys");
-/ Store the selected project keys in PluginSettings PluginSettings pluginSettings pluginSettingsFactory.createGlobalSettings(); pluginSettings.put(PLUGIN STORAGE_KEY".selected Projects", projectkeys);
-
-resp.setContentType("text/plain");
-
-resp.getWriter().write("Projects applied successfully!");
-
-//Default
-} 
+            String projectKeys = req.getParameter("keys");
+            if ("SELECT-ALL-CHECKED".equals(projectKeys)) {
+                ProjectManager projectManager = ComponentAccessor.getProjectManager();
+                List<Project> projects = projectManager.getProjectObjects();
+                projectKeys = projects.stream().map(Project::getKey).collect(Collectors.joining(","));
+            }
+            PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+            pluginSettings.put(PLUGIN_STORAGE_KEY + ".selectedProjects", projectKeys);
+            resp.setContentType("text/plain");
+            resp.getWriter().write("Projects applied successfully!");
+        } 
 else {
 
 resp.setContentType("text/html; charset=utf-8");
