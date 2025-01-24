@@ -1,88 +1,13 @@
-<!-- Web panel to display content on the right context of an issue view -->
-<web-panel key="AI-ROM-plugin" location="atl.jira.view.issue.right.context" weight="10">
-    <!-- Context provider class for the web panel -->
-    <context-provider class="com.example.plugins.PopupContextProvider"/>
-    <!-- Velocity template resource for the web panel -->
-    <resource type="velocity" name="view" location="templates/popup.vm"/>
-</web-panel>
+Here's a recap of your story in a similar format:
 
-<!-- Web section for User License Helper in the admin applications section -->
-<web-section name="User License Helper" key="ai-ram-config-websection-key" location="admin_applications_section" weight="1000">
-    <label key="URL-CONFIGURATION"/>
-</web-section>
+"Jira Plugin for Description Quality Analysis" story recap is as follows:
 
-<!-- Web item for Configuration under User License Helper -->
-<web-item name="Configuration" key="configuration" section="admin_applications_section/ai-ram-config-websection-key" weight="1000">
-    <label key="Configure-RQM-URL"/>
-    <!-- Link to the configuration servlet -->
-    <link linkId="configuration-Link">/plugins/servlet/issuecrud</link>
-</web-item>
+The Jira Plugin for Description Quality Analysis is a crucial enhancement for improving the quality of issue descriptions within Jira. Over the past sprint, I successfully developed a Jira plugin that integrates with the RQM API to analyze issue descriptions and provide quality scores and suggestions for improvement.
 
-<!-- Internationalization resource bundle -->
-<resource type="i18n" name="i18n" location="AI_Plugin_Key"/>
+Key accomplishments include:
 
-<!-- Servlet for Issue CRUD operations -->
-<servlet name="Issue CRUD" i18n-name-key="issue-crud.name" key="issue-crud" class="com.example.plugins.tutorial.servlet.IssueCRUD">
-    <description key="issue-crud.description">The Issue CRUD Plugin</description>
-    <url-pattern>/issuecrud</url-pattern>
-    <!-- Parameters for the servlet -->
-    <param name="templateRenderer" value="templateRenderer"/>
-    <param name="pluginSettingsFactory" value="pluginSettingsFactory"/>
-</servlet>
+- Designing and implementing a button on the Jira issue page to trigger the description analysis
+- Creating a configuration page for administrators to set up the RQM API URL and select applicable projects
+- Developing the plugin to fetch issue descriptions, send them to the RQM API, and display the quality score and suggested improvements within Jira
 
-<!-- Component imports for template renderer and plugin settings factory -->
-<component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
-<component-import key="templateRenderer" interface="com.atlassian.templaterenderer.TemplateRenderer"/>
-
-
-
-
-
-
-
-
-Here are the notes from yesterday call: 
-
-
-
-
-How can we make it avail for all the sdlc projects. By templates etc...
-
-
-We need to make sure it is only for user story and no other issue type.
-
-
-Line 62 - 67:
-
-Make sure to it makes sense the error message...
-
-
-Line 81- make sure to check for the length..
-
-Line 114: check error message with Venice
-
-
-
-Fetch long description to see how long it will take.
-
-
-Check if for each user it is making a call for the url we are fetching.
-
-
-Get a openion on the ui....
-
-On the modal...
-
-Ai-rqm "plugin" -  should we simply call rqm or other name.
-
-Ai - right name ?
-
-How do we handle if we want this to be part of a validation.
-
-
-Check for the api response time....
-
-Under the widget we can add previous score.
-
-
-Who is going to test it( roberto team or anyone else ?).
+This plugin enhances the overall quality of issue descriptions, making it easier for teams to understand and work on issues efficiently. The plugin is scalable and can be easily extended to support additional features and requirements.
