@@ -1,29 +1,43 @@
 else if ("getProjects".equals(action)) {
     ProjectManager projectManager = ComponentAccessor.getProjectManager();
     WorkflowSchemeManager workflowSchemeManager = ComponentAccessor.getWorkflowSchemeManager();
-    List<Project> projects = projectManager.getProjectObjects();
-
+    
     // Define the target workflow scheme name
     String targetSchemeName = "NEW: Project Management Workflow Scheme";
-
-    // Filter projects associated with the target workflow scheme
-    List<Project> projectsWithTargetWorkflowScheme = projects.stream()
-        .filter(project -> {
-            try {
-                return workflowSchemeManager.getSchemesForProjects(Collections.singleton(project))
-                    .stream()
-                    .anyMatch(scheme -> scheme.getName().equals(targetSchemeName));
-            } catch (Exception e) {
-                return false;
-            }
-        })
-        .collect(Collectors.toList());
-
-    // Sending only the project key and project name for display
-    String projectList = projectsWithTargetWorkflowScheme.stream()
-        .map(project -> project.getKey() + "-" + project.getName())
-        .collect(Collectors.joining(","));
-
-    resp.setContentType("text/plain");
-    resp.getWriter().write(projectList);
+    
+    // Fetch all workflow schemes
+    List<Scheme> allSchemes = workflowSchemeManager.getWorkflowSchemes();
+    
+    // Find the target scheme
+    Scheme targetScheme = allSchemes.stream()
+        .filter(scheme -> targetSchemeName.equals(scheme.getName()))
+        .findFirst()
+        .orElse(null);
+    
+    // Check if the target scheme exists
+    if (targetScheme != null) {
+        // Fetch projects associated with the target workflow scheme
+        List<Project> projectsWithTargetWorkflowScheme = projectManager.getProjectObjects()
+            .stream()
+            .filter(project -> {
+                try {
+                    return workflowSchemeManager.getWorkflowSchemeObj(project).getId().equals(targetScheme.getId());
+                } catch (Exception e) {
+                    return false;
+                }
+            })
+            .collect(Collectors.toList());
+    
+        // Sending only the project key and project name for display
+        String projectList = projectsWithTargetWorkflowScheme.stream()
+            .map(project -> project.getKey() + "-" + project.getName())
+            .collect(Collectors.joining(","));
+    
+        resp.setContentType("text/plain");
+        resp.getWriter().write(projectList);
+    } else {
+        // Handle case where target scheme is not found
+        resp.setContentType("text/plain");
+        resp.getWriter().write("Target workflow scheme not found.");
+    }
 }
