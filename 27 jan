@@ -1,0 +1,29 @@
+else if ("getProjects".equals(action)) {
+    ProjectManager projectManager = ComponentAccessor.getProjectManager();
+    WorkflowSchemeManager workflowSchemeManager = ComponentAccessor.getWorkflowSchemeManager();
+    List<Project> projects = projectManager.getProjectObjects();
+
+    // Define the target workflow scheme name
+    String targetSchemeName = "NEW: Project Management Workflow Scheme";
+
+    // Filter projects associated with the target workflow scheme
+    List<Project> projectsWithTargetWorkflowScheme = projects.stream()
+        .filter(project -> {
+            try {
+                return workflowSchemeManager.getSchemesForProjects(Collections.singleton(project))
+                    .stream()
+                    .anyMatch(scheme -> scheme.getName().equals(targetSchemeName));
+            } catch (Exception e) {
+                return false;
+            }
+        })
+        .collect(Collectors.toList());
+
+    // Sending only the project key and project name for display
+    String projectList = projectsWithTargetWorkflowScheme.stream()
+        .map(project -> project.getKey() + "-" + project.getName())
+        .collect(Collectors.joining(","));
+
+    resp.setContentType("text/plain");
+    resp.getWriter().write(projectList);
+}
