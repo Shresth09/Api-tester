@@ -1,3 +1,46 @@
+else if ("applySelection".equals(action)) {
+
+    String projectKeys = req.getParameter("keys");
+
+    if ("SELECT-ALL-CHECKED".equals(projectKeys)) {
+
+        ProjectManager projectManager = ComponentAccessor.getProjectManager();
+        WorkflowSchemeManager workflowSchemeManager = ComponentAccessor.getWorkflowSchemeManager();
+
+        List<Project> projects = projectManager.getProjectObjects();
+        String targetSchemeName = "1_Dev Workflow Scheme";
+
+        List<Project> projectsWithTargetWorkflowScheme = new ArrayList<>();
+
+        for (Project project : projects) {
+            try {
+                WorkflowScheme scheme = workflowSchemeManager.getWorkflowSchemeObj(project);
+                if (scheme != null && scheme.getName().equals(targetSchemeName)) {
+                    projectsWithTargetWorkflowScheme.add(project);
+                }
+            } catch (Exception e) {
+                System.out.println("Exception Occured: " + e);
+            }
+        }
+
+        projectKeys = projectsWithTargetWorkflowScheme.stream().map(Project::getKey).collect(Collectors.joining(","));
+    }
+
+    // Store the selected project keys in PluginSettings
+    PluginSettings pluginSettings = pluginSettingsFactory.createGlobalSettings();
+    pluginSettings.put(PLUGIN_STORAGE_KEY + ".selectedProjects", projectKeys);
+
+    resp.setContentType("text/plain");
+    resp.getWriter().write("Projects applied successfully!");
+}
+
+
+
+
+
+
+
+
 #if ($allowedProjectKeys.contains($project.key) && $issue.getIssueTypeObject().getName() == "Story")
     <a id="show-popup" class="aui-button ">Analyze Description</a>
 #end
