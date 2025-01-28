@@ -1,3 +1,13 @@
+#if ($allowedProjectKeys.contains($project.key) && $issue.getIssueTypeObject().getName() == "Story")
+    <a id="show-popup" class="aui-button ">Analyze Description</a>
+#end
+
+
+
+
+
+
+
 Sure! Let's refactor the code to use a `for` loop instead of a stream filter. Here’s how you can do it:
 
 ```java
