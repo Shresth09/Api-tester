@@ -1,3 +1,51 @@
+<!-- Web Panel -->
+<web-panel key="Jira-Flow-Agent" location="atl.jira.view.issue.right.context" weight="1">
+    <!-- Context provider class for the web panel -->
+    <context-provider class="com.example.plugins.PopupContextProvider"/>
+    <!-- Velocity template resource for the web panel -->
+    <resource type="velocity" name="view" location="templates/popup.vm"/>
+    <!-- Description for the web panel -->
+    <description>This web panel displays a popup in the right context of the Jira issue view.</description>
+</web-panel>
+
+<!-- Web Section -->
+<web-section name="URL Configuration" key="ai-ram-config-websection-key" location="admin_applications_section" weight="1000">
+    <label key="JFA-CONFIGURATION"/>
+    <!-- Description for the web section -->
+    <description>This web section is used for URL Configuration in the admin applications section.</description>
+</web-section>
+
+<!-- Web Item -->
+<web-item name="Configuration" key="configuration" section="admin_applications_section/ai-ram-config-websection-key" weight="1000">
+    <label key="Configure-JFA"/>
+    <!-- Link to the configuration servlet -->
+    <link linkId="configuration-Link">/plugins/servlet/issuecrud</link>
+    <!-- Description for the web item -->
+    <description>This web item provides a link to the configuration servlet under the URL Configuration section.</description>
+</web-item>
+
+<!-- Internationalization Resource Bundle -->
+<resource type="i18n" name="i18n" location="AI_Plugin_Key"/>
+<!-- Description for the i18n resource bundle -->
+<description>This resource defines the internationalization (i18n) resource bundle for the plugin.</description>
+
+<!-- Servlet -->
+<servlet name="Issue CRUD" i18n-name-key="issue-crud.name" key="issue-crud" class="com.example.plugins.tutorial.servlet.IssueCRUD">
+    <description key="issue-crud.description">The Issue CRUD Plugin</description>
+    <url-pattern>/issuecrud</url-pattern>
+    <!-- Description for the servlet -->
+    <description>This servlet handles CRUD operations for issues with the URL pattern /issuecrud.</description>
+    <!-- Parameters for the servlet -->
+    <param name="templateRenderer" value="templateRenderer"/>
+</servlet>
+
+
+
+
+
+
+
+
 else if ("applySelection".equals(action)) {
 
     String projectKeys = req.getParameter("keys");
