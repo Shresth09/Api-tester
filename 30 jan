@@ -215,3 +215,31 @@ private void createCustomField(HttpServletResponse resp) {
         Log.error("Error creating custom field", e);
     }
 }
+
+
+
+
+
+
+#set($componentAccessor = $action.getComponentAccessor())
+#set($customFieldManager = $componentAccessor.getCustomFieldManager())
+#set($issue = $issue)
+#set($scoreField = $customFieldManager.getCustomFieldObjectByName("Score"))
+
+#if($scoreField)
+    #set($scoreValue = $issue.getCustomFieldValue($scoreField))
+    #set($log = $log.debug("Score Field Value: " + $scoreValue))
+#else
+    #set($scoreValue = "Score field not found")
+    #set($log = $log.debug("Score Field not found"))
+#end
+
+<div class="score-button-container">
+    <!-- Your existing button code -->
+    <button id="scoreButton">Calculate Score</button>
+
+    <!-- Display the custom field value below the button -->
+    <div class="score-display">
+        Score: $scoreValue
+    </div>
+</div>
