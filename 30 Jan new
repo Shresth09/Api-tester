@@ -2,10 +2,10 @@ package com.citi.cti.jira.customfields;
 
 import com.atlassian.jira.issue.customfields.impl.AbstractSingleFieldType;
 import com.atlassian.jira.issue.customfields.impl.FieldValidationException;
+import com.atlassian.jira.issue.customfields.manager.CustomFieldValuePersister;
 import com.atlassian.jira.issue.customfields.manager.GenericConfigManager;
-import com.atlassian.jira.issue.customfields.persistence.CustomFieldValuePersister;
-import com.atlassian.jira.issue.customfields.persistence.PersistenceFieldType;
 import com.atlassian.jira.web.FieldVisibilityManager;
+import com.atlassian.jira.issue.customfields.persistence.PersistenceFieldType;
 
 public class YourCustomField extends AbstractSingleFieldType<String> {
 
