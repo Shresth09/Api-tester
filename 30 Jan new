@@ -1,3 +1,49 @@
+package com.citi.cti.jira.customfields;
+
+import com.atlassian.jira.issue.customfields.impl.AbstractSingleFieldType;
+import com.atlassian.jira.issue.customfields.impl.FieldValidationException;
+import com.atlassian.jira.issue.customfields.manager.GenericConfigManager;
+import com.atlassian.jira.issue.customfields.persistence.CustomFieldValuePersister;
+import com.atlassian.jira.issue.customfields.persistence.PersistenceFieldType;
+import com.atlassian.jira.web.FieldVisibilityManager;
+
+public class YourCustomField extends AbstractSingleFieldType<String> {
+
+    public YourCustomField(CustomFieldValuePersister customFieldValuePersister, 
+                           GenericConfigManager genericConfigManager, 
+                           FieldVisibilityManager fieldVisibilityManager) {
+        super(customFieldValuePersister, genericConfigManager, fieldVisibilityManager);
+    }
+
+    @Override
+    public String getSingularObjectFromString(String string) throws FieldValidationException {
+        return string;
+    }
+
+    @Override
+    public String getStringFromSingularObject(String anObject) {
+        return anObject;
+    }
+
+    @Override
+    protected Object getDbValueFromObject(String customFieldObject) {
+        return customFieldObject;
+    }
+
+    @Override
+    protected String getObjectFromDbValue(Object databaseValue) throws FieldValidationException {
+        return (String) databaseValue;
+    }
+
+    @Override
+    protected PersistenceFieldType getDatabaseType() {
+        return PersistenceFieldType.TYPE_UNLIMITED_TEXT;
+    }
+}
+
+
+
+
 Sure! Let's focus on creating an individual custom field using the `atlas-create-jira-plugin-module` command. Here’s a step-by-step guide to help you through the process:
 
 ### Step 1: Create a New Jira Plugin Project
