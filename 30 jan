@@ -180,3 +180,38 @@ public class IssueCRUD extends HttpServlet {
         Score: $scoreValue
     </div>
 </div>
+
+
+
+private void createCustomField(HttpServletResponse resp) {
+    try {
+        CustomFieldManager customFieldManager = ComponentAccessor.getCustomFieldManager();
+        String fieldName = "Score";
+
+        // Check if the custom field already exists
+        CustomField customField = customFieldManager.getCustomFieldObjectByName(fieldName);
+        if (customField == null) {
+            // Create the custom field
+            customField = customFieldManager.createCustomField(
+                    fieldName,
+                    "The score of the issue's description",
+                    customFieldManager.getCustomFieldType("com.atlassian.jira.plugin.system.customfieldtypes:float"),
+                    customFieldManager.getCustomFieldSearcher("com.atlassian.jira.plugin.system.customfieldtypes:exactnumber"),
+                    Collections.emptyList(),
+                    null);
+
+            // Associate the custom field with the default screen
+            List<FieldScreen> screens = ComponentAccessor.getFieldScreenManager().getFieldScreens();
+            for (FieldScreen screen : screens) {
+                List<FieldScreenTab> tabs = screen.getTabs();
+                for (FieldScreenTab tab : tabs) {
+                    if (!tab.getFieldScreenLayoutItems().stream().anyMatch(item -> item.getFieldId().equals(customField.getId()))) {
+                        tab.addFieldScreenLayoutItem(customField.getId());
+                    }
+                }
+            }
+        }
+    } catch (Exception e) {
+        Log.error("Error creating custom field", e);
+    }
+}
