@@ -1,18 +1,15 @@
 package com.citi.cti.jira.customfields;
 
-import com.atlassian.jira.issue.customfields.impl.AbstractSingleFieldType;
 import com.atlassian.jira.issue.customfields.impl.FieldValidationException;
-import com.atlassian.jira.issue.customfields.manager.CustomFieldValuePersister;
+import com.atlassian.jira.issue.customfields.impl.GenericTextCFType;
+import com.atlassian.jira.issue.fields.CustomField;
+import com.atlassian.jira.issue.fields.config.FieldConfig;
 import com.atlassian.jira.issue.customfields.manager.GenericConfigManager;
-import com.atlassian.jira.web.FieldVisibilityManager;
-import com.atlassian.jira.issue.customfields.persistence.PersistenceFieldType;
 
-public class YourCustomField extends AbstractSingleFieldType<String> {
+public class YourCustomField extends GenericTextCFType {
 
-    public YourCustomField(CustomFieldValuePersister customFieldValuePersister, 
-                           GenericConfigManager genericConfigManager, 
-                           FieldVisibilityManager fieldVisibilityManager) {
-        super(customFieldValuePersister, genericConfigManager, fieldVisibilityManager);
+    public YourCustomField(GenericConfigManager genericConfigManager) {
+        super(genericConfigManager);
     }
 
     @Override
@@ -26,18 +23,13 @@ public class YourCustomField extends AbstractSingleFieldType<String> {
     }
 
     @Override
-    protected Object getDbValueFromObject(String customFieldObject) {
+    public Object getDbValueFromObject(String customFieldObject) {
         return customFieldObject;
     }
 
     @Override
-    protected String getObjectFromDbValue(Object databaseValue) throws FieldValidationException {
+    public String getObjectFromDbValue(Object databaseValue) throws FieldValidationException {
         return (String) databaseValue;
-    }
-
-    @Override
-    protected PersistenceFieldType getDatabaseType() {
-        return PersistenceFieldType.TYPE_UNLIMITED_TEXT;
     }
 }
 
