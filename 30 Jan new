@@ -1,0 +1,121 @@
+Sure! Let's focus on creating an individual custom field using the `atlas-create-jira-plugin-module` command. Here’s a step-by-step guide to help you through the process:
+
+### Step 1: Create a New Jira Plugin Project
+If you don't already have a Jira plugin project, you can create a new one using the Atlassian SDK.
+
+```sh
+atlas-create-jira-plugin
+```
+
+Follow the prompts to set up your project.
+
+### Step 2: Navigate to Your Plugin Directory
+Once your project is created, navigate to your plugin directory:
+
+```sh
+cd your-plugin-directory
+```
+
+### Step 3: Create a New Custom Field Module
+Use the Atlassian SDK to create a custom field module within your plugin:
+
+```sh
+atlas-create-jira-plugin-module
+```
+
+Select the "Custom Field" module from the list of available modules. Follow the prompts to configure your custom field.
+
+### Step 4: Define the Custom Field in `atlassian-plugin.xml`
+Add the custom field definition in the `atlassian-plugin.xml` file. This file is located in the `src/main/resources` directory.
+
+```xml
+<customfield-type key="your-custom-field" name="Your Custom Field" class="com.example.plugins.customfield.YourCustomField">
+    <description>This is a custom field.</description>
+    <resource type="velocity" name="view" location="templates/customfield/view.vm"/>
+    <resource type="velocity" name="edit" location="templates/customfield/edit.vm"/>
+    <resource type="velocity" name="xml" location="templates/customfield/xml.vm"/>
+</customfield-type>
+```
+
+### Step 5: Implement the Custom Field Class
+Create a class for your custom field. This class should extend one of Jira's custom field types, such as `AbstractSingleFieldType`.
+
+Example implementation:
+
+```java
+package com.example.plugins.customfield;
+
+import com.atlassian.jira.issue.customfields.impl.AbstractSingleFieldType;
+import com.atlassian.jira.issue.customfields.impl.FieldValidationException;
+import com.atlassian.jira.issue.customfields.manager.CustomFieldValuePersister;
+import com.atlassian.jira.util.ErrorCollection;
+import com.atlassian.jira.web.FieldVisibilityManager;
+
+public class YourCustomField extends AbstractSingleFieldType<String> {
+
+    public YourCustomField(CustomFieldValuePersister customFieldValuePersister, FieldVisibilityManager fieldVisibilityManager) {
+        super(customFieldValuePersister, fieldVisibilityManager);
+    }
+
+    @Override
+    public String getSingularObjectFromString(String string) throws FieldValidationException {
+        return string;
+    }
+
+    @Override
+    public String getStringFromSingularObject(String anObject) {
+        return anObject;
+    }
+
+    @Override
+    protected Object getDbValueFromObject(String customFieldObject) {
+        return customFieldObject;
+    }
+
+    @Override
+    protected String getObjectFromDbValue(Object databaseValue) throws FieldValidationException {
+        return (String) databaseValue;
+    }
+}
+```
+
+### Step 6: Create Velocity Templates
+Create the necessary Velocity templates for your custom field. Place these templates in the `src/main/resources/templates/customfield` directory.
+
+**view.vm:**
+```velocity
+#set($value = $value)
+<p>$value</p>
+```
+
+**edit.vm:**
+```velocity
+<input type="text" name="$customField.id" value="$value"/>
+```
+
+**xml.vm:**
+```velocity
+<customfield id="$customField.id" key="$customField.name">
+    <value>$value</value>
+</customfield>
+```
+
+### Step 7: Package and Deploy the Plugin
+Build your plugin using the following command:
+
+```sh
+atlas-package
+```
+
+Deploy the plugin to your Jira instance:
+
+```sh
+atlas-run
+```
+
+Or upload the generated `.jar` file through the Jira Admin UI.
+
+### Step 8: Verify the Custom Field
+Once your plugin is installed, navigate to Jira's custom field configuration to verify that your custom field is available.
+
+You now have a custom field created and managed through your Jira plugin. Let me know if you need further assistance or if there are any specific details you’d like to explore!
