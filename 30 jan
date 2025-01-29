@@ -1,3 +1,16 @@
+protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    // Existing code...
+
+    // Add required objects to the context
+    Map<String, Object> context = new HashMap<>();
+    context.put("componentAccessor", ComponentAccessor.getComponent(ComponentAccessor.class));
+    context.put("issue", issue);
+
+    templateRenderer.render("templates/popup.vm", context, resp.getWriter());
+}
+
+
+
 package com.example.plugins.servlet;
 
 import com.atlassian.jira.component.ComponentAccessor;
