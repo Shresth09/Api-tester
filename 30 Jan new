@@ -1,67 +1,113 @@
-Sure! Here are the code changes and where to add them:
+#if ($allowedProjectKeys.contains($project.key))
+    <a id="show-popup" class="sui-button">Analyze Description</a>
 
-### 1. Add Placeholder in `popup.vm`
-Locate the part of `popup.vm` where you want to display the custom field value and add this placeholder:
+    <div class="score-display">
+        Score: <span id="score-value">Loading...</span>
+    </div>
 
-```html
-<div class="score-display">
-    Score: <span id="score-value">Loading...</span>
-</div>
-```
+    <!-- Modal Structure -->
+    <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+        <header class="aui-dialog2-header">
+            <h2 class="aui-dialog2-header-main">ROM Description Analysis</h2>
+            <a class="aui-dialog2-header-close">
+                <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+            </a>
+        </header>
+        <div class="aui-dialog2-content">
+            <div id="api-response">Loading data...</div>
+        </div>
+        <footer class="aui-dialog2-footer">
+            <div class="aui-dialog2-footer-actions">
+                <button id="close-button" class="aui-button aui-button-primary">Close</button>
+            </div>
+        </footer>
+    </div>
 
-### 2. Update JavaScript in `popup.vm`
-Modify the JavaScript to fetch the custom field value when the page loads:
+    <script type="text/javascript">
+        function initStuff() {
+            // Existing code for button click and other functionalities
 
-```html
-<script type="text/javascript">
-    function initStuff() {
-        // Function to extract the issue key
-        function getIssueKey() {
-            var url = window.location.href;
-            var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
-            var match = url.match(issueKeyPattern);
+            // Ensure the popup button remains responsive
+            if (AJS.$("#show-popup").length && !AJS.$("#show-popup").data('events-attached')) {
+                AJS.$("#show-popup").click(function() {
+                    console.log("Button clicked!");
 
-            if (match) {
-                return match[1];
+                    // Additional code to handle popup click event
+                    AJS.dialog2("#api-modal").show();
+                });
+
+                AJS.$("#show-popup").data('events-attached', true);
             }
 
-            var issueKeyElement = AJS.$("#key-val");
-            if (issueKeyElement.length) {
-                return issueKeyElement.text().trim();
-            }
-
-            var selectedIssueKey = AJS.$(".selected-issue-key").text();
-            if (selectedIssueKey) {
-                return selectedIssueKey.trim();
-            }
-
-            return null;
-        }
-
-        // Fetch and display the custom field value
-        function fetchCustomFieldValue(issueKey) {
-            var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
-            jQuery.ajax({
-                url: jiraApiUrl,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    var customFieldId = 'customfield_10000'; // Replace with your custom field ID
-                    var scoreValue = response.fields[customFieldId];
-                    if (scoreValue != null) {
-                        AJS.$("#score-value").text(scoreValue);
-                    } else {
-                        AJS.$("#score-value").text("Not Set");
-                    }
-                },
-                error: function() {
-                    AJS.$("#score-value").text("Error fetching data");
-                }
+            AJS.$("#close-button, aui-dialog2-header-close").on("click", function() {
+                AJS.dialog2("#api-modal").hide();
+                setTimeout(function() {
+                    AJS.$("#api-modal").attr("aria-hidden", "true").hide();
+                    AJS.$("#api-response").html("Loading data...");
+                }, 300);
             });
         }
 
-        // On page load, fetch and display the custom field value
+        if (typeof jQuery != "undefined") {
+            jQuery(document).ready(function() {
+                initStuff();
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            initStuff();
+            JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
+                initStuff();
+            });
+        });
+    </script>
+
+    <!-- Separate script tag for fetching and displaying custom field value -->
+    <script type="text/javascript">
         jQuery(document).ready(function() {
+            function getIssueKey() {
+                var url = window.location.href;
+                var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
+                var match = url.match(issueKeyPattern);
+
+                if (match) {
+                    return match[1];
+                }
+
+                var issueKeyElement = AJS.$("#key-val");
+                if (issueKeyElement.length) {
+                    return issueKeyElement.text().trim();
+                }
+
+                var selectedIssueKey = AJS.$(".selected-issue-key").text();
+                if (selectedIssueKey) {
+                    return selectedIssueKey.trim();
+                }
+
+                return null;
+            }
+
+            function fetchCustomFieldValue(issueKey) {
+                var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+                jQuery.ajax({
+                    url: jiraApiUrl,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        var customFieldId = 'customfield_10000'; // Replace with your custom field ID
+                        var scoreValue = response.fields[customFieldId];
+                        if (scoreValue != null) {
+                            AJS.$("#score-value").text(scoreValue);
+                        } else {
+                            AJS.$("#score-value").text("Not Set");
+                        }
+                    },
+                    error: function() {
+                        AJS.$("#score-value").text("Error fetching data");
+                    }
+                });
+            }
+
             var issueKey = getIssueKey();
             if (issueKey) {
                 fetchCustomFieldValue(issueKey);
@@ -69,25 +115,6 @@ Modify the JavaScript to fetch the custom field value when the page loads:
                 AJS.$("#score-value").text("Issue key not found");
             }
         });
-    }
-
-    if (typeof jQuery != "undefined") {
-        jQuery(document).ready(function() {
-            initStuff();
-        });
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        initStuff();
-        JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
-            initStuff();
-        });
-    });
-</script>
-```
-
-### Summary of Changes
-1. **Add Placeholder:** Insert the `<div class="score-display">` section with the `id="score-value"` span.
-2. **Update JavaScript:** Modify the `initStuff` function to fetch the custom field value on page load and display it in the placeholder.
-
-By making these changes, the custom field value will be fetched and displayed automatically when the Jira issue page loads. Let me know if you need any further assistance!
+    </script>
+#else
+#end
