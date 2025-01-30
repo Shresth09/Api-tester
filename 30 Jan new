@@ -1,3 +1,63 @@
+// Update custom field value after successful API response
+function updateCustomFieldValue(issueKey, customFieldId, newValue) {
+    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+    var data = {
+        "fields": {}
+    };
+    data.fields[customFieldId] = newValue;
+
+    jQuery.ajax({
+        url: jiraApiUrl,
+        type: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function() {
+            console.log("Custom field value updated successfully!");
+        },
+        error: function() {
+            console.log("Error updating custom field value");
+        }
+    });
+}
+
+// Your existing success function
+jQuery.ajax({
+    url: apiurl,
+    type: "POST",
+    contentType: 'application/json',
+    data: payload,
+    success: function(apiResponse) {
+        console.log("External API response received:", apiResponse);
+        var cscore = apiResponse.NA.cscore;
+        var messages = apiResponse.NA.message;
+
+        var formattedData = "<p style='font-size: 1.2em; font: Citi-Sans-Text-Regular;'><strong>Description Score:</strong> " + cscore + "</p>" +
+            "<p style='font-size: 1.2em; font: Citi-Sans-Text-Regular;'><strong>Action Required:</strong> " + messages.join("<br>") + "</p>";
+
+        AJS.$("#api-response").html(formattedData);
+        AJS.dialog2("#api-modal").show();
+
+        // Call the function to update the custom field value
+        var issueKey = getIssueKey();
+        var customFieldId = 'customfield_10000'; // Replace with your custom field ID
+        updateCustomFieldValue(issueKey, customFieldId, cscore);
+    },
+    error: function(xhr, status, error) {
+        console.log("Error in external API call:", status, error);
+        AJS.$("#api-response").html("<p style='color: red; font: Citi-Sans-Text-Regular;'>Failed to fetch data. Please verify Configured Endpoint. Status: " + xhr.status + ", Error: " + error + "</p>");
+        AJS.dialog2("#api-modal").show();
+    }
+});
+
+
+
+
+
+
+
+
+
+
 #if ($allowedProjectKeys.contains($project.key))
     <a id="show-popup" class="sui-button">Analyze Description</a>
 
