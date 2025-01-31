@@ -1,23 +1,32 @@
-<div class="item-details">
-    <dl class="details-list">
-        <dt class="details-title">
-            <label for="score-field">Score:</label>
-        </dt>
-        <dd class="details-value">
-            <span id="score-value">Loading...</span>
-        </dd>
-    </dl>
-</div> 
-
-/* Minimal CSS adjustment to ensure alignment */
-.details-list {
-    margin: 0;
-}
-.details-title, .details-value {
-    display: inline-block;
-    margin-right: 5px;
+.custom-field-container {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 10px;
 }
 
+.custom-field-label {
+    background-color: #f4f5f7;
+    color: #333;
+    padding: 5px 10px;
+    border: 1px solid #dfe1e6;
+    border-radius: 3px 0 0 3px;
+    margin-right: -1px;
+}
+
+.custom-field-value {
+    background-color: #fff;
+    color: #333;
+    padding: 5px 10px;
+    border: 1px solid #dfe1e6;
+    border-radius: 0 3px 3px 0;
+} 
+
+<div class="custom-field-container">
+    <div class="custom-field-label">Score:</div>
+    <div class="custom-field-value" id="score-value">Loading...</div>
+</div>
 
 
 
