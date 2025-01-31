@@ -1,13 +1,23 @@
-<div class="item-details custom-field-details" id="score-details">
-    <dl>
-        <dt title="Score">
+<div class="item-details">
+    <dl class="details-list">
+        <dt class="details-title">
             <label for="score-field">Score:</label>
         </dt>
-        <dd>
+        <dd class="details-value">
             <span id="score-value">Loading...</span>
         </dd>
     </dl>
 </div> 
+
+/* Minimal CSS adjustment to ensure alignment */
+.details-list {
+    margin: 0;
+}
+.details-title, .details-value {
+    display: inline-block;
+    margin-right: 5px;
+}
+
 
 
 
