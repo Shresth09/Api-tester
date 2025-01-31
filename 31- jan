@@ -1,3 +1,20 @@
+.name {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.name span {
+    background-color: #fff;
+    color: #333;
+    padding: 5px 10px;
+    border: 1px solid #dfe1e6;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+
+
 .custom-field-container {
     display: flex;
     align-items: center;
