@@ -1,3 +1,43 @@
+function updateIssueProperty(issueKey, propertyKey, newValue) {
+    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey + "/properties/" + propertyKey;
+
+    var data = {
+        value: newValue
+    };
+
+    jQuery.ajax({
+        url: jiraApiUrl,
+        type: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function() {
+            console.log("Issue property value updated successfully!");
+        },
+        error: function() {
+            console.log("Error updating issue property value");
+        }
+    });
+}
+
+AJS.toInit(function() {
+    var issueKey = getIssueKey(); // Ensure you have a function that retrieves the issue key
+
+    if (issueKey) {
+        updateIssueProperty(issueKey, "Description-Score", 10.0); // Update with the new score value
+    } else {
+        AJS.$("#score-value").text("Issue key not found");
+    }
+});
+
+
+
+
+
+
+
+
+
+
 function fetchDescriptionScore(issueKey) {
     var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey + "/properties/Description-Score";
 
