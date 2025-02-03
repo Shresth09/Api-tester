@@ -1,3 +1,29 @@
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.issue.context.GlobalIssueContext;
+import com.atlassian.jira.issue.fields.CustomField;
+import com.atlassian.jira.issue.fields.CustomFieldManager;
+import com.atlassian.jira.issue.fields.config.manager.FieldConfigSchemeManager;
+import com.atlassian.jira.issue.fields.config.FieldConfigScheme;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
+import com.atlassian.jira.issue.fields.layout.field.EditableFieldLayout;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
+import com.atlassian.jira.issue.fields.screen.FieldScreen;
+import com.atlassian.jira.issue.fields.screen.FieldScreenScheme;
+import com.atlassian.jira.issue.fields.screen.FieldScreenSchemeManager;
+import com.atlassian.jira.issue.fields.screen.FieldScreenSchemeItem;
+import com.atlassian.jira.issue.fields.screen.FieldScreenTab;
+import com.atlassian.jira.workflow.WorkflowManager;
+import com.atlassian.jira.workflow.JiraWorkflow;
+import com.opensymphony.workflow.loader.WorkflowDescriptor;
+import com.opensymphony.workflow.loader.StepDescriptor;
+import com.opensymphony.workflow.loader.ActionDescriptor;
+import org.apache.log4j.Logger;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 public class CustomFieldServlet {
 
     private static final Logger log = Logger.getLogger(CustomFieldServlet.class);
@@ -57,11 +83,28 @@ public class CustomFieldServlet {
                     }
                 }
 
+                // Hide the custom field in all field configurations to make it read-only
+                Collection<EditableFieldLayout> fieldLayouts = fieldLayoutManager.getEditableFieldLayouts();
+                for (EditableFieldLayout editableFieldLayout : fieldLayouts) {
+                    FieldLayoutItem fieldLayoutItem = editableFieldLayout.getFieldLayoutItem(customField);
+                    if (fieldLayoutItem != null) {
+                        editableFieldLayout.hide(fieldLayoutItem);
+                        fieldLayoutManager.storeEditableFieldLayout(editableFieldLayout);
+                    }
+                }
+
                 // Add the workflow property to make the custom field read-only for all workflows
                 Collection<JiraWorkflow> workflows = workflowManager.getWorkflows();
                 for (JiraWorkflow workflow : workflows) {
-                    for (StepDescriptor step : workflow.getAllSteps()) {
+                    WorkflowDescriptor descriptor = workflow.getDescriptor();
+                    List<StepDescriptor> steps = descriptor.getSteps();
+                    for (StepDescriptor step : steps) {
                         Map<String, String> properties = step.getMetaAttributes();
+                        properties.put("jira.permission.edit.group", "-1");  // "-1" indicates no group has permission to edit
+                    }
+                    List<ActionDescriptor> actions = descriptor.getGlobalActions();
+                    for (ActionDescriptor action : actions) {
+                        Map<String, String> properties = action.getMetaAttributes();
                         properties.put("jira.permission.edit.group", "-1");  // "-1" indicates no group has permission to edit
                     }
                 }
