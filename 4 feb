@@ -31,6 +31,43 @@ function updateIssueProperty(issuekey, newValue) {
 
 
 
+
+
+function deleteIssueProperty(issueKey, propertyKey) {
+    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey + "/properties/" + propertyKey;
+
+    jQuery.ajax({
+        url: jiraApiUrl,
+        type: 'DELETE',
+        success: function() {
+            console.log("Issue property deleted successfully!");
+            AJS.$("#score-value").text("Score property deleted");
+        },
+        error: function() {
+            console.log("Error deleting issue property");
+            AJS.$("#score-value").text("Error deleting score property");
+        }
+    });
+}
+
+AJS.toInit(function() {
+    var issueKey = getIssueKey(); // Ensure you have a function that retrieves the issue key
+
+    if (issueKey) {
+        deleteIssueProperty(issueKey, "Description-Score"); // Delete the Description-Score property
+    } else {
+        AJS.$("#score-value").text("Issue key not found");
+    }
+});
+
+
+
+
+
+
+
+
+
 function updateIssueProperty(issueKey, propertyKey, newValue) {
     var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey + "/properties/" + propertyKey;
 
