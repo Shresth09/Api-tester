@@ -1,8 +1,13 @@
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
+import com.atlassian.jira.issue.fields.layout.field.EditableDefaultFieldLayout;
+import com.atlassian.jira.issue.fields.layout.field.ImmutableFieldLayout;
+import com.atlassian.jira.issue.fields.layout.field.FieldConfigurationScheme;
+
 private void createCustomField(HttpServletResponse resp) {
 
     CustomFieldManager customFieldManager = ComponentAccessor.getCustomFieldManager();
-    CustomFieldType customFieldType = customFieldManager.getCustomFieldType("com.atlassian.jira.plugin.system.customfieldtypes:float");
-    CustomFieldSearcher customFieldSearcher = customFieldManager.getCustomFieldSearcher("com.atlassian.jira.plugin.system.customfieldtypes:exactnumber");
+    FieldLayoutManager fieldLayoutManager = ComponentAccessor.getComponent(FieldLayoutManager.class);
 
     try {
         String fieldName = "Score";
@@ -15,31 +20,34 @@ private void createCustomField(HttpServletResponse resp) {
             customField = customFieldManager.createCustomField(
                 fieldName,
                 "The score of the issue's description",
-                customFieldType,
-                customFieldSearcher,
+                customFieldManager.getCustomFieldType("com.atlassian.jira.plugin.system.customfieldtypes:float"),
+                customFieldManager.getCustomFieldSearcher("com.atlassian.jira.plugin.system.customfieldtypes:exactnumber"),
                 Collections.emptyList(),
                 null
             );
 
             // Associate the custom field with the default screen
             Collection<FieldScreen> screens = ComponentAccessor.getFieldScreenManager().getFieldScreens();
+            final CustomField finalCustomField = customField;
+
             for (FieldScreen screen : screens) {
                 List<FieldScreenTab> tabs = screen.getTabs();
                 for (FieldScreenTab tab : tabs) {
-                    if (tab.getFieldScreenLayoutItems().stream().anyMatch(item -> item.getFieldId().equals(customField.getId()))) {
+                    if (tab.getFieldScreenLayoutItems().stream().anyMatch(item -> item.getFieldId().equals(finalCustomField.getId()))) {
                         tab.addFieldScreenLayoutItem(customField.getId());
                     }
                 }
             }
 
-            // Set the custom field as read-only for users by adding a custom field context
-            customFieldManager.updateCustomField(customField, Collections.emptyList(), CustomFieldManager.SYSTEM_CONTEXT);
-            FieldConfigSchemeManager fieldConfigSchemeManager = ComponentAccessor.getFieldConfigSchemeManager();
-            Collection<FieldConfigScheme> schemes = fieldConfigSchemeManager.getConfigSchemesForField(customField);
-            for (FieldConfigScheme scheme : schemes) {
-                scheme.setPermission(CustomFieldManager.FIELD_CONTEXT_READ_ONLY);
-                fieldConfigSchemeManager.updateConfigScheme(scheme);
-            }
+            // Set the custom field as read-only for users by updating the field layout
+            EditableDefaultFieldLayout fieldLayout = (EditableDefaultFieldLayout) fieldLayoutManager.getEditableDefaultFieldLayout();
+            FieldLayoutItem fieldLayoutItem = fieldLayout.getFieldLayoutItem(customField);
+            fieldLayoutItem.setHidden(false);
+            fieldLayoutItem.setRequired(false);
+            fieldLayoutItem.setRendererType("readonly");
+
+            // Update the field layout
+            fieldLayoutManager.storeEditableDefaultFieldLayout(fieldLayout);
         }
     } catch (Exception e) {
         log.error("Error creating custom field", e);
