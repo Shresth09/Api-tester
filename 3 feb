@@ -28,7 +28,7 @@ public class CustomFieldServlet {
 
     private static final Logger log = Logger.getLogger(CustomFieldServlet.class);
 
-    private void createCustomField(HttpServletResponse resp) {
+    private void createCustomField(HttpServletResponse resp, Map<String, Object> context) {
 
         CustomFieldManager customFieldManager = ComponentAccessor.getCustomFieldManager();
         FieldConfigSchemeManager fieldConfigSchemeManager = ComponentAccessor.getFieldConfigSchemeManager();
@@ -52,6 +52,9 @@ public class CustomFieldServlet {
                     Collections.singletonList(GlobalIssueContext.getInstance()),
                     null
                 );
+
+                // Store the custom field ID in the context
+                context.put("scoreFieldKey", customField.getId());
 
                 // Associate the custom field with the default screen
                 Collection<FieldScreen> screens = ComponentAccessor.getFieldScreenManager().getFieldScreens();
@@ -93,21 +96,18 @@ public class CustomFieldServlet {
                     }
                 }
 
-                // Add the workflow property to make the custom field read-only for all workflows
-                Collection<JiraWorkflow> workflows = workflowManager.getWorkflows();
-                for (JiraWorkflow workflow : workflows) {
-                    WorkflowDescriptor descriptor = workflow.getDescriptor();
-                    List<StepDescriptor> steps = descriptor.getSteps();
-                    for (StepDescriptor step : steps) {
-                        Map<String, String> properties = step.getMetaAttributes();
-                        properties.put("jira.permission.edit.group", "-1");  // "-1" indicates no group has permission to edit
-                    }
-                    List<ActionDescriptor> actions = descriptor.getGlobalActions();
-                    for (ActionDescriptor action : actions) {
-                        Map<String, String> properties = action.getMetaAttributes();
-                        properties.put("jira.permission.edit.group", "-1");  // "-1" indicates no group has permission to edit
-                    }
-                }
+                // Inject JavaScript to make the custom field read-only
+                String script = "<script type=\"text/javascript\">" +
+                                "AJS.toInit(function() {" +
+                                "    var customFieldId = '" + context.get("scoreFieldKey") + "';" +
+                                "    var field = AJS.$('#customfield_' + customFieldId);" +
+                                "    field.prop('disabled', true);" +
+                                "});" +
+                                "</script>";
+                resp.getWriter().write(script);
+            } else {
+                // If custom field already exists, store its ID in the context
+                context.put("scoreFieldKey", customField.getId());
             }
 
         } catch (Exception e) {
@@ -115,3 +115,38 @@ public class CustomFieldServlet {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html>
+<head>
+    <title>Score Management</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        AJS.toInit(function() {
+            var customFieldKey = "$scoreFieldKey";
+            if(customFieldKey) {
+                var field = AJS.$("#customfield_" + customFieldKey);
+                if(field.length) {
+                    field.prop('disabled', true);
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>Manage Scores</h1>
+    <!-- Your HTML content -->
+</body>
+</html>
