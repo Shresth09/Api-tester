@@ -1,3 +1,36 @@
+function updateIssueProperty(issuekey, newValue) {
+    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issuekey + "/properties/Description-Score";
+
+    var data = {
+        "value": {  //  <--- Key change: Nested inside "value" object
+            "score": newValue //  <--- And you can nest it further if needed
+        }
+    };
+
+    jQuery.ajax({
+        url: jiraApiUrl,
+        type: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        headers: {
+            "X-Atlassian-Token": "no-check" //  <--- Important: Include the token header
+        },
+        success: function() {
+            console.log("Issue property value updated successfully!");
+        },
+        error: function(error) {
+            console.error("Error updating issue property value:", error);
+            // Important: Include more detailed error handling here as well
+            console.log("Status Code:", error.status);
+            console.log("Response Text:", error.responseText);
+        }
+    });
+}
+
+
+
+
+
 function updateIssueProperty(issueKey, propertyKey, newValue) {
     var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey + "/properties/" + propertyKey;
 
