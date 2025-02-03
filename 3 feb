@@ -1,0 +1,47 @@
+private void createCustomField(HttpServletResponse resp) {
+
+    CustomFieldManager customFieldManager = ComponentAccessor.getCustomFieldManager();
+    CustomFieldType customFieldType = customFieldManager.getCustomFieldType("com.atlassian.jira.plugin.system.customfieldtypes:float");
+    CustomFieldSearcher customFieldSearcher = customFieldManager.getCustomFieldSearcher("com.atlassian.jira.plugin.system.customfieldtypes:exactnumber");
+
+    try {
+        String fieldName = "Score";
+
+        CustomField customField = customFieldManager.getCustomFieldObjectByName(fieldName);
+
+        // Check if the custom field already exists
+        if (customField == null) {
+            // Create the custom field
+            customField = customFieldManager.createCustomField(
+                fieldName,
+                "The score of the issue's description",
+                customFieldType,
+                customFieldSearcher,
+                Collections.emptyList(),
+                null
+            );
+
+            // Associate the custom field with the default screen
+            Collection<FieldScreen> screens = ComponentAccessor.getFieldScreenManager().getFieldScreens();
+            for (FieldScreen screen : screens) {
+                List<FieldScreenTab> tabs = screen.getTabs();
+                for (FieldScreenTab tab : tabs) {
+                    if (tab.getFieldScreenLayoutItems().stream().anyMatch(item -> item.getFieldId().equals(customField.getId()))) {
+                        tab.addFieldScreenLayoutItem(customField.getId());
+                    }
+                }
+            }
+
+            // Set the custom field as read-only for users by adding a custom field context
+            customFieldManager.updateCustomField(customField, Collections.emptyList(), CustomFieldManager.SYSTEM_CONTEXT);
+            FieldConfigSchemeManager fieldConfigSchemeManager = ComponentAccessor.getFieldConfigSchemeManager();
+            Collection<FieldConfigScheme> schemes = fieldConfigSchemeManager.getConfigSchemesForField(customField);
+            for (FieldConfigScheme scheme : schemes) {
+                scheme.setPermission(CustomFieldManager.FIELD_CONTEXT_READ_ONLY);
+                fieldConfigSchemeManager.updateConfigScheme(scheme);
+            }
+        }
+    } catch (Exception e) {
+        log.error("Error creating custom field", e);
+    }
+}
