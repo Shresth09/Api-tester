@@ -1,3 +1,39 @@
+function fetchDescriptionScore(issueKey) {
+    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey + "/properties/Description-Score";
+
+    jQuery.ajax({
+        url: jiraApiUrl,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response && response.value !== undefined) {
+                AJS.$("#score-value").text(response.value);
+                console.log("Fetched score value:", response.value);
+            } else {
+                AJS.$("#score-value").text("Click button to calculate score");
+                console.log("Score value not found");
+            }
+        },
+        error: function(xhr, status, error) {
+            AJS.$("#score-value").text("Error fetching data");
+            console.log("Error fetching issue property:", error);
+            console.log("Response:", xhr.responseText);
+        }
+    });
+}
+
+AJS.toInit(function() {
+    var issueKey = getIssueKey(); // Implement this function to retrieve the current issue key
+
+    if (issueKey) {
+        fetchDescriptionScore(issueKey); // Fetch and display the property value
+    } else {
+        AJS.$("#score-value").text("Issue key not found");
+    }
+});
+
+
+
 curl -X PUT -H "Content-Type: application/json" --data "10.0" -u admin:admin "http://localhost:2990/jira/rest/api/2/issue/NEW-1/properties/Description-Score"
 
 
