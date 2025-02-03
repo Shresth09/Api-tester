@@ -1,3 +1,10 @@
+curl -X PUT \
+  -H "Content-Type: application/json" \
+  --data "10.0" \
+  -u username:password \
+  "http://localhost:2990/jira/rest/api/2/issue/NEW-1/properties/Description-Score"
+
+
 function updateIssueProperty(issueKey, propertyKey, newValue) {
     var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey + "/properties/" + propertyKey;
 
