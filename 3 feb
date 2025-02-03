@@ -1,3 +1,20 @@
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.issue.fields.CustomField;
+import com.atlassian.jira.issue.fields.CustomFieldManager;
+import com.atlassian.jira.issue.fields.config.FieldConfig;
+import com.atlassian.jira.issue.fields.config.FieldConfigScheme;
+import com.atlassian.jira.issue.fields.screen.FieldScreen;
+import com.atlassian.jira.issue.fields.screen.FieldScreenTab;
+import com.atlassian.jira.issue.fields.config.manager.FieldConfigSchemeManager;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
+import com.atlassian.jira.issue.fields.layout.field.EditableFieldLayout;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
+import org.apache.log4j.Logger;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 public class CustomFieldServlet {
 
     private static final Logger log = Logger.getLogger(CustomFieldServlet.class);
@@ -5,6 +22,7 @@ public class CustomFieldServlet {
     private void createCustomField(HttpServletResponse resp) {
 
         CustomFieldManager customFieldManager = ComponentAccessor.getCustomFieldManager();
+        FieldConfigSchemeManager fieldConfigSchemeManager = ComponentAccessor.getFieldConfigSchemeManager();
         FieldLayoutManager fieldLayoutManager = ComponentAccessor.getFieldLayoutManager();
 
         try {
@@ -36,16 +54,21 @@ public class CustomFieldServlet {
                         }
                     }
                 }
-            }
 
-            // Hide the custom field in all field configurations to make it read-only
-            Collection<EditableFieldLayout> fieldLayouts = fieldLayoutManager.getEditableFieldLayouts();
-            int i = 0;
-            for (EditableFieldLayout editableFieldLayout : fieldLayouts) {
-                FieldLayoutItem fieldLayoutItem = editableFieldLayout.getFieldLayoutItem(customField);
-                if (fieldLayoutItem != null) {
-                    editableFieldLayout.hide(fieldLayoutItem);
-                    fieldLayoutManager.storeEditableFieldLayout(editableFieldLayout);
+                // Set the custom field context to global
+                FieldConfigScheme fieldConfigScheme = customField.getConfigurationSchemes().iterator().next();
+                FieldConfig defaultFieldConfig = fieldConfigScheme.getOneAndOnlyConfig();
+                fieldConfigScheme.setContextsAndDefault(new ArrayList<>(ComponentAccessor.getIssueTypeSchemeManager().getIssueTypeIds()), defaultFieldConfig);
+                fieldConfigSchemeManager.updateConfigScheme(fieldConfigScheme);
+
+                // Hide the custom field in all field configurations to make it read-only
+                Collection<EditableFieldLayout> fieldLayouts = fieldLayoutManager.getEditableFieldLayouts();
+                for (EditableFieldLayout editableFieldLayout : fieldLayouts) {
+                    FieldLayoutItem fieldLayoutItem = editableFieldLayout.getFieldLayoutItem(customField);
+                    if (fieldLayoutItem != null) {
+                        editableFieldLayout.hide(fieldLayoutItem);
+                        fieldLayoutManager.storeEditableFieldLayout(editableFieldLayout);
+                    }
                 }
             }
 
