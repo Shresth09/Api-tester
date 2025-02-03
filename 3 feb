@@ -1,20 +1,3 @@
-import com.atlassian.jira.component.ComponentAccessor;
-import com.atlassian.jira.issue.fields.CustomField;
-import com.atlassian.jira.issue.fields.CustomFieldManager;
-import com.atlassian.jira.issue.fields.screen.FieldScreen;
-import com.atlassian.jira.issue.fields.screen.FieldScreenTab;
-import com.atlassian.jira.issue.fields.config.FieldConfigSchemeManager;
-import com.atlassian.jira.issue.fields.config.FieldConfigScheme;
-import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
-import com.atlassian.jira.issue.fields.layout.field.FieldLayout;
-import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
-import com.atlassian.jira.issue.fields.layout.field.EditableFieldLayout;
-import org.apache.log4j.Logger;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 public class CustomFieldServlet {
 
     private static final Logger log = Logger.getLogger(CustomFieldServlet.class);
@@ -55,96 +38,17 @@ public class CustomFieldServlet {
                 }
             }
 
-            // Set the custom field to be read-only in the field configuration
+            // Hide the custom field in all field configurations to make it read-only
             Collection<EditableFieldLayout> fieldLayouts = fieldLayoutManager.getEditableFieldLayouts();
+            int i = 0;
             for (EditableFieldLayout editableFieldLayout : fieldLayouts) {
                 FieldLayoutItem fieldLayoutItem = editableFieldLayout.getFieldLayoutItem(customField);
                 if (fieldLayoutItem != null) {
-                    editableFieldLayout.makeReadOnly(customField.getId().toString());
+                    editableFieldLayout.hide(fieldLayoutItem);
                     fieldLayoutManager.storeEditableFieldLayout(editableFieldLayout);
                 }
             }
 
-        } catch (Exception e) {
-            log.error("Error creating custom field", e);
-        }
-    }
-}
-
-
-
-
-
-
-
-import com.atlassian.jira.component.ComponentAccessor;
-import com.atlassian.jira.issue.fields.CustomField;
-import com.atlassian.jira.issue.fields.CustomFieldManager;
-import com.atlassian.jira.issue.fields.screen.FieldScreen;
-import com.atlassian.jira.issue.fields.screen.FieldScreenTab;
-import com.atlassian.jira.issue.fields.config.FieldConfigSchemeManager;
-import com.atlassian.jira.issue.fields.config.FieldConfigScheme;
-import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
-import com.atlassian.jira.issue.fields.layout.field.FieldLayout;
-import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
-import com.atlassian.jira.issue.fields.layout.field.EditableFieldLayout;
-import org.apache.log4j.Logger;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-public class CustomFieldServlet {
-
-    private static final Logger log = Logger.getLogger(CustomFieldServlet.class);
-
-    private void createCustomField(HttpServletResponse resp) {
-
-        CustomFieldManager customFieldManager = ComponentAccessor.getCustomFieldManager();
-        FieldLayoutManager fieldLayoutManager = ComponentAccessor.getFieldLayoutManager();
-        FieldConfigSchemeManager fieldConfigSchemeManager = ComponentAccessor.getFieldConfigSchemeManager();
-
-        try {
-            String fieldName = "Score";
-
-            CustomField customField = customFieldManager.getCustomFieldObjectByName(fieldName);
-
-            // Check if the custom field already exists
-            if (customField == null) {
-                // Create the custom field
-                customField = customFieldManager.createCustomField(
-                    fieldName,
-                    "The score of the issue's description",
-                    customFieldManager.getCustomFieldType("com.atlassian.jira.plugin.system.customfieldtypes:float"),
-                    customFieldManager.getCustomFieldSearcher("com.atlassian.jira.plugin.system.customfieldtypes:exactnumber"),
-                    Collections.emptyList(),
-                    null
-                );
-
-                // Associate the custom field with the default screen
-                Collection<FieldScreen> screens = ComponentAccessor.getFieldScreenManager().getFieldScreens();
-                final CustomField finalCustomField = customField;
-
-                for (FieldScreen screen : screens) {
-                    List<FieldScreenTab> tabs = screen.getTabs();
-                    for (FieldScreenTab tab : tabs) {
-                        if (tab.getFieldScreenLayoutItems().stream().anyMatch(item -> item.getFieldId().equals(finalCustomField.getId()))) {
-                            tab.addFieldScreenLayoutItem(customField.getId());
-                        }
-                    }
-                }
-                
-                // Set the custom field to be read-only in the field configuration
-                Collection<FieldLayout> fieldLayouts = fieldLayoutManager.getEditableFieldLayouts();
-                for (FieldLayout fieldLayout : fieldLayouts) {
-                    EditableFieldLayout editableFieldLayout = fieldLayoutManager.getEditableFieldLayout(fieldLayout);
-                    FieldLayoutItem fieldLayoutItem = editableFieldLayout.getFieldLayoutItem(customField);
-                    if (fieldLayoutItem != null) {
-                        editableFieldLayout.makeReadOnly(customField.getId());
-                        fieldLayoutManager.storeEditableFieldLayout(editableFieldLayout);
-                    }
-                }
-            }
         } catch (Exception e) {
             log.error("Error creating custom field", e);
         }
