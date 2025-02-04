@@ -1,0 +1,48 @@
+/* Style for the new Analyse Description button */
+.aui-navgroup .aui-navgroup-inner .aui-navgroup-primary .aui-nav li.analyse-description {
+    margin-left: 10px;
+}
+
+.aui-navgroup .aui-navgroup-inner .aui-navgroup-primary .aui-nav li.analyse-description button {
+    background-color: #0052cc;
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.aui-navgroup .aui-navgroup-inner .aui-navgroup-primary .aui-nav li.analyse-description button:hover {
+    background-color: #0043a7;
+}
+
+AJS.toInit(function() {
+    // Wait for the navigation group to be available
+    AJS.$(document).ready(function() {
+        var navGroup = AJS.$('.aui-navgroup .aui-navgroup-inner .aui-navgroup-primary .aui-nav');
+        if (navGroup.length > 0) {
+            // Create a new list item for the button
+            var analyseButtonLI = AJS.$('<li>', {
+                class: 'analyse-description'
+            });
+
+            // Create the button itself
+            var analyseButton = AJS.$('<button>', {
+                type: 'button',
+                class: 'aui-button',
+                text: 'Analyse Description',
+                click: function() {
+                    // Add your button click functionality here
+                    alert('Analyse Description button clicked!');
+                }
+            });
+
+            // Append the button to the list item
+            analyseButtonLI.append(analyseButton);
+
+            // Append the list item to the navigation group
+            navGroup.append(analyseButtonLI);
+        }
+    });
+});
