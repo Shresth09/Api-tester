@@ -1,3 +1,30 @@
+#if ($webResourceManager)
+    $webResourceManager.requireResourcesForContext("atl.general")
+#end
+
+<style type="text/css">
+    /* Hide the entire field group for the Score custom field */
+    .field-group label[for="customfield_10001"],
+    .field-group input#customfield_10001,
+    .field-group #customfield_10001-description {
+        display: none !important;
+    }
+
+    /* Alternatively, hide the parent .field-group div */
+    .field-group label[for="customfield_10001"] {
+        display: none !important;
+    }
+
+    .field-group label[for="customfield_10001"] ~ *,
+    .field-group label[for="customfield_10001"] {
+        display: none !important;
+    }
+</style>
+
+<!-- Your existing HTML content -->
+
+
+
 function fetchDescriptionScore(issueKey) {
     var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey + "/properties/Description-Score";
 
