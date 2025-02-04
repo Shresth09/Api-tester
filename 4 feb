@@ -1,3 +1,35 @@
+<!-- templates/analyse-description-button.vm -->
+#if ($webResourceManager)
+    $webResourceManager.requireResourcesForContext("jira.createissue")
+#end
+
+<button id="analyse-description-button" class="aui-button aui-button-primary">
+    Analyse Description
+</button>
+
+<script type="text/javascript">
+    AJS.toInit(function() {
+        // Event handler for the "Analyse Description" button
+        AJS.$('#analyse-description-button').click(function(e) {
+            e.preventDefault();
+            // Get the value from the Description field
+            var description = AJS.$('#description').val();
+            if (!description) {
+                alert('Please enter a description first.');
+                return;
+            }
+            // Perform analysis on the description
+            // Example: Count the number of words
+            var wordCount = description.trim().split(/\s+/).length;
+            // Display the result to the user
+            alert('The description contains ' + wordCount + ' words.');
+        });
+    });
+</script>
+
+
+
+
 #if ($webResourceManager)
     $webResourceManager.requireResourcesForContext("atl.general")
 #end
