@@ -1,3 +1,12 @@
+<!-- atlassian-plugin.xml -->
+<web-panel key="analyse-description-button-panel"
+           location="atl.jira.create.issue.fields.before"
+           weight="100">
+    <resource type="velocity" name="view" location="templates/analyse-description-button.vm"/>
+    <description>Adds an 'Analyse Description' button to the Create Issue screen.</description>
+</web-panel>
+
+
 <!-- templates/analyse-description-button.vm -->
 #if ($webResourceManager)
     $webResourceManager.requireResourcesForContext("jira.createissue")
