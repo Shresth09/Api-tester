@@ -1,3 +1,53 @@
+function setEntityProperty(issueKey, propertyKey, propertyValue) {
+    var jiraApiUrl = `/rest/api/2/issue/${issueKey}/properties/${propertyKey}`;
+
+    jQuery.ajax({
+        url: jiraApiUrl,
+        type: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            "value": propertyValue
+        }),
+        success: function() {
+            console.log("Entity property set successfully!");
+        },
+        error: function(xhr) {
+            console.error("Error setting entity property");
+        }
+    });
+}
+
+// Example usage:
+setEntityProperty('ISSUE-1', 'customDataKey', 80);
+
+
+function getEntityProperty(issueKey, propertyKey) {
+    var jiraApiUrl = `/rest/api/2/issue/${issueKey}/properties/${propertyKey}`;
+
+    jQuery.ajax({
+        url: jiraApiUrl,
+        type: 'GET',
+        success: function(response) {
+            console.log("Entity property value:", response.value);
+        },
+        error: function(xhr) {
+            console.error("Error retrieving entity property");
+        }
+    });
+}
+
+// Example usage:
+getEntityProperty('ISSUE-1', 'customDataKey');
+
+
+
+
+
+
+
+
+
+
 To filter issues based on values stored in Jira issue properties using JQL, you need to extend Jira's functionality with a custom JQL function. This typically involves developing a Jira plugin that allows querying entity properties through JQL. Here’s a detailed step-by-step guide:
 
 ### Step 1: Set Up Your Development Environment
