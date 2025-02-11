@@ -1,0 +1,108 @@
+To filter issues based on values stored in Jira issue properties using JQL, you need to extend Jira's functionality with a custom JQL function. This typically involves developing a Jira plugin that allows querying entity properties through JQL. Here’s a detailed step-by-step guide:
+
+### Step 1: Set Up Your Development Environment
+1. **Install Atlassian SDK:**
+   - Follow the instructions on the [Atlassian Developer site](https://developer.atlassian.com/server/framework/atlassian-sdk/set-up-the-atlassian-plugin-sdk-and-build-a-project/) to install the Atlassian SDK.
+
+2. **Create a New Jira Plugin:**
+   - Use the Atlassian SDK to create a new Jira plugin project.
+   ```shell
+   atlas-create-jira-plugin
+   ```
+
+### Step 2: Develop the Custom JQL Function
+1. **Write the JQL Function Class:**
+   - Create a class that implements the `JqlFunction` interface.
+   - Here’s an example implementation:
+
+```java
+package com.example.plugins.jql;
+
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.issue.search.SearchProvider;
+import com.atlassian.jira.jql.operand.QueryLiteral;
+import com.atlassian.jira.jql.query.QueryCreationContext;
+import com.atlassian.jira.jql.validator.OperatorValidator;
+import com.atlassian.jira.util.collect.MapBuilder;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.query.clause.TerminalClause;
+import com.atlassian.query.operator.Operator;
+import com.atlassian.query.operand.FunctionOperand;
+import com.atlassian.query.operand.Operand;
+import com.atlassian.query.operand.SingleValueOperand;
+
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.util.List;
+import java.util.Map;
+
+@Named
+public class EntityPropertyJqlFunction extends AbstractJqlFunction {
+    
+    @ComponentImport
+    private final SearchProvider searchProvider;
+
+    @Inject
+    public EntityPropertyJqlFunction(SearchProvider searchProvider) {
+        this.searchProvider = searchProvider;
+    }
+
+    @Override
+    public List<QueryLiteral> getValues(QueryCreationContext queryCreationContext, FunctionOperand operand, TerminalClause terminalClause) {
+        // Implement logic to retrieve entity property values and filter issues
+    }
+
+    @Override
+    public boolean validate(Operand operand, Operator operator) {
+        // Implement validation logic for the function
+    }
+
+    @Override
+    public String getFunctionName() {
+        return "entityProperty";
+    }
+
+    @Override
+    public boolean isList() {
+        return false;
+    }
+}
+```
+
+### Step 3: Register the JQL Function in Plugin Descriptor
+1. **Update the `atlassian-plugin.xml` file:**
+   - Register your custom JQL function.
+
+```xml
+<jira-function-key>
+    <key>entityPropertyJqlFunction</key>
+    <name>Entity Property JQL Function</name>
+    <class>com.example.plugins.jql.EntityPropertyJqlFunction</class>
+</jira-function-key>
+```
+
+### Step 4: Build and Deploy the Plugin
+1. **Build the Plugin:**
+   - Use the Atlassian SDK to build your plugin.
+   ```shell
+   atlas-package
+   ```
+
+2. **Deploy the Plugin:**
+   - Install the plugin to your Jira instance.
+
+### Step 5: Use the Custom JQL Function
+1. **Query Issues Using Your Custom Function:**
+   - Now that your plugin is installed, you can use your custom JQL function in the Issue Navigator.
+
+```jql
+project = "My Project" AND entityProperty["customDataKey"] >= 80
+```
+
+### Summary
+By following these steps, you can create a custom JQL function that allows you to filter issues based on values stored in entity properties. This involves setting up your development environment, writing and registering the custom JQL function, and deploying the plugin to your Jira instance.
+
+If developing a custom JQL function is not feasible for you, consider using an advanced Jira plugin like ScriptRunner, which provides extended JQL capabilities out of the box and may offer the functionality you need without custom development.
+
+Feel free to reach out if you need further assistance or run into any issues! 🚀
