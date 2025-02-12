@@ -2,7 +2,6 @@ package com.example.plugins.jql;
 
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.entity.property.EntityProperty;
-import com.atlassian.jira.entity.property.EntityPropertyManager;
 import com.atlassian.jira.entity.property.JSONEntityPropertyManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.search.SearchProvider;
@@ -54,8 +53,12 @@ public class EntityPropertyJqlFunction extends AbstractJqlFunction {
 
         return issues.stream()
             .filter(issue -> {
-                EntityProperty property = jsonEntityPropertyManager.getValues(issue, propertyKey).findFirst().orElse(null);
-                return property != null && propertyValue.equals(property.getValue());
+                try {
+                    EntityProperty property = jsonEntityPropertyManager.get("issue", issue.getId(), propertyKey);
+                    return property != null && propertyValue.equals(property.getValue());
+                } catch (Exception e) {
+                    return false;
+                }
             })
             .map(issue -> new QueryLiteral(operand, issue.getId()))
             .collect(Collectors.toList());
@@ -63,111 +66,6 @@ public class EntityPropertyJqlFunction extends AbstractJqlFunction {
 
     @Override
     public boolean validate(Operand operand, Operator operator) {
-        if (operand instanceof FunctionOperand) {
-            List<String> args = ((FunctionOperand) operand).getArgs();
-            return args.size() == 2;
-        }
-        return false;
-    }
-
-    @Override
-    public String getFunctionName() {
-        return "entityProperty";
-    }
-
-    @Override
-    public boolean isList() {
-        return true;
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-@&&#&#&#&@₹@₹@₹#₹#₹#&#&
-#&#&&#&#&#&#&#&#&#&#'#'#'
-
-
-
-
-
-
-
-
-
-
-
-
-package com.example.plugins.jql;
-
-import com.atlassian.jira.component.ComponentAccessor;
-import com.atlassian.jira.entity.property.JSONEntityPropertyManager;
-import com.atlassian.jira.issue.Issue;
-import com.atlassian.jira.issue.search.SearchProvider;
-import com.atlassian.jira.jql.operand.QueryLiteral;
-import com.atlassian.jira.jql.query.QueryCreationContext;
-import com.atlassian.jira.jql.validator.OperatorValidator;
-import com.atlassian.jira.util.collect.MapBuilder;
-import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import com.atlassian.query.clause.TerminalClause;
-import com.atlassian.query.operator.Operator;
-import com.atlassian.query.operand.FunctionOperand;
-import com.atlassian.query.operand.Operand;
-import com.atlassian.query.operand.SingleValueOperand;
-import com.atlassian.jira.jql.function.AbstractJqlFunction;
-
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-@Named
-public class EntityPropertyJqlFunction extends AbstractJqlFunction {
-    
-    @ComponentImport
-    private final SearchProvider searchProvider;
-    @ComponentImport
-    private final JSONEntityPropertyManager jsonEntityPropertyManager;
-
-    @Inject
-    public EntityPropertyJqlFunction(SearchProvider searchProvider, JSONEntityPropertyManager jsonEntityPropertyManager) {
-        this.searchProvider = searchProvider;
-        this.jsonEntityPropertyManager = jsonEntityPropertyManager;
-    }
-
-    @Override
-    public List<QueryLiteral> getValues(QueryCreationContext queryCreationContext, FunctionOperand operand, TerminalClause terminalClause) {
-        // Extract property key and value from function arguments
-        String propertyKey = operand.getArgs().get(0);
-        String propertyValue = operand.getArgs().get(1);
-
-        // Get all issues and filter based on entity property values
-        List<Issue> issues = ComponentAccessor.getIssueManager().getIssueObjects(
-            ComponentAccessor.getOfBizDelegator().findAll("Issue")
-        );
-
-        return issues.stream()
-            .filter(issue -> {
-                String value = jsonEntityPropertyManager.getEntityPropertyValue(issue, propertyKey);
-                return propertyValue.equals(value);
-            })
-            .map(issue -> new QueryLiteral(operand, issue.getId()))
-            .collect(Collectors.toList());
-    }
-
-    @Override
-    public boolean validate(Operand operand, Operator operator) {
-        // Validate that the operand has exactly two arguments
         if (operand instanceof FunctionOperand) {
             List<String> args = ((FunctionOperand) operand).getArgs();
             return args.size() == 2;
