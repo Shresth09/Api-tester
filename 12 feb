@@ -1,0 +1,112 @@
+package com.example.plugins.tutorial.jql;
+
+import com.atlassian.jira.JiraDataTypes;
+import com.atlassian.jira.bc.issue.search.SearchService;
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.entity.property.JsonEntityPropertyManager;
+import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.search.SearchContext;
+import com.atlassian.jira.issue.search.SearchProvider;
+import com.atlassian.jira.jql.operand.QueryLiteral;
+import com.atlassian.jira.jql.query.QueryCreationContext;
+import com.atlassian.jira.plugin.jql.function.AbstractJqlFunction;
+import com.atlassian.jira.security.JiraAuthenticationContext;
+import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.util.MessageSet;
+import com.atlassian.jira.util.MessageSetImpl;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.query.clause.Clause;
+import com.atlassian.query.clause.TerminalClause;
+import com.atlassian.query.clause.WhereClause;
+import com.atlassian.query.operand.FunctionOperand;
+import com.atlassian.query.operand.Operand;
+import com.atlassian.query.operator.Operator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Named
+public class EntityPropertyJqlFunction extends AbstractJqlFunction {
+
+    private static final Logger log = LoggerFactory.getLogger(EntityPropertyJqlFunction.class);
+
+    @ComponentImport
+    private final SearchProvider searchProvider;
+
+    @ComponentImport
+    private final JsonEntityPropertyManager jsonEntityPropertyManager;
+
+    @ComponentImport
+    private final SearchService searchService;
+
+    @Inject
+    public EntityPropertyJqlFunction(SearchProvider searchProvider, JsonEntityPropertyManager jsonEntityPropertyManager, SearchService searchService) {
+        this.searchProvider = searchProvider;
+        this.jsonEntityPropertyManager = jsonEntityPropertyManager;
+        this.searchService = searchService;
+    }
+
+    @Override
+    public List<QueryLiteral> getValues(QueryCreationContext queryCreationContext, FunctionOperand operand, TerminalClause terminalClause) {
+        String propertyKey = operand.getArgs().get(0);
+        String propertyValue = operand.getArgs().get(1);
+
+        ApplicationUser currentUser = queryCreationContext.getUser();
+        SearchContext searchContext = new SearchContext(currentUser, null);
+
+        String jql = String.format("issue.property[%s] = '%s'", propertyKey, propertyValue);
+        com.atlassian.query.Query query = com.atlassian.query.Query.newBuilder(new WhereClause(Clause.wrap(jql))).build();
+
+        try {
+            com.atlassian.jira.issue.search.SearchResults searchResults = searchService.search(currentUser, query, searchContext, com.atlassian.jira.issue.search.SearchResults.Builder.newBuilder().build());
+            return searchResults.getIssues().stream()
+                    .map(issue -> new QueryLiteral(operand, issue.getId()))
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            log.error("Error executing JQL query for entity property function", e);  // Use logging!
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public String getFunctionName() {
+        return "entityProperty"; // This is how you'll call it in JQL
+    }
+
+    @Override
+    public boolean isList() {
+        return true;
+    }
+
+    @Override
+    public JiraDataTypes getDataType() {
+        return JiraDataTypes.ISSUE;
+    }
+
+    @Override
+    public int getMinimumNumberOfExpectedArguments() {
+        return 2;
+    }
+
+    @Override
+    public MessageSet validate(ApplicationUser user, FunctionOperand operand, TerminalClause terminalClause) {
+        MessageSet messageSet = new MessageSetImpl();
+        if (operand.getArgs().size() != 2) {
+            messageSet.addErrorMessage("The entityProperty function requires exactly two arguments: a property key and a property value.");
+        }
+        return messageSet;
+    }
+
+
+    // Important: Add this method for auto-completion/suggestions
+    @Override
+    public boolean isSafeForAutocomplete() {
+        return true;
+    }
+}
