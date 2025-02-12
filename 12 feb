@@ -1,51 +1,44 @@
-<atlassian-plugin name="My Entity Property Plugin" key="com.example.plugins.tutorial">
-    <module name="Entity Property JQL Function" key="entity-property-jql-function" class="com.example.plugins.tutorial.jql.EntityPropertyJqlFunction" type="jqlFunction">
-        <description>Allows querying Jira issues based on entity properties.</description>
-    </module>
-    </atlassian-plugin>
+Sure, I'll provide the complete implementation for your custom JQL function, including the necessary imports, class definition, methods, and additional logging to help with debugging. Here's the full code:
 
+### Complete `EntityPropertyJqlFunction` Class
 
-
-
-
-
+```java
 package com.example.plugins.tutorial.jql;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import org.ofbiz.core.entity.GenericValue;
+import org.apache.log4j.Logger;
+import org.json.JSONObject;
+
 import com.atlassian.jira.JiraDataTypes;
-import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.entity.property.EntityProperty;
 import com.atlassian.jira.entity.property.JsonEntityPropertyManager;
-import com.atlassian.jira.issue.search.SearchContext;
+import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.search.SearchProvider;
 import com.atlassian.jira.jql.operand.QueryLiteral;
-import com.atlassian.jira.jql.parser.JqlQueryParser; // Import for parsing
 import com.atlassian.jira.jql.query.QueryCreationContext;
+import com.atlassian.jira.ofbiz.OfBizDelegator;
 import com.atlassian.jira.plugin.jql.function.AbstractJqlFunction;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.MessageSet;
 import com.atlassian.jira.util.MessageSetImpl;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import com.atlassian.query.Query; // Import for Query object
-import com.atlassian.query.clause.Clause;
 import com.atlassian.query.clause.TerminalClause;
-import com.atlassian.query.clause.WhereClause;
 import com.atlassian.query.operand.FunctionOperand;
 import com.atlassian.query.operand.Operand;
 import com.atlassian.query.operator.Operator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Named
 public class EntityPropertyJqlFunction extends AbstractJqlFunction {
 
-    private static final Logger log = LoggerFactory.getLogger(EntityPropertyJqlFunction.class);
+    private static final Logger log = Logger.getLogger(EntityPropertyJqlFunction.class);
 
     @ComponentImport
     private final SearchProvider searchProvider;
@@ -53,18 +46,10 @@ public class EntityPropertyJqlFunction extends AbstractJqlFunction {
     @ComponentImport
     private final JsonEntityPropertyManager jsonEntityPropertyManager;
 
-    @ComponentImport
-    private final SearchService searchService;
-
-    @ComponentImport
-    private final JqlQueryParser jqlQueryParser; // Inject the parser
-
     @Inject
-    public EntityPropertyJqlFunction(SearchProvider searchProvider, JsonEntityPropertyManager jsonEntityPropertyManager, SearchService searchService, JqlQueryParser jqlQueryParser) {
+    public EntityPropertyJqlFunction(SearchProvider searchProvider, JsonEntityPropertyManager jsonEntityPropertyManager) {
         this.searchProvider = searchProvider;
         this.jsonEntityPropertyManager = jsonEntityPropertyManager;
-        this.searchService = searchService;
-        this.jqlQueryParser = jqlQueryParser;
     }
 
     @Override
@@ -72,24 +57,39 @@ public class EntityPropertyJqlFunction extends AbstractJqlFunction {
         String propertyKey = operand.getArgs().get(0);
         String propertyValue = operand.getArgs().get(1);
 
-        ApplicationUser currentUser = queryCreationContext.getUser();
-        SearchContext searchContext = new SearchContext(currentUser, null);
+        log.debug("Executing entityProperty function with key: " + propertyKey + " and value: " + propertyValue);
 
-        String jql = String.format("issue.property[%s] = '%s'", propertyKey, propertyValue);
+        // Get all issues and filter based on entity property values
+        OfBizDelegator ofBizDelegator = ComponentAccessor.getOfBizDelegator();
+        List<GenericValue> genericValues = ofBizDelegator.findAll("Issue");
+        List<Long> issueIds = genericValues.stream().map(gv -> gv.getLong("id")).collect(Collectors.toList());
+        List<Issue> issues = ComponentAccessor.getIssueManager().getIssueObjects(issueIds);
 
-        try {
-            Query query = jqlQueryParser.parseQuery(jql); // Use the parser
+        return issues.stream()
+            .filter(issue -> {
+                try {
+                    EntityProperty property = jsonEntityPropertyManager.get("issue", issue.getId(), propertyKey);
+                    if (property != null) {
+                        String propertyJsonValue = property.getValue();
+                        JSONObject jsonObject = new JSONObject(propertyJsonValue);
+                        String actualValue = jsonObject.get("value").toString();
+                        boolean matches = propertyValue.equals(actualValue);
+                        log.debug("Issue " + issue.getKey() + " matches: " + matches);
+                        return matches;
+                    }
+                } catch (Exception e) {
+                    log.error("Error retrieving entity property for issue " + issue.getKey(), e);
+                }
+                return false;
+            })
+            .map(issue -> new QueryLiteral(operand, issue.getId()))
+            .collect(Collectors.toList());
+    }
 
-            com.atlassian.jira.issue.search.SearchResults searchResults = searchService.search(currentUser, query, searchContext, com.atlassian.jira.issue.search.SearchResults.Builder.newBuilder().build());
-
-            return searchResults.getIssues().stream()
-                    .map(issue -> new QueryLiteral(operand, issue.getId()))
-                    .collect(Collectors.toList());
-
-        } catch (Exception e) {
-            log.error("Error executing JQL query for entity property function", e);
-            return Collections.emptyList();
-        }
+    // Custom validation method
+    public boolean validate(FunctionOperand operand) {
+        List<String> args = operand.getArgs();
+        return args.size() == 2;
     }
 
     @Override
@@ -115,11 +115,67 @@ public class EntityPropertyJqlFunction extends AbstractJqlFunction {
     @Override
     public MessageSet validate(ApplicationUser user, FunctionOperand operand, TerminalClause terminalClause) {
         MessageSet messageSet = new MessageSetImpl();
-        if (operand.getArgs().size() != 2) {
+        if (!validate(operand)) {
             messageSet.addErrorMessage("The entityProperty function requires exactly two arguments: a property key and a property value.");
         }
         return messageSet;
     }
-
-    // Removed isSafeForAutocomplete() for Jira 8.20.11
 }
+```
+
+### Updated `atlassian-plugin.xml`
+
+Make sure the `atlassian-plugin.xml` file correctly registers your custom JQL function:
+
+```xml
+<atlassian-plugin key="com.example.plugins.jql" name="Custom JQL Functions Plugin" version="1.0" pluginsVersion="2">
+    <plugin-info>
+        <description>Custom JQL Functions for querying issue properties</description>
+        <version>1.0</version>
+        <vendor name="Your Company" url="https://yourcompany.com"/>
+    </plugin-info>
+
+    <jql-function key="entityPropertyJqlFunction" name="Entity Property JQL Function">
+        <description>Query issues based on entity property values</description>
+        <class>com.example.plugins.tutorial.jql.EntityPropertyJqlFunction</class>
+    </jql-function>
+</atlassian-plugin>
+```
+
+### Building and Deploying the Plugin
+
+1. **Build the Plugin:**
+
+```shell
+atlas-package
+```
+
+2. **Deploy the Plugin:**
+   - Upload the generated JAR file to your Jira instance via **Jira Administration** > **Manage Apps** > **Upload App**.
+   - Alternatively, copy the JAR file to the Jira plugins directory if you're running Jira locally.
+
+3. **Restart Jira:**
+   - After deploying, restart your Jira instance to ensure the plugin is loaded correctly.
+
+### Testing the Custom JQL Function
+
+1. **Access the Issue Navigator:**
+   - Go to **Issues** > **Search for Issues**.
+
+2. **Switch to Advanced Search:**
+   - Click on **Advanced** to use JQL directly.
+
+3. **Run Your Custom JQL Query:**
+
+```jql
+project = "NEW" AND entityProperty("Description-Score", "60")
+```
+
+4. **Validate the Results:**
+   - The issues returned should be those where the entity property `Description-Score` has a value of `60`.
+
+### Logging
+
+- Logs can be checked in the Jira logs to verify if the function is invoked and to see if any errors are logged.
+
+By following these steps, you should be able to filter issues based on the values stored in issue properties using your custom JQL function. Let me know if you need any further assistance! 🚀[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/jbillythekid/jjnotifier/tree/eaa526e7818c93815ab59fc1d80aa0ffffc080dc/src%2Fmain%2Fjava%2Forg%2Fcraftforge%2Fjira%2Fjql%2FAbstractIssuesFromFilterFunction.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")
