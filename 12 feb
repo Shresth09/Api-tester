@@ -1,3 +1,14 @@
+<atlassian-plugin name="My Entity Property Plugin" key="com.example.plugins.tutorial">
+    <module name="Entity Property JQL Function" key="entity-property-jql-function" class="com.example.plugins.tutorial.jql.EntityPropertyJqlFunction" type="jqlFunction">
+        <description>Allows querying Jira issues based on entity properties.</description>
+    </module>
+    </atlassian-plugin>
+
+
+
+
+
+
 package com.example.plugins.tutorial.jql;
 
 import com.atlassian.jira.JiraDataTypes;
