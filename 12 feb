@@ -4,10 +4,10 @@ import com.atlassian.jira.JiraDataTypes;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.entity.property.JsonEntityPropertyManager;
-import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.search.SearchContext;
 import com.atlassian.jira.issue.search.SearchProvider;
 import com.atlassian.jira.jql.operand.QueryLiteral;
+import com.atlassian.jira.jql.parser.JqlQueryParser; // Import for parsing
 import com.atlassian.jira.jql.query.QueryCreationContext;
 import com.atlassian.jira.plugin.jql.function.AbstractJqlFunction;
 import com.atlassian.jira.security.JiraAuthenticationContext;
@@ -15,6 +15,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.MessageSet;
 import com.atlassian.jira.util.MessageSetImpl;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.query.Query; // Import for Query object
 import com.atlassian.query.clause.Clause;
 import com.atlassian.query.clause.TerminalClause;
 import com.atlassian.query.clause.WhereClause;
@@ -44,11 +45,15 @@ public class EntityPropertyJqlFunction extends AbstractJqlFunction {
     @ComponentImport
     private final SearchService searchService;
 
+    @ComponentImport
+    private final JqlQueryParser jqlQueryParser; // Inject the parser
+
     @Inject
-    public EntityPropertyJqlFunction(SearchProvider searchProvider, JsonEntityPropertyManager jsonEntityPropertyManager, SearchService searchService) {
+    public EntityPropertyJqlFunction(SearchProvider searchProvider, JsonEntityPropertyManager jsonEntityPropertyManager, SearchService searchService, JqlQueryParser jqlQueryParser) {
         this.searchProvider = searchProvider;
         this.jsonEntityPropertyManager = jsonEntityPropertyManager;
         this.searchService = searchService;
+        this.jqlQueryParser = jqlQueryParser;
     }
 
     @Override
@@ -60,23 +65,25 @@ public class EntityPropertyJqlFunction extends AbstractJqlFunction {
         SearchContext searchContext = new SearchContext(currentUser, null);
 
         String jql = String.format("issue.property[%s] = '%s'", propertyKey, propertyValue);
-        com.atlassian.query.Query query = com.atlassian.query.Query.newBuilder(new WhereClause(Clause.wrap(jql))).build();
 
         try {
+            Query query = jqlQueryParser.parseQuery(jql); // Use the parser
+
             com.atlassian.jira.issue.search.SearchResults searchResults = searchService.search(currentUser, query, searchContext, com.atlassian.jira.issue.search.SearchResults.Builder.newBuilder().build());
+
             return searchResults.getIssues().stream()
                     .map(issue -> new QueryLiteral(operand, issue.getId()))
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
-            log.error("Error executing JQL query for entity property function", e);  // Use logging!
+            log.error("Error executing JQL query for entity property function", e);
             return Collections.emptyList();
         }
     }
 
     @Override
     public String getFunctionName() {
-        return "entityProperty"; // This is how you'll call it in JQL
+        return "entityProperty";
     }
 
     @Override
@@ -103,10 +110,5 @@ public class EntityPropertyJqlFunction extends AbstractJqlFunction {
         return messageSet;
     }
 
-
-    // Important: Add this method for auto-completion/suggestions
-    @Override
-    public boolean isSafeForAutocomplete() {
-        return true;
-    }
+    // Removed isSafeForAutocomplete() for Jira 8.20.11
 }
