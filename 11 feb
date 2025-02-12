@@ -1,3 +1,62 @@
+package com.example.plugins.jql;
+
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.search.SearchProvider;
+import com.atlassian.jira.jql.operand.QueryLiteral;
+import com.atlassian.jira.jql.query.QueryCreationContext;
+import com.atlassian.jira.jql.validator.OperatorValidator;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.query.clause.TerminalClause;
+import com.atlassian.query.operator.Operator;
+import com.atlassian.query.operand.FunctionOperand;
+import com.atlassian.query.operand.Operand;
+import com.atlassian.query.operand.SingleValueOperand;
+
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.util.List;
+import java.util.Map;
+
+@Named
+public class EntityPropertyJqlFunction extends AbstractJqlFunction {
+    
+    @ComponentImport
+    private final SearchProvider searchProvider;
+
+    @Inject
+    public EntityPropertyJqlFunction(SearchProvider searchProvider) {
+        this.searchProvider = searchProvider;
+    }
+
+    @Override
+    public List<QueryLiteral> getValues(QueryCreationContext queryCreationContext, FunctionOperand operand, TerminalClause terminalClause) {
+        // Implement logic to retrieve entity property values and filter issues
+    }
+
+    @Override
+    public boolean validate(Operand operand, Operator operator) {
+        // Implement validation logic for the function
+    }
+
+    @Override
+    public String getFunctionName() {
+        return "entityProperty";
+    }
+
+    @Override
+    public boolean isList() {
+        return false;
+    }
+}
+
+
+
+
+
+
+
 function setEntityProperty(issueKey, propertyKey, propertyValue) {
     var jiraApiUrl = `/rest/api/2/issue/${issueKey}/properties/${propertyKey}`;
 
