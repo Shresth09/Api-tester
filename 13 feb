@@ -1,3 +1,43 @@
+function updateScoreDisplay(score) {
+    var progressBar = AJS.$("#score-progress-bar");
+    var progressContainer = AJS.$(".progress-container");
+
+    // Check if the score is valid
+    if (score === null || score === "" || isNaN(score)) {
+        progressBar.css("width", "100%")
+                   .css("color", "gray")
+                   .css("background-color", "transparent") // Set background to transparent
+                   .text("Click Button to check score"); // Display text in gray
+        progressContainer.show(); // Ensure container is shown
+    } else {
+        var scorePercent = Math.min(Math.max(score, 0), 100); // Clamp value between 0 and 100
+        progressBar.css("width", scorePercent + "%")
+                   .text(score + "%");
+        progressContainer.show(); // Show the progress bar container
+
+        // Remove existing color classes
+        progressBar.removeClass("red yellow green gray");
+
+        // Apply color based on score
+        if (score <= 40) {
+            progressBar.addClass("red");
+        } else if (score > 40 && score <= 60) {
+            progressBar.addClass("yellow");
+        } else {
+            progressBar.addClass("green");
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
 To place the progress bar next to the "Description score" text and adjust its thickness, you can use CSS flexbox to align them horizontally. Here's how you can do it:
 
 ### Step 1: Update CSS for Flexbox and Adjust Thickness
