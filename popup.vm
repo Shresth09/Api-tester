@@ -107,6 +107,21 @@ function initStuff() {
 if (AJS.$("#show-popup").length && !AJS.$("#show-popup").data('events-attached')) {
 
 // Function to extract the issue key
+function setScoreColor(score) {
+    var scoreElement = AJS.$("#score-value");
+    scoreElement.removeClass("red yellow green gray"); // Remove existing color classes
+
+    if (score === null || score === "" || isNaN(score)) {
+        scoreElement.text("No score available");
+        scoreElement.addClass("gray");
+    } else if (score <= 40) {
+        scoreElement.addClass("red");
+    } else if (score > 40 && score <= 60) {
+        scoreElement.addClass("yellow");
+    } else {
+        scoreElement.addClass("green");
+    }
+}
 
 function getIssueKey() {
 
