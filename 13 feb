@@ -1,0 +1,138 @@
+Got it! Let’s create a progress bar to display the score after the text "Description Score". The progress bar will change color based on the score, and the score itself will be displayed in white text within the progress bar. Here’s how you can do it:
+
+### Step 1: Add CSS for the Progress Bar
+
+Define the styles for the progress bar and its different states:
+
+```css
+<style>
+.progress-container {
+    width: 100%;
+    background-color: #ccc;
+    border-radius: 25px;
+    overflow: hidden;
+    margin-top: 10px;
+    position: relative;
+}
+
+.progress-bar {
+    height: 20px;
+    width: 0;
+    background-color: gray;
+    text-align: center;
+    line-height: 20px; /* same as height to center text vertically */
+    color: white;
+    border-radius: 25px;
+    transition: width 0.5s ease, background-color 0.5s ease;
+}
+
+.progress-bar.red {
+    background-color: red;
+}
+
+.progress-bar.yellow {
+    background-color: yellow;
+    color: black; /* yellow needs black text for better readability */
+}
+
+.progress-bar.green {
+    background-color: green;
+}
+</style>
+```
+
+### Step 2: HTML for the Progress Bar
+
+Add the HTML for the progress bar inside your container where you want to display the score:
+
+```html
+<div class="custom-box">
+    <div><a id="show-popup" class="aui-button">Analyze Description</a></div>
+    <div class="description-score-custom-field">
+        Description score:
+        <div class="progress-container">
+            <div id="score-progress-bar" class="progress-bar">0%</div>
+        </div>
+    </div>
+</div>
+```
+
+### Step 3: Update JavaScript for the Progress Bar
+
+Create the `updateScoreDisplay` function to update the progress bar's width and color based on the score:
+
+```javascript
+function updateScoreDisplay(score) {
+    var progressBar = AJS.$("#score-progress-bar");
+
+    // Update the width and text of the progress bar
+    if (score === null || score === "" || isNaN(score)) {
+        progressBar.width("0%");
+        progressBar.text("No score available");
+    } else {
+        progressBar.width(score + "%");
+        progressBar.text(score + "%");
+    }
+
+    // Remove existing color classes
+    progressBar.removeClass("red yellow green");
+
+    // Apply color based on score
+    if (score === null || score === "" || isNaN(score)) {
+        progressBar.addClass("gray");
+    } else if (score <= 40) {
+        progressBar.addClass("red");
+    } else if (score > 40 && score <= 60) {
+        progressBar.addClass("yellow");
+    } else {
+        progressBar.addClass("green");
+    }
+}
+```
+
+### Step 4: Replace Direct Span Updates with `updateScoreDisplay` Calls
+
+Replace all instances where you update the score value directly with a call to `updateScoreDisplay(score)`. For example:
+
+#### On Page Load (after fetching the score value):
+
+```javascript
+function fetchCustomFieldValue(issueKey) {
+    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+    jQuery.ajax({
+        url: jiraApiUrl,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            var customFieldId = '$scoreFieldKey';
+            var scoreValue = response.fields[customFieldId];
+            updateScoreDisplay(scoreValue);
+        },
+        error: function() {
+            updateScoreDisplay(null); // Error fetching data
+        }
+    });
+}
+```
+
+#### After Calculating or Fetching the Score (e.g., in the API call success function):
+
+```javascript
+if (cscore != null) {
+    updateScoreDisplay(cscore);
+} else {
+    updateScoreDisplay(null); // No score available
+}
+```
+
+#### Handling Errors:
+
+```javascript
+error: function(xhr, status, error) {
+    AJS.$("#api-response").html("<p style='color: red; font: Citi-Sans-Text-Regular;'>Error: Failed to fetch data. Please verify configured endpoint status: " + xhr.status + ", Error: " + error + "</p>");
+    AJS.dialog2("#api-modal").show();
+    updateScoreDisplay(null); // No score available due to error
+}
+```
+
+By implementing these steps, you'll have a dynamic progress bar that updates based on the score, enhancing the visual appeal and user experience. Let me know if you need further adjustments or assistance! 🚀
