@@ -1,26 +1,35 @@
-Got it! Let’s create a progress bar to display the score after the text "Description Score". The progress bar will change color based on the score, and the score itself will be displayed in white text within the progress bar. Here’s how you can do it:
+To place the progress bar next to the "Description score" text and adjust its thickness, you can use CSS flexbox to align them horizontally. Here's how you can do it:
 
-### Step 1: Add CSS for the Progress Bar
+### Step 1: Update CSS for Flexbox and Adjust Thickness
 
-Define the styles for the progress bar and its different states:
+Define styles to use flexbox for horizontal alignment and set the thickness of the progress bar:
 
 ```css
 <style>
+.description-score-container {
+    display: flex;
+    align-items: center; /* Align items vertically centered */
+}
+
+.description-score-container .description-text {
+    margin-right: 10px; /* Space between text and bar */
+}
+
 .progress-container {
-    width: 100%;
+    flex-grow: 1; /* Allow the progress bar to take available space */
     background-color: #ccc;
     border-radius: 25px;
     overflow: hidden;
-    margin-top: 10px;
     position: relative;
+    height: 20px; /* Adjust this value to change the thickness */
 }
 
 .progress-bar {
-    height: 20px;
+    height: 100%; /* Make it full height of the container */
     width: 0;
     background-color: gray;
     text-align: center;
-    line-height: 20px; /* same as height to center text vertically */
+    line-height: 20px; /* Same as container height to center text vertically */
     color: white;
     border-radius: 25px;
     transition: width 0.5s ease, background-color 0.5s ease;
@@ -41,15 +50,15 @@ Define the styles for the progress bar and its different states:
 </style>
 ```
 
-### Step 2: HTML for the Progress Bar
+### Step 2: Update HTML for the Progress Bar
 
-Add the HTML for the progress bar inside your container where you want to display the score:
+Update the HTML structure to use the new CSS classes:
 
 ```html
 <div class="custom-box">
     <div><a id="show-popup" class="aui-button">Analyze Description</a></div>
-    <div class="description-score-custom-field">
-        Description score:
+    <div class="description-score-container">
+        <span class="description-text">Description score:</span>
         <div class="progress-container">
             <div id="score-progress-bar" class="progress-bar">0%</div>
         </div>
@@ -59,7 +68,7 @@ Add the HTML for the progress bar inside your container where you want to displa
 
 ### Step 3: Update JavaScript for the Progress Bar
 
-Create the `updateScoreDisplay` function to update the progress bar's width and color based on the score:
+Ensure your `updateScoreDisplay` function updates the progress bar correctly:
 
 ```javascript
 function updateScoreDisplay(score) {
@@ -90,12 +99,9 @@ function updateScoreDisplay(score) {
 }
 ```
 
-### Step 4: Replace Direct Span Updates with `updateScoreDisplay` Calls
+### Example Adjustments in Your Existing Code
 
-Replace all instances where you update the score value directly with a call to `updateScoreDisplay(score)`. For example:
-
-#### On Page Load (after fetching the score value):
-
+**On Page Load (after fetching the score value):**
 ```javascript
 function fetchCustomFieldValue(issueKey) {
     var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
@@ -115,8 +121,7 @@ function fetchCustomFieldValue(issueKey) {
 }
 ```
 
-#### After Calculating or Fetching the Score (e.g., in the API call success function):
-
+**After Calculating or Fetching the Score (e.g., in the API call success function):**
 ```javascript
 if (cscore != null) {
     updateScoreDisplay(cscore);
@@ -125,8 +130,7 @@ if (cscore != null) {
 }
 ```
 
-#### Handling Errors:
-
+**Handling Errors:**
 ```javascript
 error: function(xhr, status, error) {
     AJS.$("#api-response").html("<p style='color: red; font: Citi-Sans-Text-Regular;'>Error: Failed to fetch data. Please verify configured endpoint status: " + xhr.status + ", Error: " + error + "</p>");
@@ -135,4 +139,10 @@ error: function(xhr, status, error) {
 }
 ```
 
-By implementing these steps, you'll have a dynamic progress bar that updates based on the score, enhancing the visual appeal and user experience. Let me know if you need further adjustments or assistance! 🚀
+### Summary
+
+- Use `flexbox` to place the progress bar next to the text.
+- Adjust the `height` value in the `.progress-container` to set the thickness.
+- Replace direct updates to `#score-value` with calls to `updateScoreDisplay`.
+
+By following these steps, the progress bar should be positioned next to the "Description score" text and have its thickness adjusted to your liking. Let me know if you need further adjustments or assistance! 🚀
