@@ -1,194 +1,428 @@
-#set($allowedProjectKeys = "")
-<script>
-  jQuery(document).ready(function() {
-    var apiurl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getSelectedProjects";
+#if ($allowedProjectkeys.contains($project.key))
 
-    jQuery.ajax({
-      url: apiurl,
-      type: 'GET',
-      contentType: 'text/plain',
-      success: function(data) {
-        var allowedProjectKeys = data.split(",");
-        $allowedProjectKeys = allowedProjectKeys;
-        renderPopup();
-      },
-      error: function(xhr, status, error) {
-        console.log("Error fetching allowed project keys: ", error);
-      }
-    });
+<style>
 
-    function renderPopup() {
-      if ($allowedProjectKeys.indexOf("${project.key}") > -1) {
-        jQuery("#popup-container").html(`
-          <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
-          <!-- Modal Structure -->
-          <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
-            <header class="aui-dialog2-header">
-              <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
-              <a class="aui-dialog2-header-close">
-                <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-              </a>
-            </header>
-            <div class="aui-dialog2-content">
-              <div id="api-response">Loading data...</div>
-            </div>
-            <footer class="aui-dialog2-footer">
-              <div class="aui-dialog2-footer-actions">
-                <button id="close-button" class="aui-button aui-button-primary">Close</button>
-              </div>
-            </footer>
-          </div>
-        `);
-        initStuff();
-      }
-    }
-  });
-</script>
+description-score-custom-field (
 
-#if ($allowedProjectKeys.contains($project.key))
-<div id="popup-container">
-  <a id="show-popup" class="aui-button">AI-RQM Analysis</a>
-  <!-- Modal Structure -->
-  <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
-    <header class="aui-dialog2-header">
-      <h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
-      <a class="aui-dialog2-header-close">
-        <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-      </a>
-    </header>
-    <div class="aui-dialog2-content">
-      <div id="api-response">Loading data...</div>
-    </div>
-    <footer class="aui-dialog2-footer">
-      <div class="aui-dialog2-footer-actions">
-        <button id="close-button" class="aui-button aui-button-primary">Close</button>
-      </div>
-    </footer>
-  </div>
+font-family: 'Citi-Sans-Text-Regular';
+
+color: #255BE3;
+
+font-size: 16px;
+
+} .description-score-custom-field span{
+
+color: gray;
+
+}
+
+.custom-box{
+
+border: 1px solid #ccc;
+
+padding:10px;
+
+margin: 10px 0;
+
+border-radius: 5px;
+
+width: fit-content;
+
+box-sizing: content-box;
+
+}
+
+#rowFor${scoreFieldKey}{
+
+display: none !important;
+
+}
+
+</style>
+
+<div class="custom-box">
+
+<div><a id="show-popup" class="aui-button ">Analyze Description</a></div>
+
+<div class="description-score-custom-field">
+
+Description score: <span id="score-value">Loading...</span>
+
 </div>
-#else
-<p>Project key is not allowed.</p>
-#end
+
+</div>
+
+<!-- Modal Structure  -->
+
+<div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display:none;">
+
+<header class="aui-dialog2-header">
+
+<h2 class="aui-dialog2-header-main">RQM Description Analysis</h2>
+
+<a class="aui-dialog2-header-close">
+
+<span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+
+</a>
+
+</header>
+
+<div class="aui-dialog2-content">
+
+<div id="api-response">Loading data...</div>
+
+</div>
+
+<footer class="aui-dialog2-footer">
+
+div class="aui-dialog2-footer-actions"> <
+
+<button id="close-button" class="aui-button aui-button-primary">Close</button>
+
+</div>
+
+</div>
+
+</footer>
 
 <script type="module">
-  AJS.toInit(function() {
-    jQuery(document).ready(function() {
-      initStuff();
-    });
-  });
+
+AJS. to Init(function() {
+
+jQuery(document).ready(function() {
+
+initStuff();
+
+});
+
+});
+
 </script>
 
 <script type="text/javascript">
-  function initStuff() {
-    if (AJS.$("#show-popup").length && !AJS.$("#show-popup").data('events-attached')) {
-      // Function to extract the issue key
-      function getIssueKey() {
-        var url = window.location.href;
-        var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
-        var match = url.match(issueKeyPattern);
-        if (match) {
-          return match[1];
-        }
-        var issueKeyElement = AJS.$("#key-val");
-        if (issueKeyElement.length) {
-          return issueKeyElement.text().trim();
-        }
-        var selectedIssueKey = AJS.$(".selected-issue-key").text();
-        if (selectedIssueKey) {
-          return selectedIssueKey.trim();
-        }
-        return null;
-      }
 
-      // Show the modal and fetch API data on button click
-      AJS.$("#show-popup").click(function() {
-        var issuekey = getIssueKey();
-        if (!issuekey) {
-          AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'> Issue key not found. </p>");
-          AJS.dialog2("#api-modal").show();
-          return;
-        }
+function initStuff() {
 
-        var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issuekey;
-        jQuery.ajax({
-          url: jiraApiUrl,
-          type: 'GET',
-          dataType: 'json',
-          success: function(response) {
-            var description = response.fields.description;
-            if (!description) {
-              AJS.$("#api-response").html("<p style='color: red; font-weight: bold;'> Description is not provided in the issue. </p>");
-              AJS.dialog2("#api-modal").show();
-              return;
-            }
+if (AJS.$("#show-popup").length && !AJS.$("#show-popup").data('events-attached')) {
 
-            var servletApiurl = AJS.params.baseURL + "/plugins/servlet/issuecrud?action=getUrl";
-            jQuery.ajax({
-              url: servletApiurl,
-              type: 'GET',
-              contentType: 'application/json',
-              success: function(response) {
-                var serverApiUrl = response.apiUrl;
-                var payload = JSON.stringify({ user_story: description });
-                var apiurl = serverApiUrl;
-                AJS.$("#api-modal").show();
-                AJS.$("#api-response").html("<pre>Loading data...</pre>");
-                jQuery.ajax({
-                  url: apiurl,
-                  type: "POST",
-                  contentType: 'application/json',
-                  data: payload,
-                  success: function(apiResponse) {
-                    var cscore = apiResponse.NA.cscore;
-                    var messages = apiResponse.NA.message;
-                    var formattedData = "<p style='font-size: 1.2em;'><strong>SCORE:</strong> " + cscore + "</p>" +
-                                        "<p style='font-size: 1.2em;'><strong>MESSAGE:</strong> " + messages.join("<br>") + "</p>";
-                    AJS.$("#api-response").html(formattedData);
-                    AJS.dialog2("#api-modal").show();
-                  },
-                  error: function(xhr, status, error) {
-                    AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch data. Verify the ROM URL in Configuration. Status: " +
-                                                xhr.status + ", Error: " + error + "</p>");
-                    AJS.dialog2("#api-modal").show();
-                  }
-                });
-              },
-              error: function(xhr, status, error) {
-                AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch ROM API from servlet. Status: " +
-                                            xhr.status + ", Error: " + error + "</p>");
-                AJS.dialog2("#api-modal").show();
-              }
-            });
-          },
-          error: function(xhr, status, error) {
-            AJS.$("#api-response").html("<p style='color: red;'>Failed to fetch Jira issue data. Status: " + xhr.status + ", Error: " + error + "</p>");
-            AJS.dialog2("#api-modal").show();
-          }
-        });
-      });
+// Function to extract the issue key
 
-      AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
-        AJS.dialog2("#api-modal").hide();
-        setTimeout(function() {
-          AJS.$("#api-modal").attr("aria-hidden", "true").hide();
-          AJS.$("#api-response").html("Loading data...");
-        }, 300);
-      });
+function getIssueKey() {
 
-      AJS.$("#show-popup").data('events-attached', true);
-    }
-  }
+console.log("Extracting issue key...");
 
-  if (typeof jQuery !== "undefined") {
-    jQuery(document).ready(function() {
-      initStuff();
-    });
-  }
+var url = window.location.href;
 
-  document.addEventListener("DOMContentLoaded", function() {
-    initStuff();
-    JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
-      initStuff();
-    });
-  });
+var issueKeyPattern /browse\/([A-Z]+-\d+)/;
+
+var match = url.match(issueKeyPattern);
+
+if (match) {
+
+return match[1];
+
+}
+
+var issueKeyElement = AJS.$("#key-val");
+
+if (issueKeyElement.length) { return issueKeyElement.text().trim();
+
+}
+
+var selectedIssuekey AJS.$(".selected-issue-key").text();
+
+if (selectedIssueKey) ( return selectedIssueKey.trim();
+
+}
+
+return null;
+
+} function updateCustomFieldValue(issueKey, customFieldId, newValue) {
+
+var jiraApiurl AJS.params.baseURL + "/rest/api/2/issue/" + issuekey;
+
+var data = {
+
+"fields": {}
+
+};
+data.fields [customFieldId]= newValue;
+
+jQuery.ajax({
+
+url: jiraApiUrl,
+
+type: 'PUT',
+
+contentType: application/json',
+
+data: JSON.stringify(data),
+
+success: function() {
+
+console.log("Custom field value updated successfully!");
+
+},
+
+error: function() {
+
+I
+
+}
+
+});
+
+}
+
+console.log("Error updating custom field value");
+
+function setEntityProperty(issuekey, propertyValue) {
+
+var jiraApiUrl = AJS.params.baseURL +"/rest/api/2/issue/"+ issueKey+"/properties/Description-Score";
+
+jQuery.ajax({
+
+url: jiraApiurl,
+
+type: 'PUT',
+
+contentType: 'application/json',
+
+data: JSON.stringify({
+
+}),
+
+"value": propertyValue
+
+success: function() {
+
+},
+
+console.log("Entity property set successfully!");
+
+error: function(xhr) {
+
+console.error("Error setting entity property");
+
+}}) ;} 
+
+// Show the modal and fetch API data on button click
+
+AJS.$("#show-popup").click(function() {
+
+console.log("Button clicked!");
+
+var issuekey getIssueKey();
+
+if (lissuekey) {
+
+console.log("Issue key not found.");
+
+AJS.$("#api-response").html("<p style='color: red;
+
+font: Citi-Sans-Text-Regular;'>Error: Issue key not found in the url.</p>");
+
+A35.dialog2("#api-modal").show();
+
+return;
+} 
+var jiraApiurl AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+
+console.log("Fetching data from Jira API:", jiraApiUrl);
+
+// Fetch the issue description from Jira
+
+jQuery.ajax({
+
+url: jiraApiurl,
+
+type: 'GET',
+
+dataType: 'json',
+
+success: function (response) { console.log("Jira API response received:", response);
+
+var description response.fields.description;
+
+if (!description || Idescription.trim()) {
+
+console.log("Description not provided in the issue.");
+
+AJS.$("#api-response").html("<p style='color: red; font: Citi-Sans-Text-Regular;'> Error: Description is not provided in the issue.</p>");
+
+AJS.dialog2("#api-modal").show();
+
+AJS.$("#score-value").text("Description not provided!");
+return;}
+
+var payload JSON.stringify({user_story: description}); var apiurl= '$rqmUrl'; console.log("Sending data to external API:", apiurl, payload);
+
+AJS.$("#api-modal").show();
+
+AJS.$("#api-response").html("<pre>Loading data...</pre>");
+
+jQuery.ajax({
+
+url: apiurl, type: 'POST', contentType: 'application/json', data: payload, success: function (apiResponse) { console.log("External API response received:", apiResponse); var cscore apiResponse.NA.cscore; var messages apiResponse.NA.message;
+
+var formattedData =
+
+<p style='font-size: 1.2em; font: Citi-Sans-Text-Regular;'> <strong>Description Score:</strong> ${cscore}</p> <p style='font-size: 1.2em; font: Citi-Sans-Text-Regular;'> <strong>Action Required:</strong> ${messages.join("<br>"))}</p>';
+
+AJS.$("#api-response").html(formattedData); AJS.dialog2("#api-modal").show();
+var issuekey getIssueKey();
+
+var customFieldId= '$scoreFieldKey";
+
+updateCustomFieldValue(issuekey, customFieldId, cscore);
+
+setEntityProperty(issuekey,cscore);
+
+if (cscore != null) {
+
+AJS.$("#score-value").text(cscore);
+
+}}, 
+
+error: function(xhr, status, error) { {
+
+console.log("Error in external API call:", status, error); AJS.$("#api-response").html("<p style='color: red ; font:
+
+Citi-Sans-Text-Regular;' > Error: Failed to fetch data. Please verify Configured Endpoint Status: 404" + "</p>");
+
+AJS.dialog2("#api-modal").show();
+}}) ;}, 
+error: function(xhr, status, error) (
+
+console.log("Error in Jira API call:", status, error );
+
+AJS.$("#api-response").html("<p style='color: red; font: Citi-Sans-Text-Regular; '>
+
+Error: Failed to fetch Jira issue data. Status:"xhr.status +", Error: + error + "</p>");
+
+AJS.dialog2("#api-modal").show();
+
+}
+
+});
+
+});
+
+AJS.$("#close-button, aui-dialog2-header-close").on("click", function() {
+
+AJS.dialog2("#api-modal").hide();
+
+setTimeout(function() {
+
+AJS.$("#api-modal").attr("aria-hidden", "true").hide(); AJS.$("#api-response").html("Loading data....");
+
+), зее);
+
+});
+
+AJS.$("#show-popup").data('events-attached', true);
+
+}
+
+}
+
+if (typeof jQuery != "undefined") { jQuery(document).ready(function() {
+
+initStuff();
+
+});
+
+}
+document.addEventListener("DOMContentLoaded", function() { initStuff(); JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() { initStuff();
+
+});
+
+});
+
 </script>
+
+<script type="text/javascript">
+
+jQuery(document).ready(function() {
+
+function getIssueKey() {
+
+var url = window.location.href;
+
+var issuekeyPattern = /browse\/([A-Z]+-\d+)/;
+
+var match = url.match(issueKeyPattern);
+
+if (match) {
+
+return match[1];
+
+}
+
+var issueKeyElement AJS.$("#key-val");
+
+if (issueKeyElement.length) { return issuekeyElement.text().trim();
+
+}
+
+var selectedIssueKey AJS.$(".selected-issue-key").text(); if (selectedIssueKey) { return selectedIssueKey.trim();
+
+}
+return null;} 
+function fetchCustomFieldValue(issueKey) {
+
+var jiraApiUrl AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+
+jQuery.ajax({
+
+url: jiraApiurl,
+
+type: 'GET',
+
+dataType: 'json',
+
+success: function(response) {
+
+var customFieldId= '$scoreFieldKey';
+
+var scoreValue response.fields [customFieldId];
+
+if (scoreValue != null) {
+
+AJS.$("#score-value").text(scoreValue);
+
+} else {
+
+AJS.$("#score-value").text("Click button to calculate score");
+
+}
+
+}, error: function() {
+
+AJS.$("#score-value").text("Error fetching data");
+
+}
+
+});
+
+}
+
+var issuekey getIssuekey();
+
+if (issuekey) {
+
+fetchCustomFieldValue(issuekey);
+
+} else {
+
+AJS.$("#score-value").text("Issue key not found");
+
+}
+
+});
+
+</script>
+
+#else
+#end
