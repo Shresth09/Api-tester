@@ -158,12 +158,21 @@ return null;
 }
 
 
-function setScoreColor(score) {
+function updateScoreDisplay(score) {
     var scoreElement = AJS.$("#score-value");
-    scoreElement.removeClass("red yellow green gray"); // Remove existing color classes
 
+    // Update the text of the span
     if (score === null || score === "" || isNaN(score)) {
         scoreElement.text("No score available");
+    } else {
+        scoreElement.text(score);
+    }
+
+    // Remove existing color classes
+    scoreElement.removeClass("red yellow green gray");
+
+    // Apply color based on score
+    if (score === null || score === "" || isNaN(score)) {
         scoreElement.addClass("gray");
     } else if (score <= 40) {
         scoreElement.addClass("red");
