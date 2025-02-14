@@ -1,0 +1,46 @@
+<script type="text/javascript">
+AJS.toInit(function() {
+    // Function to attach the event listener to the Description field
+    function attachDescriptionListener() {
+        // Ensure the dialog and the editor are fully loaded
+        setTimeout(function() {
+            // Get the TinyMCE editor instance for the Description field
+            var editor = tinymce.get('description');
+            if (editor) {
+                // Avoid attaching multiple event listeners
+                if (!editor.eventsAttached) {
+                    editor.on('blur', function() {
+                        // Get the plain text content from the editor
+                        var descriptionText = editor.getContent({ format: 'text' });
+                        alert("Description:\n" + descriptionText);
+                    });
+                    editor.eventsAttached = true;
+                }
+            } else {
+                // Fallback in case TinyMCE editor is not available
+                var $descriptionField = AJS.$("#description");
+                if ($descriptionField.length && !$descriptionField.data('events-attached')) {
+                    $descriptionField.on('blur', function() {
+                        var descriptionText = $descriptionField.val();
+                        alert("Description:\n" + descriptionText);
+                    });
+                    $descriptionField.data('events-attached', true);
+                }
+            }
+        }, 500); // Adjust the timeout as needed to allow the editor to initialize
+    }
+
+    // Listen for the dialog to be opened
+    AJS.$(document).on('dialogContentReady', function(e, dialog) {
+        // Check if the Create Issue dialog is opened
+        if (dialog.$popup && dialog.$popup.attr('id') === 'create-issue-dialog') {
+            attachDescriptionListener();
+        }
+    });
+
+    // Also, check if the page is in Create Issue mode (full page)
+    if (AJS.$('#create-issue-dialog').length === 0 && AJS.$('#create-issue-submit').length > 0) {
+        attachDescriptionListener();
+    }
+});
+</script>
