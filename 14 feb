@@ -1,3 +1,18 @@
+ function initStuff() {
+
+        // Description blur event handler
+        AJS.$("#description").blur(function() {
+            var descriptionText = AJS.$("#description").val();
+            if (descriptionText.trim() !== "") {
+                alert("Description: " + descriptionText);
+            }
+        });
+
+
+
+
+
+
 <script type="text/javascript">
 AJS.toInit(function() {
     // Function to attach the event listener to the Description field
