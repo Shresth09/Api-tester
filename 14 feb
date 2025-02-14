@@ -11,6 +11,20 @@
 
 
 
+ // Description blur event handler (modified)
+        AJS.$("#description").blur(function() {
+            var descriptionText = AJS.$("#description").val();
+            if (descriptionText.trim() !== "") {
+                AJS.$("#api-response").html("<p>" + descriptionText + "</p>"); // Set description text in modal
+                AJS.dialog2("#api-modal").show(); // Show the modal
+            }
+        });
+
+
+
+
+
+
 
 
 <script type="text/javascript">
