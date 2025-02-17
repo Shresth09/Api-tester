@@ -2,14 +2,9 @@ var cscore = apiResponse.NA.cscore;
 var messages = apiResponse.NA.message;
 var rulesBroken = apiResponse.NA.subkind;
 
-// Check if messages has data
-if (!messages || messages.length === 0) {
-    messages = ["No actions required"];
-}
-
-// Number the messages
-var numberedMessages = messages.map(function(msg, index) {
-    return `${index + 1}. ${msg}`;
+// Add bullet points to messages
+var bulletedMessages = messages.map(function(msg) {
+    return `&#8226; ${msg}`; // Use HTML bullet point
 }).join("<br>");
 
 // Create the table in a formatted string
@@ -25,7 +20,7 @@ var formattedData = `
     </tr>
     <tr>
         <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'><strong>Action Required:</strong></td>
-        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'>${numberedMessages}</td>
+        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'>${bulletedMessages}</td>
     </tr>
 </table>
 `;
