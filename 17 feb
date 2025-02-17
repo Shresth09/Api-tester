@@ -2,10 +2,22 @@ var cscore = apiResponse.NA.cscore;
 var messages = apiResponse.NA.message;
 var rulesBroken = apiResponse.NA.subkind;
 
-// Add hand click icon to messages
-var icon = '&#128073;'; // Hand click emoji
+// Add hand click icon or green tick icon to messages
 var iconMessages = messages.map(function(msg) {
-    return `${icon} ${msg}`;
+    if (msg === "No actions required") {
+        return `&#9989; ${msg}`; // Green tick emoji
+    } else {
+        return `&#128073; ${msg}`; // Hand click emoji
+    }
+}).join("<br>");
+
+// Add cross mark or prohibited mark to rules broken
+var iconRulesBroken = rulesBroken.map(function(rule) {
+    if (rule === "no_error") {
+        return `&#9989; ${rule}`; // Green tick emoji
+    } else {
+        return `&#128683; ${rule}`; // Prohibited mark emoji (⛔)
+    }
 }).join("<br>");
 
 // Create the table in a formatted string
@@ -17,7 +29,7 @@ var formattedData = `
     </tr>
     <tr>
         <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'><strong>Rules Broken:</strong></td>
-        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'>${rulesBroken}</td>
+        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'>${iconRulesBroken}</td>
     </tr>
     <tr>
         <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'><strong>Action Required:</strong></td>
