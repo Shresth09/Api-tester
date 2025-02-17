@@ -2,9 +2,10 @@ var cscore = apiResponse.NA.cscore;
 var messages = apiResponse.NA.message;
 var rulesBroken = apiResponse.NA.subkind;
 
-// Add bullet points to messages
-var bulletedMessages = messages.map(function(msg) {
-    return `&#8226; ${msg}`; // Use HTML bullet point
+// Add hand click icon to messages
+var icon = '&#128073;'; // Hand click emoji
+var iconMessages = messages.map(function(msg) {
+    return `${icon} ${msg}`;
 }).join("<br>");
 
 // Create the table in a formatted string
@@ -20,7 +21,7 @@ var formattedData = `
     </tr>
     <tr>
         <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'><strong>Action Required:</strong></td>
-        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'>${bulletedMessages}</td>
+        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'>${iconMessages}</td>
     </tr>
 </table>
 `;
