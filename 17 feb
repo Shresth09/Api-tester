@@ -2,6 +2,9 @@ var cscore = apiResponse.NA.cscore;
 var messages = apiResponse.NA.message;
 var rulesBroken = apiResponse.NA.subkind;
 
+// Number the messages
+var numberedMessages = messages.map((msg, index) => `${index + 1}. ${msg}`).join("<br>");
+
 // Create the table in a formatted string
 var formattedData = `
 <table style='width: 100%; border-collapse: collapse;'>
@@ -15,7 +18,11 @@ var formattedData = `
     </tr>
     <tr>
         <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'><strong>Action Required:</strong></td>
-        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'>${messages.join("<br>")}</td>
+        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'>${numberedMessages}</td>
     </tr>
 </table>
 `;
+
+// Insert the formatted data into the desired element
+AJS.$("#api-response").html(formattedData);
+AJS.dialog2("#api-modal").show();
