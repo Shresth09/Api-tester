@@ -3,7 +3,9 @@ var messages = apiResponse.NA.message;
 var rulesBroken = apiResponse.NA.subkind;
 
 // Number the messages
-var numberedMessages = messages.map((msg, index) => `${index + 1}. ${msg}`).join("<br>");
+var numberedMessages = messages.map(function(msg, index) {
+    return `${index + 1}. ${msg}`;
+}).join("<br>");
 
 // Create the table in a formatted string
 var formattedData = `
