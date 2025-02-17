@@ -2,6 +2,11 @@ var cscore = apiResponse.NA.cscore;
 var messages = apiResponse.NA.message;
 var rulesBroken = apiResponse.NA.subkind;
 
+// Check if messages has data
+if (!messages || messages.length === 0) {
+    messages = ["No actions required"];
+}
+
 // Number the messages
 var numberedMessages = messages.map(function(msg, index) {
     return `${index + 1}. ${msg}`;
