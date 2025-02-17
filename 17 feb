@@ -1,0 +1,21 @@
+var cscore = apiResponse.NA.cscore;
+var messages = apiResponse.NA.message;
+var rulesBroken = apiResponse.NA.subkind;
+
+// Create the table in a formatted string
+var formattedData = `
+<table style='width: 100%; border-collapse: collapse;'>
+    <tr>
+        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'><strong>Description Score:</strong></td>
+        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'>${cscore}</td>
+    </tr>
+    <tr>
+        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'><strong>Rules Broken:</strong></td>
+        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'>${rulesBroken}</td>
+    </tr>
+    <tr>
+        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'><strong>Action Required:</strong></td>
+        <td style='border: 1px solid #ddd; padding: 8px; font-size: 1.2em; font: Citi-Sans-Text-Regular;'>${messages.join("<br>")}</td>
+    </tr>
+</table>
+`;
