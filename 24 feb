@@ -2,11 +2,11 @@ if (AJS.$("#show-popup").length && !AJS.$("#show-popup").data('events-attached')
     // Event handler for the close buttons
     AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
         AJS.dialog2("#api-modal").hide();
-        AJS.$("#api-modal").attr("aria-hidden", "true").hide();
+        AJS.$("#api-modal").attr("aria-hidden", "true").css("display", "none");
         AJS.$("#api-response").html("Loading data...");
     });
 
-    // Ensure that the show-popup button has the event attached
+    // Ensure the show-popup button has the event attached
     AJS.$("#show-popup").on("click", function() {
         // Your existing code for showing the modal or other actions
     });
