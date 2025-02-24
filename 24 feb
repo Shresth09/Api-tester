@@ -1,0 +1,97 @@
+I understand that you want to assign the value returned from the `fetchCustomFieldValue` function directly to `globalDescription`. However, since `fetchCustomFieldValue` involves an asynchronous AJAX call, you'll need to handle it using Promises or async/await to ensure the value is correctly set.
+
+### Using Promises
+
+You can't directly assign the result of an asynchronous function to a variable, but you can achieve the desired effect using Promises.
+
+### Step 1: Modify `fetchCustomFieldValue` to Return a Promise
+
+Update the `fetchCustomFieldValue` function to return a Promise:
+
+```javascript
+function fetchCustomFieldValue(issueKey) {
+    console.log("Fetching Data from custom Field ID: " + "$scoreFieldKey");
+
+    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+    return new Promise((resolve, reject) => {
+        jQuery.ajax({
+            url: jiraApiUrl,
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                var customFieldId = '$scoreFieldKey';
+                var scoreValue = response.fields[customFieldId];
+                var description = response.fields.description; // Fetch the description
+
+                console.log("DESCRIPTION: " + description);
+                if (scoreValue != null) {
+                    updateScoreDisplay(scoreValue);
+                    console.log("Div Value updated with custom Field ID " + "$scoreFieldKey" + " value: " + scoreValue);
+                } else {
+                    updateScoreDisplay(null);
+                }
+                resolve(description); // Resolve the Promise with the description
+            },
+            error: function() {
+                AJS.$("#score-value").text("Error fetching data");
+                reject("Error fetching data"); // Reject the Promise in case of error
+            }
+        });
+    });
+}
+```
+
+### Step 2: Call `fetchCustomFieldValue` and Assign `globalDescription`
+
+Use the returned Promise to assign the value to `globalDescription`:
+
+```javascript
+var globalDescription = "";
+
+function initStuff() {
+    var globalIssueKey = getIssueKey();
+
+    fetchCustomFieldValue(globalIssueKey).then(description => {
+        globalDescription = description;
+        console.log("DESCRIPTION VALUE: " + globalDescription);
+    }).catch(error => {
+        console.log("Error:", error);
+    });
+}
+
+function getIssueKey() {
+    var url = window.location.href;
+    var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
+    var match = url.match(issueKeyPattern);
+
+    if (match) {
+        return match[1];
+    }
+
+    var issueKeyElement = AJS.$("#key-val");
+    if (issueKeyElement.length) {
+        return issueKeyElement.text().trim();
+    }
+
+    var selectedIssueKey = AJS.$(".selected-issue-key").text();
+    if (selectedIssueKey) {
+        return selectedIssueKey.trim();
+    }
+
+    return null;
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    initStuff();
+    JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
+        initStuff();
+    });
+});
+```
+
+### Explanation
+
+- **Return a Promise**: The `fetchCustomFieldValue` function now returns a Promise that resolves with the description.
+- **Set Global Variable**: Use the `.then` method to assign the `description` to `globalDescription` once the Promise resolves.
+
+By using Promises, you can handle the asynchronous nature of the AJAX call and ensure the `globalDescription` variable is set correctly. Let me know if you need any further adjustments or assistance! 🚀
