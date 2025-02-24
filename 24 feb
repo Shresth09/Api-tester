@@ -1,3 +1,17 @@
+if (AJS.$("#close-button, .aui-dialog2-header-close").data('events-attached') !== true) {
+    AJS.$("#close-button, .aui-dialog2-header-close").on("click", function() {
+        AJS.dialog2("#api-modal").hide();
+        AJS.$("#api-modal").attr("aria-hidden", "true").css("display", "none");
+        AJS.$("#api-response").html("Loading data...");
+    });
+    AJS.$("#close-button, .aui-dialog2-header-close").data('events-attached', true);
+}
+
+
+
+
+
+
 var globalDescription = "";
 
 async function initStuff() {
