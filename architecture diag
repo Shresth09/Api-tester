@@ -1,0 +1,86 @@
+Your structure is off to a great start! Here’s an enhanced version with some added details and organization:
+
+### Architecture Diagram Structure
+
+#### Roles
+- **User**: Interacts with the Jira instance and uses the plugin's features.
+- **Admin**: Configures and manages the plugin within the Jira instance.
+
+#### Components
+1. **Jira Instance**: The base platform where the plugin is installed and operates.
+2. **Jira Flow Agent Plugin**: The main plugin providing the required functionalities.
+3. **Plugin Servlet**: Handles HTTP requests and responses, interacting with the plugin's backend.
+4. **Plugin Database (DB)**: Stores configuration data, project lists, and other necessary information.
+5. **Plugin Components**:
+    - **Web Panel**: UI components and elements visible to users.
+    - **Context Class**: Fetches and processes data required for the plugin.
+    - **Velocity File (popup.vm)**: Template for the popup modal, containing UI elements and event handlers.
+6. **ROM API**: External API that the plugin interacts with to fetch or send data.
+
+#### Data Flow
+1. **Jira Flow Agent**
+    - **Servlet**: Handles requests and updates the database.
+        - **Sets Data in DB**
+    - **Configuration**:
+        - **RQM URL Configuration**
+        - **Project List Data**
+            - `apiUrl`
+            - `selectedProjects`
+
+2. **Plugin Components**
+    - **Web Panel**:
+        - **UI Button on Issue Page**: Triggers actions on user interaction.
+    - **Context Class**:
+        - Fetches final data for:
+            - `apiUrl`
+            - `scoreFieldKey`
+            - `allowedProjectKeys`
+    - **Velocity File (popup.vm)**:
+        - Accesses context class for values.
+        - Handles creation of button and button click events.
+
+### Detailed Breakdown
+
+#### Jira Flow Agent
+1. **Servlet**:
+    - Sets data in the database based on user input or configuration.
+    - Manages incoming requests and processes them.
+2. **RQM URL Configuration**:
+    - Stores and manages the API URL for RQM.
+3. **Project List Data**:
+    - Manages the list of selected projects.
+    - Fields:
+        - `apiUrl`
+        - `selectedProjects`
+
+#### Plugin Components
+1. **Web Panel**:
+    - Contains UI elements such as the button on the issue page.
+    - Handles user interactions.
+2. **Context Class**:
+    - Fetches necessary data for the plugin to function.
+    - Fields:
+        - `apiUrl`
+        - `scoreFieldKey`
+        - `allowedProjectKeys`
+3. **Velocity File (popup.vm)**:
+    - Template file for the popup modal.
+    - Accesses values from the context class.
+    - Handles button creation and click events.
+
+### Enhanced Data Flow
+1. **User Interaction**:
+    - User clicks the UI button on the issue page.
+    - Button click event triggers a request to the plugin servlet.
+2. **Request Handling**:
+    - Plugin servlet processes the request and interacts with the database if necessary.
+3. **Data Fetching**:
+    - Context class fetches required data (`apiUrl`, `scoreFieldKey`, `allowedProjectKeys`).
+4. **API Call**:
+    - Plugin makes an API call to the ROM API using the configured `apiUrl`.
+5. **Response Handling**:
+    - Plugin processes the API response and updates the UI accordingly.
+6. **UI Update**:
+    - Velocity file (popup.vm) updates the UI elements based on the fetched data and response.
+
+This enhanced structure provides a comprehensive overview of the plugin's architecture and data flow, making it easier to understand and document. Let me know if this helps or if you need any further adjustments! 🚀
