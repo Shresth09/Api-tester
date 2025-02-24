@@ -1,3 +1,53 @@
+var globalDescription = "";
+
+async function initStuff() {
+    var globalIssueKey = getIssueKey();
+
+    try {
+        globalDescription = await fetchCustomFieldValue(globalIssueKey);
+        console.log("DESCRIPTION VALUE: " + globalDescription);
+    } catch (error) {
+        console.log("Error:", error);
+    }
+}
+
+function getIssueKey() {
+    var url = window.location.href;
+    var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
+    var match = url.match(issueKeyPattern);
+
+    if (match) {
+        return match[1];
+    }
+
+    var issueKeyElement = AJS.$("#key-val");
+    if (issueKeyElement.length) {
+        return issueKeyElement.text().trim();
+    }
+
+    var selectedIssueKey = AJS.$(".selected-issue-key").text();
+    if (selectedIssueKey) {
+        return selectedIssueKey.trim();
+    }
+
+    return null;
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    initStuff();
+    JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function() {
+        initStuff();
+    });
+});
+
+
+
+
+
+
+
+
+
 I understand that you want to assign the value returned from the `fetchCustomFieldValue` function directly to `globalDescription`. However, since `fetchCustomFieldValue` involves an asynchronous AJAX call, you'll need to handle it using Promises or async/await to ensure the value is correctly set.
 
 ### Using Promises
