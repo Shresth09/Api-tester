@@ -1,0 +1,40 @@
+Alright, let's start with a very basic "Hello World" example in a VM file, focusing on simplicity and getting it to display on your Jira issue page.
+1. Plugin Module (atlassian-plugin.xml):
+We'll use a webPanel to inject our "Hello World" message into the right sidebar.
+<web-panel key="hello-world-panel" location="atl.jira.view.issue.right.context" weight="10">
+    <label key="hello.world.title"/>
+    <resource type="velocity" name="content" location="templates/hello-world.vm"/>
+</web-panel>
+
+2. Velocity Template (templates/hello-world.vm):
+<div id="hello-world-container">
+    <p>Hello, World!</p>
+</div>
+
+Explanation:
+ * web-panel:
+   * This module type tells Jira to create a panel in the specified location.
+   * key: A unique identifier for your panel.
+   * location: atl.jira.view.issue.right.context places it in the right sidebar of the issue page.
+   * weight: Determines the order of panels in the sidebar.
+   * resource: Specifies the VM template to use.
+ * hello-world.vm:
+   * This is a simple HTML file with a "Hello, World!" message.
+Steps to Implement:
+ * Create the Plugin Structure:
+   * If you haven't already, create a basic Jira plugin project structure.
+ * Create the atlassian-plugin.xml:
+   * Place the XML code above in your atlassian-plugin.xml file.
+ * Create the templates Directory:
+   * Create a templates directory in your plugin's resources folder.
+ * Create the hello-world.vm:
+   * Place the VM code above in a file named hello-world.vm within the templates directory.
+ * Build and Install:
+   * Build your plugin and install it in your Jira instance.
+ * View an Issue:
+   * Navigate to a Jira issue, and you should see the "Hello, World!" message in the right sidebar.
+Key Points:
+ * This is the simplest possible example to ensure your plugin is working and that you understand the basic flow.
+ * Once you have this working, you can gradually add more complex logic and functionality.
+ * If you do not see the hello world message, ensure that the plugin is enabled, and that you have cleared your browser cache.
+ * If you are editing the atlassian-plugin.xml or the vm file, you will need to re-install the plugin for the changes to take effect.
