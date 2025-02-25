@@ -1,3 +1,24 @@
+AJS.toInit(function() {
+  // Wait for the page to load
+  AJS.$(document).ready(function() {
+    // Find the comments section
+    var commentsSection = AJS.$('#issue-comments');
+
+    if (commentsSection.length) {
+      // Create a container for your content
+      var helloWorldContainer = AJS.$('<div>', { id: 'hello-world-inline-container' })
+        .html('<p>Hello, World! (Inline above comments)</p>');
+
+      // Insert the container above the comments section
+      commentsSection.before(helloWorldContainer);
+    } else {
+      console.error('Comments section not found.');
+    }
+  });
+});
+
+
+
 Got it. You want to place the "Hello World" message directly above the comments section using a web-section module. Let's make that happen.
 1. Plugin Module (atlassian-plugin.xml):
 <web-section key="hello-world-inline" location="jira.issue.comments.above" weight="10">
