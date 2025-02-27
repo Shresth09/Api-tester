@@ -15,11 +15,11 @@
         #totalEntries {margin-bottom: 20px;}
         .chart-container .chart-legend {
             position: absolute;
-            top: 330px; /* Adjust as needed */
+            top: 330px;
             left: 5px;
             width: 95%;
             overflow-y: auto;
-            max-height: 50px; /* Adjust max height for vertical scroll */
+            max-height: 50px;
         }
     </style>
 </head>
@@ -98,7 +98,7 @@
                                 }
                             },
                             legend: {
-                                display: false, // Hide default legend
+                                display: false,
                             }
                         }
                     });
