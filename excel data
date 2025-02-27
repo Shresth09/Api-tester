@@ -112,11 +112,9 @@
         }
 
         function createDataTable(data) {
-            $(document).ready(function() {
-                $('#dataTable').DataTable({
-                    data: data,
-                    columns: Object.keys(data[0]).map(key => ({ title: key, data: key }))
-                });
+            $('#dataTable').DataTable({ // Removed $(document).ready()
+                data: data,
+                columns: Object.keys(data[0]).map(key => ({ title: key, data: key }))
             });
         }
     </script>
