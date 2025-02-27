@@ -7,15 +7,16 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         body { font-family: sans-serif; }
-        .chart-container { width: 300px; height: 300px; display: inline-block; margin: 20px; vertical-align: top; }
-        #totalEntries { background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; }
+        .chart-container { width: 300px; height: 300px; display: inline-block; margin: 10px; vertical-align: top; } /* Adjusted width and vertical-align */
+        #totalEntries {margin-bottom: 20px;}
     </style>
 </head>
 <body>
     <h1>USPB-Repos_Jan2025 Data Visualizations</h1>
+
+    <input type="file" id="csvFileInput" accept=".csv">
 
     <div id="totalEntries"></div>
 
@@ -25,19 +26,23 @@
     <table id="dataTable" class="display"></table>
 
     <script>
-        window.onload = function() {
-            Papa.parse("USPB-Repos_Jan2025.csv", {
-                download: true,
-                header: true,
-                complete: function(results) {
-                    const data = results.data;
-                    visualizeData(data);
-                }
-            });
-        };
+        document.getElementById('csvFileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file && file.name === 'USPB-Repos_Jan2025.csv') {
+                Papa.parse(file, {
+                    header: true,
+                    complete: function(results) {
+                        const data = results.data;
+                        visualizeData(data);
+                    }
+                });
+            } else {
+                alert("Please select the correct file: USPB-Repos_Jan2025.csv");
+            }
+        });
 
         function visualizeData(data) {
-            document.getElementById('totalEntries').textContent = "Total Entries: " + data.length;
+            document.getElementById('totalEntries').textContent = `Total Entries: ${data.length}`;
             createCharts(data);
             createDataTable(data);
         }
@@ -45,6 +50,7 @@
         function createCharts(data) {
             const chartsDiv = document.getElementById('charts');
             const headers = Object.keys(data[0]);
+            chartsDiv.innerHTML = ''; // Clear previous charts
 
             headers.forEach(header => {
                 const uniqueValues = {};
@@ -56,6 +62,8 @@
                 if (Object.keys(uniqueValues).length > 1 && Object.keys(uniqueValues).length < 20) {
                     const labels = Object.keys(uniqueValues);
                     const values = Object.values(uniqueValues);
+                    const total = values.reduce((a, b) => a + b, 0);
+                    const percentages = values.map(v => ((v / total) * 100).toFixed(1) + '%');
 
                     const chartContainer = document.createElement('div');
                     chartContainer.className = 'chart-container';
@@ -67,66 +75,17 @@
                     new Chart(ctx, {
                         type: 'pie',
                         data: {
-                            labels: labels,
-                            datasets: [{
-                                data: values,
-                                backgroundColor: [
-                                    'rgba(255, 99, 132, 0.7)',
-                                    'rgba(54, 162, 235, 0.7)',
-                                    'rgba(255, 206, 86, 0.7)',
-                                    'rgba(75, 192, 192, 0.7)',
-                                    'rgba(153, 102, 255, 0.7)',
-                                    'rgba(255, 159, 64, 0.7)',
-                                    'rgba(192, 192, 192, 0.7)',
-                                    'rgba(0, 128, 0, 0.7)',
-                                    'rgba(128, 0, 128, 0.7)',
-                                    'rgba(0, 0, 128, 0.7)',
-                                    'rgba(255, 0, 0, 0.7)',
-                                    'rgba(0, 255, 0, 0.7)',
-                                    'rgba(0, 0, 255, 0.7)',
-                                    'rgba(255, 255, 0, 0.7)',
-                                    'rgba(0, 255, 255, 0.7)',
-                                    'rgba(255, 0, 255, 0.7)'
-                                ],
-                                borderWidth: 1
-                            }]
+                            labels: labels.map((label, index) => `${label} (${percentages[index]})`), // Include percentage in labels
+                            datasets: [{ data: values }]
                         },
                         options: {
-                            responsive: true,
                             plugins: {
                                 title: {
                                     display: true,
                                     text: header,
-                                },
-                                datalabels: {
-                                    formatter: (value, ctx) => {
-                                        let sum = 0;
-                                        let dataArr = ctx.chart.data.datasets[0].data;
-                                        dataArr.map(data => {
-                                            sum += data;
-                                        });
-                                        let percentage = (value * 100 / sum).toFixed(2) + "%";
-                                        return percentage + "\n(" + value + "/" + sum + ")";
-                                    },
-                                    color: '#000',
-                                    anchor: 'end',
-                                    align: 'start',
-                                    offset: 10,
-                                    borderWidth: 1,
-                                    borderColor: '#000',
-                                    borderRadius: 25,
-                                    backgroundColor: (context) => {
-                                        return context.dataset.backgroundColor[context.dataIndex];
-                                    },
-                                },
-                            },
-                            elements: {
-                                arc: {
-                                    borderWidth: 0,
-                                },
-                            },
-                        },
-                        plugins: [ChartDataLabels.default]
+                                }
+                            }
+                        }
                     });
                 }
             });
@@ -141,6 +100,5 @@
             });
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 </body>
 </html>
