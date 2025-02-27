@@ -58,8 +58,9 @@
 
         function createCharts(data) {
             const chartsDiv = document.getElementById('charts');
+            chartsDiv.innerHTML = ''; // Clear previous charts
+
             const headers = Object.keys(data[0]);
-            chartsDiv.innerHTML = '';
 
             headers.forEach(header => {
                 const uniqueValues = {};
