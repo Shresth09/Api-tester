@@ -28,7 +28,7 @@
 
     <script>
         document.getElementById('csvFileInput').addEventListener('change', function(event) {
-            const file = event.target.files[0];
+            const file = event.target.files;
             if (file && file.name === 'USPB-Repos_Jan2025.csv') {
                 Papa.parse(file, {
                     header: true,
@@ -50,7 +50,7 @@
 
         function createCharts(data) {
             const chartsDiv = document.getElementById('charts');
-            const headers = Object.keys(data[0]);
+            const headers = Object.keys(data);
 
             headers.forEach(header => {
                 const uniqueValues = {};
@@ -107,7 +107,7 @@
                                 datalabels: {
                                     formatter: (value, ctx) => {
                                         let sum = 0;
-                                        let dataArr = ctx.chart.data.datasets[0].data;
+                                        let dataArr = ctx.chart.data.datasets.data;
                                         dataArr.map(data => {
                                             sum += data;
                                         });
@@ -142,7 +142,7 @@
             $(document).ready(function() {
                 $('#dataTable').DataTable({
                     data: data,
-                    columns: Object.keys(data[0]).map(key => ({ title: key, data: key }))
+                    columns: Object.keys(data).map(key => ({ title: key, data: key }))
                 });
             });
         }
