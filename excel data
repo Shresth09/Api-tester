@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>USPB-Repos_Jan2025 Data Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+    <style>
+        body { font-family: sans-serif; }
+        .chart-container { width: 500px; height: 300px; display: inline-block; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>USPB-Repos_Jan2025 Data Visualizations</h1>
+
+    <input type="file" id="csvFileInput" accept=".csv">
+
+    <div id="charts"></div>
+
+    <h2>Data Table</h2>
+    <table id="dataTable" class="display"></table>
+
+    <script>
+        document.getElementById('csvFileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file && file.name === 'USPB-Repos_Jan2025.csv') {
+                Papa.parse(file, {
+                    header: true,
+                    complete: function(results) {
+                        const data = results.data;
+                        visualizeData(data);
+                    }
+                });
+            } else {
+                alert("Please select the correct file: USPB-Repos_Jan2025.csv");
+            }
+        });
+
+        function visualizeData(data) {
+            createCharts(data);
+            createDataTable(data);
+        }
+
+        function createCharts(data) {
+            const chartsDiv = document.getElementById('charts');
+            const headers = Object.keys(data[0]);
+
+            headers.forEach(header => {
+                const uniqueValues = {};
+                data.forEach(row => {
+                    const value = row[header] || 'Unknown';
+                    uniqueValues[value] = (uniqueValues[value] || 0) + 1;
+                });
+
+                if (Object.keys(uniqueValues).length > 1 && Object.keys(uniqueValues).length < 20) { //add check to avoid charts with too many or too little sections.
+                    const labels = Object.keys(uniqueValues);
+                    const values = Object.values(uniqueValues);
+
+                    const chartContainer = document.createElement('div');
+                    chartContainer.className = 'chart-container';
+                    const canvas = document.createElement('canvas');
+                    chartContainer.appendChild(canvas);
+                    chartsDiv.appendChild(chartContainer);
+
+                    const ctx = canvas.getContext('2d');
+                    new Chart(ctx, {
+                        type: 'pie',
+                        data: { labels: labels, datasets: [{ data: values }] },
+                        options: {
+                            plugins:{
+                                title: {
+                                    display: true,
+                                    text: header,
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function createDataTable(data) {
+            $(document).ready(function() {
+                $('#dataTable').DataTable({
+                    data: data,
+                    columns: Object.keys(data[0]).map(key => ({ title: key, data: key }))
+                });
+            });
+        }
+    </script>
+</body>
+</html>
