@@ -9,6 +9,15 @@ $('#dataTable').DataTable({
 
 
 
+},
+                    "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+                        //remove alert message from screen
+                    },
+                    "fnInitComplete": function(oSettings, json) {
+                         //remove alert message from screen
+                    }
+
+
 
 <!DOCTYPE html>
 <html>
