@@ -19,28 +19,22 @@
 
     <div id="totalEntries"></div>
 
-    <input type="file" id="csvFileInput" accept=".csv">
-
     <div id="charts"></div>
 
     <h2>Data Table</h2>
     <table id="dataTable" class="display"></table>
 
     <script>
-        document.getElementById('csvFileInput').addEventListener('change', function(event) {
-            const file = event.target.files;
-            if (file && file.name === 'USPB-Repos_Jan2025.csv') {
-                Papa.parse(file, {
-                    header: true,
-                    complete: function(results) {
-                        const data = results.data;
-                        visualizeData(data);
-                    }
-                });
-            } else {
-                alert("Please select the correct file: USPB-Repos_Jan2025.csv");
-            }
-        });
+        window.onload = function() {
+            Papa.parse("USPB-Repos_Jan2025.csv", {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    const data = results.data;
+                    visualizeData(data);
+                }
+            });
+        };
 
         function visualizeData(data) {
             document.getElementById('totalEntries').textContent = "Total Entries: " + data.length;
@@ -50,7 +44,7 @@
 
         function createCharts(data) {
             const chartsDiv = document.getElementById('charts');
-            const headers = Object.keys(data);
+            const headers = Object.keys(data[0]);
 
             headers.forEach(header => {
                 const uniqueValues = {};
@@ -107,7 +101,7 @@
                                 datalabels: {
                                     formatter: (value, ctx) => {
                                         let sum = 0;
-                                        let dataArr = ctx.chart.data.datasets.data;
+                                        let dataArr = ctx.chart.data.datasets[0].data;
                                         dataArr.map(data => {
                                             sum += data;
                                         });
@@ -142,10 +136,11 @@
             $(document).ready(function() {
                 $('#dataTable').DataTable({
                     data: data,
-                    columns: Object.keys(data).map(key => ({ title: key, data: key }))
+                    columns: Object.keys(data[0]).map(key => ({ title: key, data: key }))
                 });
             });
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 </body>
 </html>
