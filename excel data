@@ -9,8 +9,11 @@
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
     <style>
         body { font-family: sans-serif; }
-        .chart-container { width: 300px; height: 300px; display: inline-block; margin: 10px; vertical-align: top; } /* Adjusted width and vertical-align */
+        .chart-container { width: 300px; height: 350px; display: inline-block; margin: 10px; vertical-align: top; position: relative; } /* Increased height and added position: relative */
+        .chart-container canvas { position: absolute; top: 30px; left: 0; } /* Adjusted canvas position */
+        .chart-container h3 { position: absolute; top: 0; left: 0; width: 100%; text-align: center; } /* Added h3 styling */
         #totalEntries {margin-bottom: 20px;}
+        #charts {overflow-x: auto; white-space: nowrap;}/*Added a horizontal scroll bar*/
     </style>
 </head>
 <body>
@@ -50,7 +53,7 @@
         function createCharts(data) {
             const chartsDiv = document.getElementById('charts');
             const headers = Object.keys(data[0]);
-            chartsDiv.innerHTML = ''; // Clear previous charts
+            chartsDiv.innerHTML = '';
 
             headers.forEach(header => {
                 const uniqueValues = {};
@@ -59,7 +62,7 @@
                     uniqueValues[value] = (uniqueValues[value] || 0) + 1;
                 });
 
-                if (Object.keys(uniqueValues).length > 1 && Object.keys(uniqueValues).length < 20) {
+                if (Object.keys(uniqueValues).length > 1 && Object.keys(uniqueValues).length < 40) { // Changed to 40
                     const labels = Object.keys(uniqueValues);
                     const values = Object.values(uniqueValues);
                     const total = values.reduce((a, b) => a + b, 0);
@@ -67,6 +70,9 @@
 
                     const chartContainer = document.createElement('div');
                     chartContainer.className = 'chart-container';
+                    const headerElement = document.createElement('h3'); // Create header element
+                    headerElement.textContent = header;
+                    chartContainer.appendChild(headerElement);
                     const canvas = document.createElement('canvas');
                     chartContainer.appendChild(canvas);
                     chartsDiv.appendChild(chartContainer);
@@ -75,14 +81,13 @@
                     new Chart(ctx, {
                         type: 'pie',
                         data: {
-                            labels: labels.map((label, index) => `${label} (${percentages[index]})`), // Include percentage in labels
+                            labels: labels.map((label, index) => `${label} (${percentages[index]})`),
                             datasets: [{ data: values }]
                         },
                         options: {
                             plugins: {
                                 title: {
-                                    display: true,
-                                    text: header,
+                                    display: false, // Remove default title
                                 }
                             }
                         }
