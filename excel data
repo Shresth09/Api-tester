@@ -11,8 +11,6 @@
         body { font-family: sans-serif; }
         .chart-container { width: 300px; height: 350px; display: inline-block; margin: 10px; vertical-align: top; position: relative; }
         .chart-container canvas { position: absolute; top: 30px; left: 0; }
-        .chart-container h3 { position: absolute; top: 0; left: 0; width: 100%; text-align: center; }
-        #totalEntries {margin-bottom: 20px;}
         .chart-container .chart-legend {
             position: absolute;
             top: 330px;
@@ -21,6 +19,7 @@
             overflow-y: auto;
             max-height: 50px;
         }
+        #totalEntries {margin-bottom: 20px;}
     </style>
 </head>
 <body>
@@ -52,7 +51,7 @@
         });
 
         function visualizeData(data) {
-            document.getElementById('totalEntries').textContent = `Total Entries: ${data.length}`;
+            document.getElementById('totalEntries').textContent = `Total Entries: ${data.length - 1}`;
             createCharts(data);
             createDataTable(data);
         }
@@ -77,9 +76,6 @@
 
                     const chartContainer = document.createElement('div');
                     chartContainer.className = 'chart-container';
-                    const headerElement = document.createElement('h3');
-                    headerElement.textContent = header;
-                    chartContainer.appendChild(headerElement);
                     const canvas = document.createElement('canvas');
                     chartContainer.appendChild(canvas);
                     chartsDiv.appendChild(chartContainer);
@@ -94,7 +90,8 @@
                         options: {
                             plugins: {
                                 title: {
-                                    display: false,
+                                    display: true,
+                                    text: header,
                                 }
                             },
                             legend: {
@@ -112,9 +109,11 @@
         }
 
         function createDataTable(data) {
-            $('#dataTable').DataTable({ // Removed $(document).ready()
-                data: data,
-                columns: Object.keys(data[0]).map(key => ({ title: key, data: key }))
+            $(document).ready(function() {
+                $('#dataTable').DataTable({
+                    data: data,
+                    columns: Object.keys(data[0]).map(key => ({ title: key, data: key }))
+                });
             });
         }
     </script>
