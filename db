@@ -1,0 +1,238 @@
+Below is a complete, end-to-end example that shows you how to create a custom SQL table in Jira’s own database by using Atlassian’s recommended **Active Objects (AO)** framework, along with a web panel (Velocity template) and a servlet that uses AO to insert data into your table. Using AO not only creates your table within the Jira instance safely but also makes it easier to manage schema migrations and data through Jira’s infrastructure.
+
+> **Overview Flow**  
+> 1. At plugin activation, AO scans your entity interfaces in the configured package and creates the corresponding table in Jira’s database.  
+> 2. A web panel (displayed on the Jira issue page) renders a Velocity template with a button.  
+> 3. Clicking the button sends an AJAX POST request to a servlet endpoint.  
+> 4. The servlet uses the injected Active Objects instance to create a record in your custom table.
+
+---
+
+## Step 1. Configure Your Plugin Modules in `atlassian-plugin.xml`
+
+Create or update your `atlassian-plugin.xml` file to include:  
+- An AO module so that AO will scan for your entity classes and create the SQL table.  
+- A web panel module pointing to your Velocity template.  
+- A servlet module that handles AJAX requests from your web panel.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<atlassian-plugin key="com.example.plugins.tutorial" name="Tutorial Plugin" plugins-version="2">
+    <plugin-info>
+        <description>A sample plugin that uses Active Objects to create a SQL table inside Jira.</description>
+        <version>1.0</version>
+        <vendor name="Your Company" url="http://www.example.com"/>
+    </plugin-info>
+
+    <!-- Import the Active Objects component -->
+    <component-import key="activeObjects" interface="net.java.ao.ActiveObjects"/>
+
+    <!-- AO module: this tells Jira to scan the package for AO entity definitions -->
+    <ao key="aoMigration" packages="com.example.plugins.ao"/>
+
+    <!-- Web Panel Module -->
+    <web-panel key="Jira-Flow-Agent" location="atl.jira.view.issue.right.context" weight="1">
+        <context-provider class="com.example.plugins.PopupContextProvider"/>
+        <resource type="velocity" name="view" location="templates/popup.vm"/>
+        <description>This web panel displays a button on the issue page.</description>
+    </web-panel>
+
+    <!-- Servlet Module -->
+    <servlet name="Issue CRUD" i18n-name-key="issue-crud.name" key="issue-crud"
+             class="com.example.plugins.tutorial.servlet.IssueCRUD">
+        <description key="issue-crud.description">This servlet handles CRUD operations using Active Objects.</description>
+        <url-pattern>/issuecrud/*</url-pattern>
+        <!-- Example parameters for the servlet -->
+        <param name="templateRenderer" value="templateRenderer"/>
+        <param name="pluginSettingsFactory" value="pluginSettingsFactory"/>
+    </servlet>
+</atlassian-plugin>
+```
+
+*Notes:*  
+- The `<ao>` element tells Jira’s Active Objects framework which package to scan for your entity (table) definitions.  
+- The servlet’s URL pattern (`/issuecrud/*`) lets you map sub-path requests (e.g. `/issuecrud/updateTable`) to specific actions.
+
+---
+
+## Step 2. Define the Active Objects Entity
+
+Create an AO entity interface that describes your table’s columns. AO will automatically create this table in the Jira database on plugin installation.
+
+Create the file `JiraPluginData.java` in the package `com.example.plugins.ao`:
+
+```java
+package com.example.plugins.ao;
+
+import java.util.Date;
+import net.java.ao.Entity;
+import net.java.ao.schema.Table;
+
+@Table("JIRA_PLUGIN_DATA") // This defines the table name in the database.
+public interface JiraPluginData extends Entity {
+    // Issue identifier (you can store Jira issue key or id)
+    String getIssueId();
+    void setIssueId(String issueId);
+
+    // A summary comment associated with an issue
+    String getCommentSummary();
+    void setCommentSummary(String commentSummary);
+
+    // The creation timestamp
+    Date getCreatedAt();
+    void setCreatedAt(Date createdAt);
+}
+```
+
+*Key Points:*  
+- The `@Table` annotation fixes the physical table name in the database.
+- AO automatically adds a primary key column (usually called `ID`).
+
+---
+
+## Step 3. Create the Servlet to Insert Data Using Active Objects
+
+This servlet will handle the AJAX POST call from your web panel. It uses injection to get an instance of `ActiveObjects` so that you can perform database operations without writing raw SQL.
+
+Create the file `IssueCRUD.java` in the package `com.example.plugins.tutorial.servlet`:
+
+```java
+package com.example.plugins.tutorial.servlet;
+
+import com.atlassian.activeobjects.external.ActiveObjects;
+import com.example.plugins.ao.JiraPluginData;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.io.IOException;
+import java.util.Date;
+
+public class IssueCRUD extends HttpServlet {
+
+    private final ActiveObjects activeObjects;
+
+    // Use constructor injection (Jira’s plugin framework supports Spring DI)
+    @Autowired
+    public IssueCRUD(ActiveObjects activeObjects) {
+        this.activeObjects = activeObjects;
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Get the extra path information, e.g. "/updateTable"
+        String pathInfo = req.getPathInfo();  // Expecting: /updateTable
+
+        if ("/updateTable".equals(pathInfo)) {
+            updateTable(req, resp);
+        } else {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unknown action: " + pathInfo);
+        }
+    }
+
+    private void updateTable(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // Retrieve parameters from the request (sent by AJAX)
+        String issueId = req.getParameter("issueId");
+        String commentSummary = req.getParameter("commentSummary");
+
+        if (issueId == null || commentSummary == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
+            return;
+        }
+
+        // Use Active Objects to create and store a record in a transaction
+        activeObjects.executeInTransaction(() -> {
+            JiraPluginData data = activeObjects.create(JiraPluginData.class);
+            data.setIssueId(issueId);
+            data.setCommentSummary(commentSummary);
+            data.setCreatedAt(new Date());
+            data.save();
+            return null;
+        });
+
+        // Send back an OK response if successful
+        resp.setStatus(HttpServletResponse.SC_OK);
+    }
+}
+```
+
+*Important Considerations:*  
+- The servlet uses the Active Objects API, meaning you do not manage raw JDBC connections manually.  
+- Constructor injection with `@Autowired` ensures the `ActiveObjects` instance is provided by Jira’s Spring container.
+
+---
+
+## Step 4. Create the Velocity Template (`popup.vm`)
+
+This file is rendered inside the Jira issue view (via your web panel). It contains a button that, when clicked, triggers an AJAX call to the servlet endpoint.
+
+Create the file `popup.vm` in your plugin’s `templates` directory:
+
+```html
+<div>
+    <button id="updateTableButton">Update Table</button>
+</div>
+
+<script type="text/javascript">
+    AJS.$(document).ready(function() {
+        AJS.$("#updateTableButton").click(function() {
+            // Retrieve the issue ID using Jira’s meta tags
+            var issueId = AJS.Meta.get("issue-id");
+            // Here you can collect the comment summary via an input field or other source.
+            var commentSummary = "Your comment summary data"; 
+
+            AJS.$.ajax({
+                type: "POST",
+                // Use AJS.contextPath() so that the servlet URL is correctly resolved.
+                url: AJS.contextPath() + "/issuecrud/updateTable",
+                data: {
+                    issueId: issueId,
+                    commentSummary: commentSummary
+                },
+                success: function(response) {
+                    alert("Table updated successfully!");
+                },
+                error: function(xhr, status, error) {
+                    alert("Error updating table: " + xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+```
+
+*Tips:*  
+- You can expand this code to collect dynamic data from your page.
+- The AJAX call targets `/issuecrud/updateTable` because our servlet’s URL pattern is `/issuecrud/*`.
+
+---
+
+## Step 5. Build, Deploy, and Test Your Plugin
+
+1. **Build Your Plugin:**  
+   Use the Atlassian SDK (for example, run `atlas-package`) to build your plugin. During the plugin installation, the Active Objects module will automatically scan for your entity (`JiraPluginData`) and create the table `JIRA_PLUGIN_DATA` in Jira’s database.
+
+2. **Deploy Your Plugin:**  
+   Deploy your plugin to your Jira instance (via “Manage apps” in Jira or using `atlas-run` for a development instance).
+
+3. **Test the Implementation:**  
+   - Open an issue in Jira where your web panel is visible.
+   - Click the **Update Table** button.  
+   - The AJAX call should trigger your servlet, and Active Objects will insert a record into the `JIRA_PLUGIN_DATA` table.  
+   - Verify the record by inspecting your Jira database or via additional plugin functionality (such as listing entries).
+
+---
+
+## Additional Considerations
+
+- **Error Handling & Security:**  
+  Validate and sanitize all incoming parameters. In production code, you might also implement permission checks.
+
+- **Logging:**  
+  Consider using a logging framework (e.g., SLF4J) to log errors instead of printing stack traces.
+
+- **Extending AO Entities:**  
+  You can add more fields or even relationships between AO entities as your plugin grows. Active Objects supports schema migrations, which help when you need to alter the table structure in future releases.
+
+This complete solution uses Active Objects to seamlessly create and manage a custom SQL table within your Jira instance, while integrating with your UI (via Velocity) and servlet logic for dynamic operations. Enjoy coding, and feel free to ask if you need any further clarification or enhancements!
