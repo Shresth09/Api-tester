@@ -1,3 +1,15 @@
+var currentStoryDescriptionDiv = `
+    <div style="margin-top: 10px;">
+        <span style="color: #B23802; font-weight: bold;">Current Story Description -</span>
+    </div>
+    <div style="margin-top: 5px;">
+        The user story has some issues related to being well-formed, atomic, minimal, problem-oriented, unambiguous, a full sentence, estimable, and ADA compliant.<br><br>
+        It needs to be rewritten with a clearer focus on the user's perspective, broken down into smaller stories, and avoid implementation details.
+    </div>
+`;
+
+
+
 var formattedData = `
     <u><b>Overall Score: ${cscore}%</b></u><br>
 
