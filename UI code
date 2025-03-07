@@ -1,0 +1,55 @@
+var formattedData = `
+    <u><b>Overall Score: ${cscore}%</b></u><br>
+
+    <div style='font-color:#B23802;'>
+        Current Story Description -
+    </div>
+
+    ${globalDescription}<br>
+
+    <div>
+        <h3>Suggested Story Description</h3>
+        <textarea id="suggested-story-description" class="textarea">${apiResponse.NA.suggestedStory}</textarea>
+    </div>
+
+    <table id="rules-table" class="aui">
+        <thead>
+            <tr>
+                <th>Rule</th>
+                <th>Status</th>
+                <th>Link</th>
+            </tr>
+        </thead>
+        <tbody>
+    `;
+
+apiResponse.NA.rules.forEach(function(rule) {
+    formattedData += `
+            <tr>
+                <td>${rule.name}</td>
+                <td>${rule.status === "passed" ? "&#9989;" : "&#9940;"} ${rule.status}</td>
+                <td><a href="${rule.link}">Link</a></td>
+            </tr>
+    `;
+});
+
+formattedData += `
+        </tbody>
+    </table>
+
+    <p><a href="link" target="_blank">Link to ROM</a></p>
+
+    <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+            <button id="yes-button" class="aui-button aui-button-primary">Yes</button>
+            <button id="no-button" class="aui-button">No</button>
+        </div>
+        <div class="aui-dialog2-footer-hint">
+            3 Stars
+        </div>
+    </footer>
+`;
+
+AJS.$("#api-response").html(formattedData);
+
+AJS.dialog2("#api-modal").show();
