@@ -1,3 +1,24 @@
+var suggestedStoryDescriptionDiv = `
+    <div style="margin-top: 20px;">
+        <span style="color: #B23802; font-weight: bold;">Suggested Story Description -</span>
+    </div>
+
+    <div style="margin-top: 5px;">
+        <textarea id="suggested-story-textarea" style="width: 100%; height: 100px; padding: 5px;">
+            As a developer, I want to create an Angular application with a user interface and deploy it to LSE so that users can access the application's features.
+        </textarea>
+    </div>
+
+    <div style="margin-top: 10px;">
+        <button class="aui-button" id="accept-suggested-story">
+            <span class="aui-icon aui-icon-small aui-iconfont-approve">Accept</span>
+        </button>
+    </div>
+`;
+
+
+
+
 var currentStoryDescriptionDiv = `
     <div style="margin-top: 10px;">
         <span style="color: #B23802; font-weight: bold;">Current Story Description -</span>
