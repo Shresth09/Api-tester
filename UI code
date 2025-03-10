@@ -1,3 +1,19 @@
+<div style="margin-top: 10px;">
+    <span style="color: #B23802; font-weight: bold; cursor: pointer;" onclick="toggleDescription('current-story-description')">
+        <span id="current-story-toggle">+</span> Current Story Description -
+    </span>
+</div>
+
+<div id="current-story-description" style="margin-top: 5px; display: none;">
+    ${globalDescription}
+</div>
+
+
+
+
+
+
+
 var rulesTableDiv = `
     <div style="margin-top: 20px;">
         <b>Rules Broken - 8 out of 14</b>
