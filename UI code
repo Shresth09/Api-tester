@@ -18,7 +18,12 @@
         transition: transform 0.3s ease; /* Smooth transition for rotation */
     }
 </style>
-
+AJS.$("#accept-suggested-story").on("click", function() {
+            // Your logic for handling the Accept button click
+            alert("Description updated successfully");
+            // Add your api call here to update Description
+            AJS.dialog2("#api-modal").hide(); // Close the modal
+        });
 
     
 
