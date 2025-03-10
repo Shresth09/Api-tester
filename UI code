@@ -1,38 +1,36 @@
-<div style="margin-top: 10px;">
+<div style="margin-top: 10px; border-top: 1px solid lightgrey; border-bottom: 1px solid lightgrey; padding: 10px 0;">
     <details class="collapsible-section">
-        <summary style="color: #B23802; font-weight: bold; cursor: pointer; list-style: none;">
-            Current Story Description -
+        <summary style="color: #B23802; font-weight: bold; cursor: pointer; list-style: none; display: flex; align-items: center;">
+            <span class="circle">+</span> 
+            <span style="margin-left: 5px;">Current Story Description -</span>
         </summary>
         <div style="margin-top: 5px;">
             ${globalDescription}
         </div>
     </details>
 </div>
+ 
 .collapsible-section summary::before {
-    content: "+ ";
-    margin-right: 5px;
-    font-weight: bold;
+    /* Remove the ::before content */
 }
 
 .collapsible-section[open] summary::before {
-    content: "- "; /* This won't work in pure CSS */
+    /* Remove the ::before content */
 }
 
-/* Optional: Style the disclosure triangle */
-.collapsible-section summary::-webkit-details-marker {
-    display: none; /* Hide the default triangle */
+.collapsible-section summary .circle {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid #B23802;
+    text-align: center;
+    line-height: 18px; /* Vertically center the text */
 }
 
-.collapsible-section summary::after {
-    content: "▶"; /* Or any other triangle symbol */
-    float: right;
-    transition: transform 0.3s ease-in-out;
-}
+/* ... rest of your CSS ... */
 
-.collapsible-section[open] summary::after {
-    transform: rotate(90deg);
-}
-
+    
 
 
 
