@@ -96,6 +96,12 @@ var suggestedStoryDescriptionDiv = `
 `;
 
 
+
+<script>
+    document.getElementById('accept-suggested-story').addEventListener('click', function() {
+        alert('Description updated successfully');
+    });
+</script>
 -=-) - 
 
 
