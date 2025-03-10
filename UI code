@@ -1,34 +1,24 @@
 <div style="margin-top: 10px; border-top: 1px solid lightgrey; border-bottom: 1px solid lightgrey; padding: 10px 0;">
     <details class="collapsible-section">
-        <summary style="color: #B23802; font-weight: bold; cursor: pointer; list-style: none; display: flex; align-items: center;">
-            <span class="circle">+</span> 
-            <span style="margin-left: 5px;">Current Story Description -</span>
+        <summary style="color: #B23802; font-weight: bold; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between;">
+            <span style="margin-right: 5px;">Current Story Description -</span>
+            <span class="arrow">▶</span> 
         </summary>
         <div style="margin-top: 5px;">
             ${globalDescription}
         </div>
     </details>
 </div>
- 
-.collapsible-section summary::before {
-    /* Remove the ::before content */
-}
 
-.collapsible-section[open] summary::before {
-    /* Remove the ::before content */
-}
+<style>
+    .collapsible-section[open] .arrow {
+        transform: rotate(90deg); /* Rotate the arrow when the section is open */
+    }
+    .arrow {
+        transition: transform 0.3s ease; /* Smooth transition for rotation */
+    }
+</style>
 
-.collapsible-section summary .circle {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 1px solid #B23802;
-    text-align: center;
-    line-height: 18px; /* Vertically center the text */
-}
-
-/* ... rest of your CSS ... */
 
     
 
