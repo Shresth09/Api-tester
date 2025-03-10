@@ -1,12 +1,38 @@
 <div style="margin-top: 10px;">
-    <span style="color: #B23802; font-weight: bold; cursor: pointer;" onclick="toggleDescription('current-story-description')">
-        <span id="current-story-toggle">+</span> Current Story Description -
-    </span>
+    <details class="collapsible-section">
+        <summary style="color: #B23802; font-weight: bold; cursor: pointer; list-style: none;">
+            Current Story Description -
+        </summary>
+        <div style="margin-top: 5px;">
+            ${globalDescription}
+        </div>
+    </details>
 </div>
+.collapsible-section summary::before {
+    content: "+ ";
+    margin-right: 5px;
+    font-weight: bold;
+}
 
-<div id="current-story-description" style="margin-top: 5px; display: none;">
-    ${globalDescription}
-</div>
+.collapsible-section[open] summary::before {
+    content: "- "; /* This won't work in pure CSS */
+}
+
+/* Optional: Style the disclosure triangle */
+.collapsible-section summary::-webkit-details-marker {
+    display: none; /* Hide the default triangle */
+}
+
+.collapsible-section summary::after {
+    content: "▶"; /* Or any other triangle symbol */
+    float: right;
+    transition: transform 0.3s ease-in-out;
+}
+
+.collapsible-section[open] summary::after {
+    transform: rotate(90deg);
+}
+
 
 
 
