@@ -1,3 +1,24 @@
+AJS.$("#download-button").on("click", function() {
+    var downloadvar = AJS.$("#api-response").html();
+
+    // Create a new window for the PDF
+    var printWindow = window.open('', '_blank');
+    printWindow.document.open();
+    printWindow.document.write('<html><head><title>User Story Report</title></head><body>' + downloadvar + '</body></html>');
+    printWindow.document.close();
+
+    // Trigger the print dialog (which can be saved as PDF)
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+});
+
+
+
+
+
+
+
 <div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display: none;">
 
     <header class="aui-dialog2-header">
