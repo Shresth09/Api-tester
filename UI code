@@ -1,3 +1,36 @@
+<div id="api-modal" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true" style="display: none;">
+
+  <header class="aui-dialog2-header">
+    <h2 class="aui-dialog2-header-main"> <small> CITI - PLUGIN </small><br>User Story Scanner</h2>
+    <a class="aui-dialog2-header-close">
+      <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+    </a>
+  </header>
+
+  <div class="aui-dialog2-content">
+    <div id="api-response">Loading data...</div>
+  </div>
+
+  <footer class="aui-dialog2-footer">
+    <div class="aui-dialog2-footer-actions">
+      <a id="download-button" class="aui-button" href="#" download="data.txt">
+        <span class="aui-icon aui-icon-small aui-iconfont-download">Download</span>
+      </a>
+      <button id="close-button" class="aui-button aui-button-primary">Close</button>
+    </div>
+  </footer>
+
+</div>
+
+
+
+
+
+
+
+
+
+
 <div style="margin-top: 10px; border-top: 1px solid lightgrey; border-bottom: 1px solid lightgrey; padding: 10px 0;">
     <details class="collapsible-section">
         <summary style="color: #B23802; font-weight: bold; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between;">
