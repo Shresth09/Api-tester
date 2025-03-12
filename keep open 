@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Keep Screen Awake</title>
+<style>
+body {
+  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  background-color: #f0f0f0;
+}
+
+#container {
+  text-align: center;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: white;
+}
+
+#status {
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+#instructions {
+  margin-top: 10px;
+  font-size: smaller;
+  color: grey;
+}
+</style>
+</head>
+<body>
+
+<div id="container">
+  <h1>Screen Awake</h1>
+  <p>This page will prevent your screen from sleeping.</p>
+  <div id="status">Active</div>
+  <div id="instructions">Keep this tab open.</div>
+</div>
+
+<script>
+function keepAwake() {
+  // Simple method: Just set an interval to move the mouse slightly.
+  // Note: This method may not work in all VDI environments, as some restrict mouse movement.
+  // If this method fails, the organization will likely need to adjust the VDI settings.
+  // The noSleep.js library is a more reliable approach, but requires the browser to support the wake lock API.
+  // The wake lock API is not universally supported, and some browsers require HTTPS.
+  // This simple method is a good starting point.
+  function moveMouse() {
+    window.dispatchEvent(new MouseEvent('mousemove', {
+      clientX: 0,
+      clientY: 0,
+      bubbles: false,
+      cancelable: false,
+      view: window
+    }));
+  }
+
+  setInterval(moveMouse, 60000); // Move mouse every minute (adjust as needed)
+}
+
+keepAwake();
+
+// Optional: Use the Wake Lock API (if available and HTTPS is used).
+// The wake lock API is the most reliable way to prevent screen sleep.
+// However, it requires browser support and HTTPS.
+// You might need to serve this page via a local web server to use HTTPS.
+// If your organization allows it, you can use a service like ngrok to tunnel to your local web server.
+// Example using the Wake Lock API (requires HTTPS and browser support):
+
+/*
+if ('wakeLock' in navigator) {
+  let wakeLock = null;
+
+  async function requestWakeLock() {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      console.log('Wake Lock active');
+      document.getElementById('status').textContent = "Wake Lock: Active";
+
+      wakeLock.addEventListener('release', () => {
+        console.log('Wake Lock released');
+        document.getElementById('status').textContent = "Inactive";
+      });
+    } catch (err) {
+      console.error(`${err.name}, ${err.message}`);
+      document.getElementById('status').textContent = "Wake Lock: Error";
+    }
+  }
+
+  requestWakeLock();
+
+  document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible') {
+      requestWakeLock();
+    }
+  });
+
+} else {
+    console.log("Wake lock API not supported");
+    document.getElementById("status").textContent = "Wake Lock: Not Supported. Using Mouse Movement.";
+}
+*/
+
+</script>
+
+</body>
+</html>
