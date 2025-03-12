@@ -1,0 +1,28 @@
+<web-panel key="my-user-profile-panel" location="atl.jira.user.profile.content" weight="1">
+  <!-- Optional context provider if you need to supply data specific to the user profile -->
+  <context-provider class="com.example.plugins.MyUserProfileContextProvider"/>
+  <!-- Velocity template that renders your button -->
+  <resource type="velocity" name="view" location="/templates/my-user-profile-button.vm"/>
+  <description>This panel adds a custom button on the user profile page.</description>
+</web-panel>
+
+
+<web-item key="my-user-profile-button" name="My Custom Button" section="atl.jira.user.profile.actions" weight="100">
+  <label key="my.user.profile.button.label">Custom Action</label>
+  <link>/plugins/servlet/myCustomAction?userId=$user.id</link>
+  <description>A button displayed within the user profile actions section.</description>
+</web-item>
+
+
+
+<web-section name="User Profile Actions" key="my-user-profile-websection" location="atl.jira.user.profile.actions" weight="1000">
+  <label key="my.user.profile.actions.label">User Profile Actions</label>
+  <description>This web section provides additional actions for user profiles.</description>
+</web-section>
+
+<web-item name="Profile Button" key="user-profile-button" section="atl.jira.user.profile.actions/my-user-profile-websection" weight="1">
+  <label key="my.user.profile.button.label">My Custom Button</label>
+  <!-- Link to your servlet or action -->
+  <link>/plugins/servlet/myProfileAction?userId=$user.id</link>
+  <description>This button links to a custom profile-related action.</description>
+</web-item>
