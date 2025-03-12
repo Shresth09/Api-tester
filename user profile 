@@ -1,3 +1,25 @@
+### **Potential Location Keys for User Profile Extensions**
+
+1. **`atl.jira.user.profile.sidebar`**  
+   - **Purpose:** Many developers have attempted to inject content into the sidebar (generally on the left side) of the user profile using identifiers like this.  
+   - **Note:** This key isn’t officially prominent in the documentation for Jira 8.20.11, so you may need to verify its availability on your instance by inspecting the DOM.
+
+2. **`atl.jira.user.profile.left`**  
+   - **Purpose:** Some community examples refer to a “left” location when targeting the user profile. Although less common, it’s worth a trial if you’re aiming specifically for the left panel.  
+   - **Note:** As with the sidebar key, you’ll need to double-check if this key is recognized in your Jira configuration.
+
+3. **`atl.jira.user.profile.content`**  
+   - **Purpose:** Typically, this loads additional content in the main area of the profile page. If your design allows for it, you can consider re-arranging your content so it appears as part of the core profile rather than strictly in the left panel.
+   - **Note:** This is more common and documented, but may not match your desired "left panel" placement.
+
+4. **`atl.jira.user.profile.actions`**  
+   - **Purpose:** Often used for action buttons or links; while it might not be strictly in the left panel, it is another candidate for displaying additional controls on the profile page.
+   - **Note:** The actual placement (header, right/left) can depend on Jira’s UI layout, which sometimes changes between versions.
+
+
+
+
+
 <web-panel key="my-user-profile-panel" location="atl.jira.user.profile.content" weight="1">
   <!-- Optional context provider if you need to supply data specific to the user profile -->
   <context-provider class="com.example.plugins.MyUserProfileContextProvider"/>
