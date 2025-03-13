@@ -1,3 +1,77 @@
+Yes, you can use CSS to position the score and message in the absolute center of the arc! To do this, you can wrap your arc and the score text in a container element. Then, use CSS to center the text absolutely within the container. Here's how you can do it:
+
+### Updated Code
+```html
+<div class="arc-container">
+  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+      viewBox="37 -5 120 100" width="240" height="200">
+    <defs>
+      <linearGradient id="arcGradient" gradientUnits="objectBoundingBox">
+        <stop offset="0%" stop-color="red"/>
+        <stop offset="28%" stop-color="darkorange"/>
+        <stop offset="50%" stop-color="khaki"/>
+        <stop offset="80%" stop-color="yellowgreen"/>
+        <stop offset="100%" stop-color="limegreen"/>
+      </linearGradient>
+    </defs>
+    <path class="grey" d="M55,90 A55,55 0 1,1 140,90" style="fill:none;"/>
+    <path class="green" d="M55,90 A55,55 0 1,1 140,90" style="fill:none;"/>
+  </svg>
+  <div class="score-text">10</div>
+  <div class="message-text">Good</div>
+</div>
+```
+
+### CSS
+```css
+.arc-container {
+  position: relative;
+  width: 240px; /* Match the SVG width */
+  height: 200px; /* Match the SVG height */
+}
+
+.score-text,
+.message-text {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: Arial, sans-serif;
+  color: black;
+  text-align: center;
+}
+
+.score-text {
+  top: 45%; /* Adjust vertical position for the score */
+  font-size: 16px;
+}
+
+.message-text {
+  top: 55%; /* Adjust vertical position for the message */
+  font-size: 12px;
+}
+```
+
+### Explanation:
+1. **Container Setup**:
+   - The `arc-container` element is the wrapper for both the SVG and the centered text.
+   - Set `position: relative` on the container to allow absolutely positioning the child elements relative to it.
+
+2. **Centering the Text**:
+   - Use `left: 50%` and `transform: translate(-50%, -50%)` to horizontally and vertically center the text within the container.
+
+3. **Separate Styles for Score and Message**:
+   - The `score-text` and `message-text` classes have separate `top` values to align them at different vertical levels inside the arc.
+
+4. **Match Container Dimensions to SVG**:
+   - Ensure the container's dimensions match the SVG dimensions (`width: 240px` and `height: 200px`) for proper alignment.
+
+This will ensure the score ("10") and message ("Good") are perfectly centered within the arc. Let me know if you need further adjustments!
+
+
+
+
+
+
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
     x="0px" y="0px" viewBox="37 -5 120 100" width="240" height="200" 
     style="transform-origin: center;">
