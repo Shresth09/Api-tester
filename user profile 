@@ -1,3 +1,26 @@
+<div class="start-value">0</div>
+  <div class="end-value">10</div>
+
+
+.start-value {
+  left: 15%;
+  top: 85%; /* Place near the bottom-left of arc */
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+}
+
+.end-value {
+  left: 85%;
+  top: 85%; /* Place near the bottom-right of arc */
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+}
+
+
+
+
+
+
 Yes, you can use CSS to position the score and message in the absolute center of the arc! To do this, you can wrap your arc and the score text in a container element. Then, use CSS to center the text absolutely within the container. Here's how you can do it:
 
 ### Updated Code
