@@ -1,31 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     viewBox="74 -10 240 200" width="240" height="200">
-  <defs>
-    <linearGradient id="arcGradient" gradientUnits="objectBoundingBox">
-      <stop offset="0%" stop-color="red"/>
-      <stop offset="20%" stop-color="darkorange"/>
-      <stop offset="50%" stop-color="khaki"/>
-      <stop offset="80%" stop-color="yellowgreen"/>
-      <stop offset="100%" stop-color="limegreen"/>
-    </linearGradient>
-  </defs>
-  <path class="grey" d="M110,180 A110,110 0 1,1 280,180" style="fill:none;"/>
-  <path class="green" d="M110,180 A110,110 0 1,1 280,180" style="fill:none;"/>
-</svg>
-
-
-
-
-
-
-
-
 <style>
+    .custom-box {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        width: fit-content;
+        box-sizing: content-box;
+        position: relative;
+    }
+
+    .rqm-label {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: white;
+        padding: 0 5px;
+        font-size: 0.9em;
+    }
+
     .progress-wrapper {
-        height: 100vh;
+        height: 100px; /* Adjust height as needed */
         display: flex;
         align-items: center;
-        justify-content: space-around;
+        justify-content: center;
     }
 
     path {
@@ -46,20 +43,25 @@
     }
 </style>
 
-<div class="progress-wrapper">
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="37-5 120 100" width="120" height="100">
-        <defs>
-            <linearGradient id="arcGradient" gradientUnits="objectBoundingBox">
-                <stop offset="0%" stop-color="red"/>
-                <stop offset="20%" stop-color="darkorange"/>
-                <stop offset="50%" stop-color="khaki"/>
-                <stop offset="80%" stop-color="yellowgreen"/>
-                <stop offset="100%" stop-color="limegreen"/>
-            </linearGradient>
-        </defs>
-        <path class="grey" d="M55,90 A55,55 0 1,1 140,90" style="fill:none;"/>
-        <path class="green" d="M55,90 A55,55 0 1,1 140,90" style="fill:none;"/>
-    </svg>
+<div class="custom-box">
+    <div class="rqm-label">Gamify Score</div>
+    <div class="progress-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+             viewBox="0 0 120 100" width="120" height="100">
+            <defs>
+                <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="red"/>
+                    <stop offset="20%" stop-color="darkorange"/>
+                    <stop offset="50%" stop-color="khaki"/>
+                    <stop offset="80%" stop-color="yellowgreen"/>
+                    <stop offset="100%" stop-color="limegreen"/>
+                </linearGradient>
+            </defs>
+            <path class="grey" d="M55,90 A55,55 0 1,1 140,90" style="fill:none;"/>
+            <path class="green" d="M55,90 A55,55 0 1,1 140,90" style="fill:none;"/>
+        </svg>
+    </div>
+    <div><a id="show-popup" class="aui-button">Details</a></div>
 </div>
 
 <script>
