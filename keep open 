@@ -2,110 +2,118 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Keep Screen Awake</title>
+  <title>Simulated Mouse Movement Visualizer</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    #status { margin-top: 20px; font-weight: bold; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    #cursor {
+      width: 20px;
+      height: 20px;
+      background-color: red;
+      border-radius: 50%;
+      position: absolute;
+      pointer-events: none;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    #status {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    #controls {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+    }
+    button {
+      margin-right: 8px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
-  <h1>Screen Wake Lock Demo</h1>
-  <p>This page attempts to disable screen locking by using the Screen Wake Lock API.</p>
-  <div id="status">Initializing...</div>
-
+  <div id="status">Simulating mouse movement...</div>
+  <div id="cursor">M</div>
+  
+  <div id="controls">
+    <button onclick="toggleSimulation()">Stop Simulation</button>
+  </div>
+  
   <script>
-    let wakeLock = null;
-
-    // Function to request a wake lock.
-    async function requestWakeLock() {
-      if ('wakeLock' in navigator) {
-        try {
-          wakeLock = await navigator.wakeLock.request('screen');
-          document.getElementById('status').textContent = 'Wake lock is active.';
-          console.log('Wake lock active');
-
-          // Listen for a release event.
-          wakeLock.addEventListener('release', () => {
-            document.getElementById('status').textContent = 'Wake lock was released.';
-            console.log('Wake lock released');
-          });
-        } catch (err) {
-          document.getElementById('status').textContent = `${err.name}: ${err.message}`;
-          console.error(`${err.name}, ${err.message}`);
-        }
+    // Initial cursor position at the center of the window
+    let posX = window.innerWidth / 2;
+    let posY = window.innerHeight / 2;
+    const cursor = document.getElementById('cursor');
+    let simulationRunning = true;
+    
+    // Update the displayed cursor element position
+    function updateCursor() {
+      cursor.style.left = posX + "px";
+      cursor.style.top = posY + "px";
+    }
+    
+    // Simulate mouse movement and show the updated position
+    function simulateMovement() {
+      if (!simulationRunning) return;
+      
+      // Calculate random offsets between -50 and 50 pixels
+      const offsetX = Math.floor(Math.random() * 101 - 50);
+      const offsetY = Math.floor(Math.random() * 101 - 50);
+      
+      // Ensure the dot stays within the window boundaries
+      posX = Math.max(0, Math.min(window.innerWidth - 20, posX + offsetX));
+      posY = Math.max(0, Math.min(window.innerHeight - 20, posY + offsetY));
+      
+      updateCursor();
+      
+      // Dispatch a synthetic mousemove event with the new coordinates
+      const event = new MouseEvent('mousemove', {
+        bubbles: true,
+        cancelable: true,
+        clientX: posX,
+        clientY: posY,
+      });
+      document.dispatchEvent(event);
+      
+      // Update the status text with the current coordinates
+      document.getElementById('status').textContent = `Cursor at (${posX}, ${posY})`;
+    }
+    
+    // Run simulation at regular intervals (every 2 seconds)
+    let simulationInterval = setInterval(simulateMovement, 2000);
+    
+    // Toggle simulation on/off with the button
+    function toggleSimulation() {
+      simulationRunning = !simulationRunning;
+      if (simulationRunning) {
+        simulationInterval = setInterval(simulateMovement, 2000);
+        document.querySelector("#controls button").textContent = 'Stop Simulation';
+        document.getElementById('status').textContent = 'Simulating mouse movement...';
       } else {
-        document.getElementById('status').textContent = 'Wake Lock API not supported in your browser.';
+        clearInterval(simulationInterval);
+        document.querySelector("#controls button").textContent = 'Start Simulation';
+        document.getElementById('status').textContent = 'Simulation paused.';
       }
     }
-
-    // Re-acquire the wake lock if the user returns to the page.
-    document.addEventListener('visibilitychange', async () => {
-      if (wakeLock !== null && document.visibilityState === 'visible') {
-        await requestWakeLock();
-      }
-    });
-
-    // Request the wake lock when the page loads.
-    requestWakeLock();
+    
+    // Initialize the cursor position on load
+    updateCursor();
   </script>
-</body>
-</html> 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#₹₹₹₹₹₹₹₹₹₹₹
-
-
-
-
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Keep Screen Awake</title>
-</head>
-<body>
-    <h1>Screen Awake Tool</h1>
-    <p>This page will keep your screen awake as long as it is open in the browser.</p>
-
-    <script>
-        let interval;
-
-        function keepAwake() {
-            interval = setInterval(() => {
-                const event = new MouseEvent('mousemove', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true
-                });
-                document.dispatchEvent(event);
-            }, 30000); // Moves mouse every 30 seconds
-        }
-
-        function stopAwake() {
-            clearInterval(interval);
-        }
-
-        // Start keeping the screen awake when the page loads
-        keepAwake();
-
-        // Stop the process if needed (you can create a button for this)
-        window.onbeforeunload = stopAwake;
-    </script>
 </body>
 </html>
