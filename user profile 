@@ -12,27 +12,20 @@
   </defs>
   <path class="grey" d="M55,90 A55,55 0 1,1 140,90" style="fill:none;"/>
   <path class="green" d="M55,90 A55,55 0 1,1 140,90" style="fill:none;"/>
-  
-  <!-- Add the score -->
-  <text x="95" y="80" text-anchor="middle" font-size="16" fill="black" font-family="Arial">
+
+  <!-- Centered score text -->
+  <text x="97.5" y="90" text-anchor="middle" dominant-baseline="middle" 
+        font-size="16" fill="black" font-family="Arial">
     10
   </text>
 
-  <!-- Add the message "Good" -->
-  <text x="95" y="100" text-anchor="middle" font-size="12" fill="black" font-family="Arial">
+  <!-- Centered message "Good" -->
+  <text x="97.5" y="110" text-anchor="middle" dominant-baseline="middle" 
+        font-size="12" fill="black" font-family="Arial">
     Good
   </text>
+</svg> 
 
-  <!-- Add the start (0) -->
-  <text x="50" y="110" text-anchor="middle" font-size="10" fill="black" font-family="Arial">
-    0
-  </text>
-
-  <!-- Add the end (10) -->
-  <text x="140" y="110" text-anchor="middle" font-size="10" fill="black" font-family="Arial">
-    10
-  </text>
-</svg>
 
 
 
