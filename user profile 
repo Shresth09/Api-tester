@@ -1,50 +1,58 @@
-### **Potential Location Keys for User Profile Extensions**
+<style>
+    .progress-wrapper {
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+    }
 
-1. **`atl.jira.user.profile.sidebar`**  
-   - **Purpose:** Many developers have attempted to inject content into the sidebar (generally on the left side) of the user profile using identifiers like this.  
-   - **Note:** This key isn’t officially prominent in the documentation for Jira 8.20.11, so you may need to verify its availability on your instance by inspecting the DOM.
+    path {
+        stroke-linecap: round;
+        stroke-width: 6;
+    }
 
-2. **`atl.jira.user.profile.left`**  
-   - **Purpose:** Some community examples refer to a “left” location when targeting the user profile. Although less common, it’s worth a trial if you’re aiming specifically for the left panel.  
-   - **Note:** As with the sidebar key, you’ll need to double-check if this key is recognized in your Jira configuration.
+    .grey {
+        stroke: #e5e5e5;
+        stroke-width: 3px;
+    }
 
-3. **`atl.jira.user.profile.content`**  
-   - **Purpose:** Typically, this loads additional content in the main area of the profile page. If your design allows for it, you can consider re-arranging your content so it appears as part of the core profile rather than strictly in the left panel.
-   - **Note:** This is more common and documented, but may not match your desired "left panel" placement.
+    .green {
+        stroke: url(#arcGradient);
+        stroke-width: 9px;
+        stroke-dasharray: 248;
+        stroke-dashoffset: 248; /* Start empty */
+    }
+</style>
 
-4. **`atl.jira.user.profile.actions`**  
-   - **Purpose:** Often used for action buttons or links; while it might not be strictly in the left panel, it is another candidate for displaying additional controls on the profile page.
-   - **Note:** The actual placement (header, right/left) can depend on Jira’s UI layout, which sometimes changes between versions.
+<div class="progress-wrapper">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="37-5 120 100" width="120" height="100">
+        <defs>
+            <linearGradient id="arcGradient" gradientUnits="objectBoundingBox">
+                <stop offset="0%" stop-color="red"/>
+                <stop offset="20%" stop-color="darkorange"/>
+                <stop offset="50%" stop-color="khaki"/>
+                <stop offset="80%" stop-color="yellowgreen"/>
+                <stop offset="100%" stop-color="limegreen"/>
+            </linearGradient>
+        </defs>
+        <path class="grey" d="M55,90 A55,55 0 1,1 140,90" style="fill:none;"/>
+        <path class="green" d="M55,90 A55,55 0 1,1 140,90" style="fill:none;"/>
+    </svg>
+</div>
 
+<script>
+    #set ($score = 7) // Replace with your actual score variable
+    const userScore = $score;
 
+    document.addEventListener("DOMContentLoaded", function() {
+        const arcPath = document.querySelector(".green");
 
+        if (arcPath) {
+            const totalLength = 248;
+            const percentage = userScore / 10;
+            const offset = totalLength - (totalLength * percentage);
 
-
-<web-panel key="my-user-profile-panel" location="atl.jira.user.profile.content" weight="1">
-  <!-- Optional context provider if you need to supply data specific to the user profile -->
-  <context-provider class="com.example.plugins.MyUserProfileContextProvider"/>
-  <!-- Velocity template that renders your button -->
-  <resource type="velocity" name="view" location="/templates/my-user-profile-button.vm"/>
-  <description>This panel adds a custom button on the user profile page.</description>
-</web-panel>
-
-
-<web-item key="my-user-profile-button" name="My Custom Button" section="atl.jira.user.profile.actions" weight="100">
-  <label key="my.user.profile.button.label">Custom Action</label>
-  <link>/plugins/servlet/myCustomAction?userId=$user.id</link>
-  <description>A button displayed within the user profile actions section.</description>
-</web-item>
-
-
-
-<web-section name="User Profile Actions" key="my-user-profile-websection" location="atl.jira.user.profile.actions" weight="1000">
-  <label key="my.user.profile.actions.label">User Profile Actions</label>
-  <description>This web section provides additional actions for user profiles.</description>
-</web-section>
-
-<web-item name="Profile Button" key="user-profile-button" section="atl.jira.user.profile.actions/my-user-profile-websection" weight="1">
-  <label key="my.user.profile.button.label">My Custom Button</label>
-  <!-- Link to your servlet or action -->
-  <link>/plugins/servlet/myProfileAction?userId=$user.id</link>
-  <description>This button links to a custom profile-related action.</description>
-</web-item>
+            arcPath.style.strokeDashoffset = offset;
+        }
+    });
+</script>
