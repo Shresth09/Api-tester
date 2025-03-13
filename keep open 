@@ -1,6 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <title>Keep Screen Awake</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #status { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Screen Wake Lock Demo</h1>
+  <p>This page attempts to disable screen locking by using the Screen Wake Lock API.</p>
+  <div id="status">Initializing...</div>
+
+  <script>
+    let wakeLock = null;
+
+    // Function to request a wake lock.
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          document.getElementById('status').textContent = 'Wake lock is active.';
+          console.log('Wake lock active');
+
+          // Listen for a release event.
+          wakeLock.addEventListener('release', () => {
+            document.getElementById('status').textContent = 'Wake lock was released.';
+            console.log('Wake lock released');
+          });
+        } catch (err) {
+          document.getElementById('status').textContent = `${err.name}: ${err.message}`;
+          console.error(`${err.name}, ${err.message}`);
+        }
+      } else {
+        document.getElementById('status').textContent = 'Wake Lock API not supported in your browser.';
+      }
+    }
+
+    // Re-acquire the wake lock if the user returns to the page.
+    document.addEventListener('visibilitychange', async () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        await requestWakeLock();
+      }
+    });
+
+    // Request the wake lock when the page loads.
+    requestWakeLock();
+  </script>
+</body>
+</html> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#₹₹₹₹₹₹₹₹₹₹₹
+
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
     <title>Keep Screen Awake</title>
 </head>
 <body>
