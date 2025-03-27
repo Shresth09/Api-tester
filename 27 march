@@ -3,86 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Logo Example</title>
+  <title>Logo</title>
   <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #f4f4f4;
-      margin: 0;
-    }
     .logo-container {
-      text-align: center;
+      display: flex;
+      align-items: center;
       font-family: Arial, sans-serif;
-    }
-    .vertical-text {
-      writing-mode: vertical-rl;
-      transform: rotate(180deg);
       font-size: 24px;
+    }
+    .logo-text {
       font-weight: bold;
       color: black;
     }
-    .vertical-text .highlight {
+    .logo-text .blue {
       color: blue;
     }
-    .icon {
-      font-size: 40px;
-      color: black;
-      margin-top: 10px;
+    .logo-icon {
+      margin-right: 8px; /* Add some spacing between the icon and text */
+      font-size: 24px;
     }
   </style>
 </head>
 <body>
   <div class="logo-container">
-    <div class="vertical-text">
-      Scan<span class="highlight">R</span>
-    </div>
-    <div class="icon">
-      🔍
-    </div>
+    <span class="logo-icon">&#x1F50E;&#xFE0E;</span>
+    <span class="logo-text">
+      Scan<span class="blue">R</span>
+    </span>
   </div>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-AJS.$("#your-modal-button").on("click", function () {
-  // Define the score (this can come from your logic)
-  var cscore = 75; // Example score
-
-  // Determine the color class based on the score
-  var progressBarClass = "";
-  if (cscore <= 40) {
-    progressBarClass = "red";
-  } else if (cscore > 40 && cscore <= 70) {
-    progressBarClass = "yellow";
-  } else {
-    progressBarClass = "green";
-  }
-
-  // Create the modal content and set the progress bar directly
-  var modalContent = `
-    <div class="modal-body">
-      <div class="progress-container">
-        <div id="modal-score-progress-bar" class="progress-bar ${progressBarClass}" 
-             style="width: ${cscore}%; text-align: center;">
-          ${cscore}%
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Add the modal content to the DOM and display the modal
-  AJS.dialog2("#your-modal").html(modalContent).show();
-});
