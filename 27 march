@@ -14,24 +14,25 @@
     .logo-text {
       font-weight: bold;
       color: black;
+      margin: 0; /* Remove any default margin */
+      padding: 0; /* Remove any default padding */
     }
     .logo-text .blue {
       color: blue;
     }
     .logo-icon {
-      margin-right: 4px; /* Reduced the spacing between the icon and the text */
       font-size: 48px; /* Icon size */
       color: gray; /* Gray overlay for the icon */
       transform: scaleX(-1); /* Flip the icon horizontally */
+      margin: 0; /* Remove all spacing */
+      padding: 0; /* Remove all padding */
+      line-height: 1; /* Ensure no extra vertical spacing */
     }
   </style>
 </head>
 <body>
   <div class="logo-container">
-    <span class="logo-icon">&#x1F50E;&#xFE0E;</span>
-    <span class="logo-text">
-      Scan<span class="blue">R</span>
-    </span>
+    <span class="logo-icon">&#x1F50E;&#xFE0E;</span><span class="logo-text">Scan<span class="blue">R</span></span>
   </div>
 </body>
 </html>
