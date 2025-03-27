@@ -1,0 +1,29 @@
+AJS.$("#your-modal-button").on("click", function () {
+  // Define the score (this can come from your logic)
+  var cscore = 75; // Example score
+
+  // Determine the color class based on the score
+  var progressBarClass = "";
+  if (cscore <= 40) {
+    progressBarClass = "red";
+  } else if (cscore > 40 && cscore <= 70) {
+    progressBarClass = "yellow";
+  } else {
+    progressBarClass = "green";
+  }
+
+  // Create the modal content and set the progress bar directly
+  var modalContent = `
+    <div class="modal-body">
+      <div class="progress-container">
+        <div id="modal-score-progress-bar" class="progress-bar ${progressBarClass}" 
+             style="width: ${cscore}%; text-align: center;">
+          ${cscore}%
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add the modal content to the DOM and display the modal
+  AJS.dialog2("#your-modal").html(modalContent).show();
+});
