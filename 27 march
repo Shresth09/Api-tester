@@ -1,3 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logo Example</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+      margin: 0;
+    }
+    .logo-container {
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
+    .vertical-text {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 24px;
+      font-weight: bold;
+      color: black;
+    }
+    .vertical-text .highlight {
+      color: blue;
+    }
+    .icon {
+      font-size: 40px;
+      color: black;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-container">
+    <div class="vertical-text">
+      Scan<span class="highlight">R</span>
+    </div>
+    <div class="icon">
+      🔍
+    </div>
+  </div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
 AJS.$("#your-modal-button").on("click", function () {
   // Define the score (this can come from your logic)
   var cscore = 75; // Example score
