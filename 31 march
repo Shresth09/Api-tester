@@ -1,0 +1,63 @@
+package com.example.searchapp.service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class RestEndPointService {
+
+    private final String jiraToken = "YOUR_JIRA_TOKEN";
+    private final String jiraBaseUrl = "https://your-jira-instance.com";
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    public ResponseEntity<String> getIssueByKey(String query) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + jiraToken);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        // JQL query for fetching issues
+        String urlToSend = jiraBaseUrl + "/rest/api/2/search?jql=issuetype=Application AND summary~\"" + query + "\"";
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(urlToSend, HttpMethod.GET, entity, String.class);
+
+            // Parse the response from Jira API
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(response.getBody());
+            JsonNode issuesNode = rootNode.path("issues");
+
+            // Prepare the result JSON format
+            List<String> itemsList = new ArrayList<>();
+            issuesNode.forEach(issueNode -> {
+                String summary = issueNode.path("fields").path("summary").asText();
+                // Highlight the query in the summary
+                String highlighted = summary.replaceAll("(?i)" + java.util.regex.Pattern>" + query + "</b>");
+
+                // Add the formatted string directly to the list
+                itemsList.add(String.format(
+                    "{\"value\": \"%s\", \"html\": \"%s\", \"label\": \"%s\"}",
+                    summary, highlighted, summary
+                ));
+            });
+
+            // Construct the response JSON manually
+            String resultJson = String.format("{\"items\": [%s]}", String.join(",", itemsList));
+
+            return ResponseEntity.ok(resultJson);
+
+        } catch (Exception ex) {
+            System.err.println("Error processing Jira API response: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing Jira API response.");
+        }
+    }
+}
