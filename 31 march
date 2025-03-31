@@ -1,4 +1,39 @@
-public String processApiResponse(ResponseEntity<String> response, String query) {
+public ResponseEntity<JSONObject> getIssueByKey(String query2) {
+    System.out.println("Received Request GET for getIssueById with Key: " + query2);
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + jira_token);
+
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+    String urlToSend = jira_nam_base_url + "/rest/api/2/search?jql=issuetype=Application AND summary~" + query2;
+
+    System.out.println("Calling URL: " + urlToSend);
+
+    try {
+        ResponseEntity<String> response = restTemplate.exchange(urlToSend, HttpMethod.GET, entity, String.class);
+
+        System.out.println("Response success: " + HttpStatus.OK);
+
+        JSONObject respJson = processApiResponse(response, query2);
+
+        return new ResponseEntity<>(respJson, HttpStatus.OK);
+
+    } catch (HttpClientErrorException e) {
+        System.out.println(e.getResponseBodyAsString() + "\n RESPONSE CODE:" + e.getStatusCode());
+        JSONObject errorJson = new JSONObject();
+        errorJson.put("error", e.getMessage());
+        return new ResponseEntity<>(errorJson, e.getStatusCode());
+    }
+}
+
+
+
+
+
+
+
+
+public JSONObject processApiResponse(ResponseEntity<String> response, String query) {
     try {
         // Parse the API response into a JSON object
         JSONObject responseJson = new JSONObject(response.getBody());
@@ -10,7 +45,7 @@ public String processApiResponse(ResponseEntity<String> response, String query) 
         JSONArray issuesArray = responseJson.getJSONArray("issues");
 
         // Prepare the result JSON structure
-        StringBuilder resultJson = new StringBuilder("{\"items\": [");
+        JSONArray itemsArray = new JSONArray();
 
         // Iterate through the issues
         for (int i = 0; i < total; i++) {
@@ -20,31 +55,30 @@ public String processApiResponse(ResponseEntity<String> response, String query) 
             String summary = issueObject.getJSONObject("fields").getString("summary");
 
             // Highlight the query keyword in the summary using Unicode characters
-            String highlighted = summary.replace(query, "\\u003Cb\\u003E" + query + "\\u003C/b\\u003E");
+            String highlighted = summary.replace(query, "\u003Cb\u003E" + query + "\u003C/b\u003E");
 
-            // Add the result to the response
-            resultJson.append(String.format(
-                "{\"value\": \"%s\", \"html\": \"%s\", \"label\": \"%s\"}",
-                summary.replace("\"", "\\\""), // Escape quotes in JSON strings
-                highlighted.replace("\"", "\\\""), // Escape quotes in highlighted string
-                summary.replace("\"", "\\\"") // Escape quotes in label
-            ));
+            // Construct the individual item JSON object
+            JSONObject item = new JSONObject();
+            item.put("value", summary);
+            item.put("html", highlighted);
+            item.put("label", summary);
 
-            // Add a comma if this isn't the last item
-            if (i < total - 1) {
-                resultJson.append(",");
-            }
+            // Add the item to the items array
+            itemsArray.put(item);
         }
 
-        // Close the JSON structure
-        resultJson.append("]}");
+        // Wrap the items array in a parent JSON object
+        JSONObject resultJson = new JSONObject();
+        resultJson.put("items", itemsArray);
 
-        // Return the final result JSON
-        return resultJson.toString();
+        // Return the final JSON object
+        return resultJson;
 
     } catch (Exception ex) {
         // Handle any errors gracefully
         ex.printStackTrace();
-        return "{\"error\": \"Failed to process response\"}";
+        JSONObject errorJson = new JSONObject();
+        errorJson.put("error", "Failed to process response");
+        return errorJson;
     }
 }
