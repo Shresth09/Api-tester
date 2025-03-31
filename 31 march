@@ -1,84 +1,123 @@
-public ResponseEntity<JSONObject> getIssueByKey(String query2) {
-    System.out.println("Received Request GET for getIssueById with Key: " + query2);
+package com.example.searchapp.controller;
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", "Bearer " + jira_token);
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.example.searchapp.service.RestEndPointService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-    HttpEntity<String> entity = new HttpEntity<>(headers);
-    String urlToSend = jira_nam_base_url + "/rest/api/2/search?jql=issuetype=Application AND summary~" + query2;
+@RestController
+@CrossOrigin(origins = "*")
+public class RestEndPointController {
 
-    System.out.println("Calling URL: " + urlToSend);
+    @Autowired
+    private RestEndPointService restEndPointService;
 
-    try {
-        ResponseEntity<String> response = restTemplate.exchange(urlToSend, HttpMethod.GET, entity, String.class);
-
-        System.out.println("Response success: " + HttpStatus.OK);
-
-        JSONObject respJson = processApiResponse(response, query2);
-
-        return new ResponseEntity<>(respJson, HttpStatus.OK);
-
-    } catch (HttpClientErrorException e) {
-        System.out.println(e.getResponseBodyAsString() + "\n RESPONSE CODE:" + e.getStatusCode());
-        JSONObject errorJson = new JSONObject();
-        errorJson.put("error", e.getMessage());
-        return new ResponseEntity<>(errorJson, e.getStatusCode());
+    // Handles GET requests to /search
+    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ObjectNode> getIssue(@RequestParam("query") String query) {
+        // Delegate the logic to the service class
+        return restEndPointService.getIssueByKey(query);
     }
 }
 
 
+package com.example.searchapp.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+@Service
+public class RestEndPointService {
 
+    @Value("${jira_nam_base_url}")
+    private String jiraNamBaseUrl;
 
+    @Value("${jira_token}")
+    private String jiraToken;
 
+    private final RestTemplate restTemplate;
 
-public JSONObject processApiResponse(ResponseEntity<String> response, String query) {
-    try {
-        // Parse the API response into a JSON object
-        JSONObject responseJson = new JSONObject(response.getBody());
+    public RestEndPointService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
-        // Extract the total number of issues
-        int total = responseJson.getInt("total");
+    public ResponseEntity<ObjectNode> getIssueByKey(String query) {
+        try {
+            // Set up headers with authorization
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + jiraToken);
+            headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        // Get the "issues" array
-        JSONArray issuesArray = responseJson.getJSONArray("issues");
+            // Build the Jira REST API URL with the query parameter
+            String urlToSend = jiraNamBaseUrl + "/rest/api/2/search?jql=issuetype=Application AND summary~\"" + query + "\"";
+            System.out.println("Calling URL: " + urlToSend);
 
-        // Prepare the result JSON structure
-        JSONArray itemsArray = new JSONArray();
+            // Call the Jira API
+            ResponseEntity<String> response = restTemplate.exchange(urlToSend, HttpMethod.GET, entity, String.class);
 
-        // Iterate through the issues
-        for (int i = 0; i < total; i++) {
-            JSONObject issueObject = issuesArray.getJSONObject(i);
+            System.out.println("Response success: " + response.getStatusCode());
+            // Process the API response and return the result
+            return new ResponseEntity<>(processApiResponse(response, query), HttpStatus.OK);
 
-            // Fetch the summary field of the issue
-            String summary = issueObject.getJSONObject("fields").getString("summary");
-
-            // Highlight the query keyword in the summary using Unicode characters
-            String highlighted = summary.replace(query, "\u003Cb\u003E" + query + "\u003C/b\u003E");
-
-            // Construct the individual item JSON object
-            JSONObject item = new JSONObject();
-            item.put("value", summary);
-            item.put("html", highlighted);
-            item.put("label", summary);
-
-            // Add the item to the items array
-            itemsArray.put(item);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            // Create and return an error JSON response
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode errorResponse = mapper.createObjectNode();
+            errorResponse.put("error", "Failed to fetch issues: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+    }
 
-        // Wrap the items array in a parent JSON object
-        JSONObject resultJson = new JSONObject();
-        resultJson.put("items", itemsArray);
+    private ObjectNode processApiResponse(ResponseEntity<String> response, String query) {
+        try {
+            // Initialize ObjectMapper and parse the Jira API response
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode responseJson = (ObjectNode) mapper.readTree(response.getBody());
+            ArrayNode issuesArray = (ArrayNode) responseJson.get("issues");
 
-        // Return the final JSON object
-        return resultJson;
+            // Create the final result JSON structure
+            ObjectNode resultJson = mapper.createObjectNode();
+            ArrayNode itemsArray = mapper.createArrayNode();
 
-    } catch (Exception ex) {
-        // Handle any errors gracefully
-        ex.printStackTrace();
-        JSONObject errorJson = new JSONObject();
-        errorJson.put("error", "Failed to process response");
-        return errorJson;
+            // Iterate through the issues and construct the items array
+            for (int i = 0; i < issuesArray.size(); i++) {
+                ObjectNode issueObject = (ObjectNode) issuesArray.get(i);
+                String summary = issueObject.get("fields").get("summary").asText();
+
+                // Highlight the query in the summary
+                String highlighted = summary.replace(query, "\u003Cb\u003E" + query + "\u003C/b\u003E");
+
+                // Add each issue's data to the items array
+                ObjectNode item = mapper.createObjectNode();
+                item.put("value", summary);
+                item.put("html", highlighted);
+                item.put("label", summary);
+                itemsArray.add(item);
+            }
+
+            // Wrap the items array in the result JSON object
+            resultJson.set("items", itemsArray);
+            return resultJson;
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            // Handle any errors during processing
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode errorJson = mapper.createObjectNode();
+            errorJson.put("error", "Failed to process response: " + ex.getMessage());
+            return errorJson;
+        }
     }
 }
