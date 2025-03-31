@@ -1,3 +1,51 @@
+private ObjectNode processApiResponse(ResponseEntity<String> response, String query) {
+    try {
+        // Initialize ObjectMapper with ESCAPE_NON_ASCII enabled
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true);
+
+        // Parse the API response
+        ObjectNode responseJson = (ObjectNode) mapper.readTree(response.getBody());
+        ArrayNode issuesArray = (ArrayNode) responseJson.get("issues");
+
+        // Construct the response JSON
+        ObjectNode resultJson = mapper.createObjectNode();
+        ArrayNode itemsArray = mapper.createArrayNode();
+
+        for (int i = 0; i < issuesArray.size(); i++) {
+            ObjectNode issueObject = (ObjectNode) issuesArray.get(i);
+            String summary = issueObject.get("fields").get("summary").asText();
+
+            // Use Unicode-encoded <b> tags
+            String highlighted = summary.replace(query, "\\u003Cb\\u003E" + query + "\\u003C/b\\u003E");
+
+            // Add data to items array
+            ObjectNode item = mapper.createObjectNode();
+            item.put("value", summary);
+            item.put("html", highlighted);
+            item.put("label", summary);
+            itemsArray.add(item);
+        }
+
+        resultJson.set("items", itemsArray);
+        return resultJson;
+
+    } catch (Exception ex) {
+        ex.printStackTrace();
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode errorJson = mapper.createObjectNode();
+        errorJson.put("error", "Failed to process response: " + ex.getMessage());
+        return errorJson;
+    }
+}
+
+
+
+
+
+
+
+
 package com.example.searchapp.controller;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
