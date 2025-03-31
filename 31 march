@@ -1,66 +1,52 @@
-String html = summary.replace(query2, "\u003Cb\u003E" + query2 + "\u003C/b\u003E");
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.http.ResponseEntity;
 
+public String processApiResponse(ResponseEntity<String> response, String query) {
+    try {
+        // Parse the API response into a JSON object
+        JSONObject responseJson = new JSONObject(response.getBody());
 
-package com.example.searchapp.service;
+        // Extract the total number of issues
+        int total = responseJson.getInt("total");
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+        // Get the "issues" array
+        JSONArray issuesArray = responseJson.getJSONArray("issues");
 
-import java.util.ArrayList;
-import java.util.List;
+        // Prepare the result JSON structure
+        StringBuilder resultJson = new StringBuilder("{\"items\": [");
 
-@Service
-public class RestEndPointService {
+        // Iterate through the issues
+        for (int i = 0; i < total; i++) {
+            JSONObject issueObject = issuesArray.getJSONObject(i);
 
-    private final String jiraToken = "YOUR_JIRA_TOKEN";
-    private final String jiraBaseUrl = "https://your-jira-instance.com";
+            // Fetch the summary field of the issue
+            String summary = issueObject.getJSONObject("fields").getString("summary");
 
-    @Autowired
-    private RestTemplate restTemplate;
+            // Highlight the query keyword in the summary
+            String highlighted = summary.replace(query, "\u003Cb\u003E" + query + "\u003C/b\u003E");
 
-    public ResponseEntity<String> getIssueByKey(String query) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + jiraToken);
+            // Add the result to the response
+            resultJson.append(String.format(
+                "{\"value\": \"%s\", \"html\": \"%s\", \"label\": \"%s\"}",
+                summary, highlighted, summary
+            ));
 
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        // JQL query for fetching issues
-        String urlToSend = jiraBaseUrl + "/rest/api/2/search?jql=issuetype=Application AND summary~\"" + query + "\"";
-
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(urlToSend, HttpMethod.GET, entity, String.class);
-
-            // Parse the response from Jira API
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(response.getBody());
-            JsonNode issuesNode = rootNode.path("issues");
-
-            // Prepare the result JSON format
-            List<String> itemsList = new ArrayList<>();
-            issuesNode.forEach(issueNode -> {
-                String summary = issueNode.path("fields").path("summary").asText();
-                // Highlight the query in the summary
-                String highlighted = summary.replaceAll("(?i)" + java.util.regex.Pattern>" + query + "</b>");
-
-                // Add the formatted string directly to the list
-                itemsList.add(String.format(
-                    "{\"value\": \"%s\", \"html\": \"%s\", \"label\": \"%s\"}",
-                    summary, highlighted, summary
-                ));
-            });
-
-            // Construct the response JSON manually
-            String resultJson = String.format("{\"items\": [%s]}", String.join(",", itemsList));
-
-            return ResponseEntity.ok(resultJson);
-
-        } catch (Exception ex) {
-            System.err.println("Error processing Jira API response: " + ex.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing Jira API response.");
+            // Add a comma if this isn't the last item
+            if (i < total - 1) {
+                resultJson.append(",");
+            }
         }
+
+        // Close the JSON structure
+        resultJson.append("]}");
+
+        // Return the final result JSON
+        return resultJson.toString();
+
+    } catch (Exception ex) {
+        // Handle any errors gracefully
+        ex.printStackTrace();
+        return "{\"error\": \"Failed to process response\"}";
     }
 }
