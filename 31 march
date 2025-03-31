@@ -1,3 +1,17 @@
+StringBuilder highlighted = new StringBuilder();
+            int index = summary.toLowerCase().indexOf(query.toLowerCase());
+            if (index != -1) {
+                // Add the text before the query
+                highlighted.append(summary.substring(0, index));
+                // Add the query wrapped in <b> tags
+                highlighted.append("\u003Cb\u003E").append(query).append("\u003C/b\u003E");
+                // Add the text after the query
+                highlighted.append(summary.substring(index + query.length()));
+
+
+
+
+
 private ObjectNode processApiResponse(ResponseEntity<String> response, String query) {
     try {
         // Initialize ObjectMapper with ESCAPE_NON_ASCII enabled
