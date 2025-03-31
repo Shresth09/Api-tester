@@ -1,7 +1,3 @@
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.springframework.http.ResponseEntity;
-
 public String processApiResponse(ResponseEntity<String> response, String query) {
     try {
         // Parse the API response into a JSON object
@@ -23,13 +19,15 @@ public String processApiResponse(ResponseEntity<String> response, String query) 
             // Fetch the summary field of the issue
             String summary = issueObject.getJSONObject("fields").getString("summary");
 
-            // Highlight the query keyword in the summary
-            String highlighted = summary.replace(query, "\u003Cb\u003E" + query + "\u003C/b\u003E");
+            // Highlight the query keyword in the summary using Unicode characters
+            String highlighted = summary.replace(query, "\\u003Cb\\u003E" + query + "\\u003C/b\\u003E");
 
             // Add the result to the response
             resultJson.append(String.format(
                 "{\"value\": \"%s\", \"html\": \"%s\", \"label\": \"%s\"}",
-                summary, highlighted, summary
+                summary.replace("\"", "\\\""), // Escape quotes in JSON strings
+                highlighted.replace("\"", "\\\""), // Escape quotes in highlighted string
+                summary.replace("\"", "\\\"") // Escape quotes in label
             ));
 
             // Add a comma if this isn't the last item
