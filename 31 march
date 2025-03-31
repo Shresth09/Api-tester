@@ -1,3 +1,6 @@
+String html = summary.replace(query2, "\u003Cb\u003E" + query2 + "\u003C/b\u003E");
+
+
 package com.example.searchapp.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
