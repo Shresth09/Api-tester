@@ -1,0 +1,70 @@
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
+// Swagger Documentation for the Controller
+@Operation(
+    summary = "Search Jira Issues by Query",
+    description = "Fetch Jira issues based on the provided query parameter or fetch all 'Application' issues if query is empty.",
+    requestBody = @RequestBody(
+        description = "Request Body containing input details for query-based issue search.",
+        required = true,
+        content = @Content(
+            mediaType = "application/json",
+            examples = @ExampleObject(
+                name = "Sample Request",
+                value = "{\"query\": \"test\"}"
+            )
+        )
+    )
+)
+@ApiResponses(value = {
+    @ApiResponse(
+        responseCode = "200",
+        description = "Success",
+        content = @Content(
+            examples = @ExampleObject(
+                name = "Sample Success Response",
+                value = "{\"items\": [{\"value\": \"Test Data as a Service Mexico\", \"html\": \"Test Data as a \u003Cb\u003Etest\u003C/b\u003E Mexico\", \"label\": \"Test Data as a Service Mexico\"}]}"
+            )
+        )
+    ),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Bad Request",
+        content = @Content(
+            examples = @ExampleObject(
+                name = "Sample Error Response",
+                value = "{\"error\": \"Query parameter is missing or empty\"}"
+            )
+        )
+    ),
+    @ApiResponse(
+        responseCode = "500",
+        description = "Internal Server Error",
+        content = @Content(
+            examples = @ExampleObject(
+                name = "Sample Failure Response",
+                value = "{\"error\": \"Failed to fetch issues: Internal server error.\"}"
+            )
+        )
+    )
+})
+@GetMapping(value = "/csiCataloger/search", produces = MediaType.APPLICATION_JSON_VALUE)
+public ResponseEntity<ObjectNode> getIssue(@RequestParam(value = "query", required = false) String query) {
+    try {
+        // Call the service method for both scenarios
+        return restEndPointService.getIssueByKey(query);
+    } catch (Exception ex) {
+        // Handle unexpected errors and return a meaningful error response
+        ex.printStackTrace();
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode errorResponse = mapper.createObjectNode();
+        errorResponse.put("error", "An unexpected error occurred: " + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+}
