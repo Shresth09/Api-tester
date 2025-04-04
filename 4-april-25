@@ -1,0 +1,83 @@
+public ResponseEntity<ObjectNode> getIssueByKey(String query) {
+    try {
+        // Validate query for invalid characters
+        if (query != null) {
+            try {
+                Pattern.compile(query);
+            } catch (PatternSyntaxException e) {
+                ObjectMapper mapper = new ObjectMapper();
+                ObjectNode errorJson = mapper.createObjectNode();
+                errorJson.put("error", "Invalid character in query: " + query + ". INTERNAL_SERVER_ERROR Status: 500");
+                return new ResponseEntity<>(errorJson, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        // Set up headers for the request
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + jira_token);
+        headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        // Initialize variables for pagination
+        String urlToSend;
+        int startAt = 0;
+        int maxResults = 1000;
+        int total;
+        List<JsonNode> allIssues = new ArrayList<>(); // Collect all issues here
+
+        do {
+            // Construct the Jira API URL
+            if (query == null || query.trim().isEmpty()) {
+                urlToSend = jira_nam_base_url + "/rest/api/2/search?jql=issuetype=Application&startAt=" + startAt + "&maxResults=" + maxResults;
+            } else {
+                urlToSend = jira_nam_base_url + "/rest/api/2/search?jql=issuetype=Application AND summary~\"" + query + "\"&startAt=" + startAt + "&maxResults=" + maxResults;
+            }
+
+            System.out.println("Calling URL: " + urlToSend);
+
+            // Make the API call
+            ResponseEntity<String> response = restTemplate.exchange(urlToSend, HttpMethod.GET, entity, String.class);
+
+            // Parse the response
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode rootNode = mapper.readTree(response.getBody());
+            ArrayNode issues = (ArrayNode) rootNode.get("issues");
+            total = rootNode.get("total").asInt();
+
+            // Add fetched issues to the list
+            allIssues.addAll(issues);
+
+            // Increment startAt for the next batch
+            startAt += maxResults;
+
+        } while (startAt < total); // Continue until all issues are fetched
+
+        // Create a final response JSON with all collected issues
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode finalResponse = mapper.createObjectNode();
+        ArrayNode allIssuesArray = mapper.createArrayNode();
+        allIssuesArray.addAll(allIssues);
+        finalResponse.set("issues", allIssuesArray);
+
+        // Process the aggregated issues
+        ObjectNode processedResponse = processApiResponse(new ResponseEntity<>(finalResponse, HttpStatus.OK), query);
+        if (processedResponse == null) {
+            ObjectNode errorJson = mapper.createObjectNode();
+            errorJson.put("error", "Failed to process Jira responses for query: " + query + " INTERNAL_SERVER_ERROR Status: 500");
+            return new ResponseEntity<>(errorJson, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // Return the processed response
+        return new ResponseEntity<>(processedResponse, HttpStatus.OK);
+
+    } catch (Exception ex) {
+        ex.printStackTrace();
+
+        // Create and return an error JSON response
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode errorResponse = mapper.createObjectNode();
+        errorResponse.put("error", "Failed to fetch issues: " + ex.getMessage());
+        logService.createLog("ERROR", "Exception caught: " + ex, "Event Manager");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+}
