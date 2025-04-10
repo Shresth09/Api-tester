@@ -1,0 +1,54 @@
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.client.RestTemplate;
+
+public class JiraCustomFieldExtractor {
+
+    public static void main(String[] args) {
+        // Replace with your Jira API URL
+        String jiraUrl = "https://your-domain.atlassian.net/rest/api/latest/issue/IssueKey-1?expand=names";
+
+        // Replace with your Base64-encoded credentials for authentication
+        String authHeader = "Basic YOUR_BASE64_ENCODED_CREDENTIALS";
+
+        // Set up RestTemplate and HTTP headers
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", authHeader);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        try {
+            // Fetch the JSON response from Jira
+            String jsonResponse = restTemplate.exchange(jiraUrl, HttpMethod.GET, entity, String.class).getBody();
+
+            // Parse the JSON response using Jackson ObjectMapper
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(jsonResponse);
+
+            // Extract custom field ID for "Planview ID" from the 'names' section
+            JsonNode namesNode = rootNode.path("names");
+            String planviewCustomFieldId = null;
+
+            for (Map.Entry<String, JsonNode> field : namesNode.fields().entrySet()) {
+                if ("Planview ID".equals(field.getValue().asText())) {
+                    planviewCustomFieldId = field.getKey();
+                    break;
+                }
+            }
+
+            // If the ID is found, fetch its value from the 'fields' section
+            if (planviewCustomFieldId != null) {
+                JsonNode fieldsNode = rootNode.path("fields");
+                String planviewIdValue = fieldsNode.path(planviewCustomFieldId).asText();
+                System.out.println("Planview ID Value: " + planviewIdValue);
+            } else {
+                System.out.println("Custom field 'Planview ID' not found in the response!");
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while fetching or parsing the Jira response: " + e.getMessage());
+        }
+    }
+}
