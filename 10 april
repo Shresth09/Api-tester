@@ -1,3 +1,14 @@
+Iterator<Map.Entry<String, JsonNode>> fieldsIterator = namesNode.fields();
+while (fieldsIterator.hasNext()) {
+    Map.Entry<String, JsonNode> field = fieldsIterator.next();
+    if ("Planview ID".equals(field.getValue().asText())) {
+        planviewCustomFieldId = field.getKey();
+        break;
+    }
+}
+
+
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpEntity;
