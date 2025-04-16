@@ -1,0 +1,64 @@
+@RestController
+@RequestMapping("/jira")
+public class JiraController {
+
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
+    @Value("${jira.base.url}")
+    private String jiraBaseUrl;
+
+    @Value("${jira.username}")
+    private String jiraUsername;
+
+    @Value("${jira.api.token}")
+    private String jiraApiToken;
+
+    public JiraController(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+    }
+
+    @GetMapping("/customFieldInfo")
+    public ResponseEntity<ObjectNode> getCustomFieldInfo(@RequestParam String fieldName) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth(jiraUsername, jiraApiToken);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            String url = jiraBaseUrl + "/rest/api/2/field";
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                url, HttpMethod.GET, entity, String.class
+            );
+
+            ArrayNode fieldsArray = (ArrayNode) objectMapper.readTree(response.getBody());
+
+            for (JsonNode field : fieldsArray) {
+                if (fieldName.equals(field.get("name").asText())) {
+                    // Build the success response
+                    ObjectNode fieldInfo = objectMapper.createObjectNode();
+                    fieldInfo.put("type", "success");
+                    fieldInfo.put("title", "Custom Field Id");
+                    fieldInfo.put("close", "auto");
+                    fieldInfo.put("body", field.get("id").asText());
+
+                    return ResponseEntity.ok(fieldInfo);
+                }
+            }
+
+            // Build the error response
+            ObjectNode errorNode = objectMapper.createObjectNode();
+            errorNode.put("error", "Error Finding field " + fieldName);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorNode);
+
+        } catch (Exception e) {
+            ObjectNode errorNode = objectMapper.createObjectNode();
+            errorNode.put("error", "Unexpected Error");
+            errorNode.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorNode);
+        }
+    }
+}
