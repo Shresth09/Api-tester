@@ -1,3 +1,14 @@
+
+private boolean isValidQuery(String query) {
+    // Allow empty spaces, alphanumeric characters, and other regex symbols
+    return query.matches("[a-zA-Z0-9\\s.*+?|()\\[\\]{}^$\\-\\\\]*"); // The '*' allows empty input
+}
+
+
+
+
+
+
 private boolean isValidQuery(String query) {
     // Allow alphanumeric characters, spaces, and other essential regex symbols
     return query.matches("[a-zA-Z0-9\\s.*+?|()\\[\\]{}^$\\-\\\\]+"); // Includes spaces (\s)
