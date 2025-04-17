@@ -1,3 +1,10 @@
+private boolean isValidQuery(String query) {
+    // Allow alphanumeric characters, spaces, and other essential regex symbols
+    return query.matches("[a-zA-Z0-9\\s.*+?|()\\[\\]{}^$\\-\\\\]+"); // Includes spaces (\s)
+}
+
+
+
 public ResponseEntity<ObjectNode> getIssueByKey(String query) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode errorJson = mapper.createObjectNode();
