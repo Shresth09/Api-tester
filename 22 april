@@ -1,0 +1,46 @@
+try {
+    ResponseEntity<String> response = restTemplate.exchange(urlTofetchCustomFields, HttpMethod.GET, entity, String.class);
+    
+    ObjectMapper objectMapper = new ObjectMapper();
+    JsonNode rootNode = objectMapper.readTree(response.getBody());
+    
+    JsonNode issueTypeNode = rootNode.path("fields").path("issuetype");
+    String issueType = issueTypeNode.path("name").asText();
+    
+    System.out.println("ISSUE TYPE IS: " + issueType);
+
+    // Only process if issue type matches Planview
+    if ("Planview".equals(issueType)) {
+        JsonNode namesNode = rootNode.path("names");
+
+        // Map to store required custom field IDs
+        Map<String, String> customFieldIds = new HashMap<>();
+        List<String> requiredFields = List.of("Planview ID", "RRP Integration Failure", "RRP Error Message");
+
+        // Efficient single iteration over the namesNode
+        for (Iterator<Map.Entry<String, JsonNode>> fieldsIterator = namesNode.fields(); fieldsIterator.hasNext(); ) {
+            Map.Entry<String, JsonNode> field = fieldsIterator.next();
+
+            String fieldName = field.getValue().asText();
+            if (requiredFields.contains(fieldName)) {
+                customFieldIds.put(fieldName, field.getKey());
+            }
+
+            // Stop early if all fields are found
+            if (customFieldIds.size() == requiredFields.size()) {
+                break;
+            }
+        }
+
+        // Retrieve the IDs
+        String planviewCustomFieldId = customFieldIds.get("Planview ID");
+        String rrpIntegrationFailureId = customFieldIds.get("RRP Integration Failure");
+        String rrpErrorMessageId = customFieldIds.get("RRP Error Message");
+
+        System.out.println("Planview ID: " + planviewCustomFieldId);
+        System.out.println("RRP Integration Failure ID: " + rrpIntegrationFailureId);
+        System.out.println("RRP Error Message ID: " + rrpErrorMessageId);
+    }
+} catch (Exception e) {
+    e.printStackTrace();
+}
