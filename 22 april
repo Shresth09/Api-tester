@@ -1,4 +1,42 @@
 try {
+    // Sending the POST request and getting the response
+    ResponseEntity<String> rrpResponse = restTemplate.exchange(rrpURL, HttpMethod.POST, rrpPostEntity, String.class);
+
+    // Logging the response
+    String rrpResponseBody = rrpResponse.getBody();
+    System.out.println("Response = " + rrpResponseBody);
+
+    // Removing unwanted Unicode characters (if necessary)
+    if (rrpResponseBody != null) {
+        rrpResponseBody = rrpResponseBody.replace("\u00A0", "").trim();
+    }
+
+    // Parsing JSON response using Jackson
+    ObjectMapper objectMapper = new ObjectMapper();
+    JsonNode jsonNode = objectMapper.readTree(rrpResponseBody);
+
+    // Ensuring the response is a valid JSON object
+    if (jsonNode.isObject()) {
+        String r_status = jsonNode.path("requestStatus").asText();
+        String msg = jsonNode.path("message").asText();
+
+        System.out.println("Request Status: " + r_status);
+        System.out.println("Message: " + msg);
+    } else {
+        System.out.println("Invalid JSON response");
+    }
+
+} catch (Exception e) {
+    e.printStackTrace();
+} 
+
+
+
+
+
+
+
+try {
     ResponseEntity<String> response = restTemplate.exchange(urlTofetchCustomFields, HttpMethod.GET, entity, String.class);
     
     ObjectMapper objectMapper = new ObjectMapper();
