@@ -1,3 +1,30 @@
+public void reindexIssue(String issueId, String jiraBaseUrl, HttpHeaders headers) {
+    try {
+        // Construct the URL for reindexing the issue
+        String reindexUrl = jiraBaseUrl + "/rest/api/2/reindex/issue?issueId=" + issueId;
+
+        // Create the HTTP entity with headers
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        // Send POST request to reindex the issue
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(reindexUrl, HttpMethod.POST, entity, String.class);
+
+        // Log the response
+        System.out.println("Reindex Response Code: " + response.getStatusCode());
+        System.out.println("Reindex Response Body: " + response.getBody());
+    } catch (Exception e) {
+        e.printStackTrace();
+        System.out.println("Failed to reindex the issue: " + issueId);
+    }
+}
+
+
+
+
+
+
+
 public void updateJiraCustomFields(String issueKey, String checkboxFieldId, String checkboxValue, 
                                    String textFieldId, String textFieldValue, 
                                    String jiraBaseUrl, HttpHeaders headers) {
