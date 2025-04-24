@@ -1,3 +1,17 @@
+@ApiResponses(value = {
+    @ApiResponse(
+        responseCode = "200",
+        description = "Success",
+        content = @Content(
+            examples = @ExampleObject(
+                name = "Sample Success Response",
+                value = "{ \"rrpResponse\": \"{\\\"requestStatus\\\":\\\"Success\\\",\\\"projectId\\\":\\\"20250987650\\\",\\\"csiIdList\\\" :[\\\"154515\\\"],\\\"message\\\":\\\"Project 20250987650 is successfully processed.\\\"}\" }"
+            )
+        )
+    ),
+
+
+
 public void reindexIssue(String issueId, String jiraBaseUrl, HttpHeaders headers) {
     try {
         // Construct the URL for reindexing the issue
