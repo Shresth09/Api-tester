@@ -1,3 +1,16 @@
+tasks:
+  - name: java-maven-build
+    params:
+      - name: jdk-version
+        value: "11"
+      - name: goals
+        value: "com.atlassian.maven.plugins:atlassian-plugin-sdk:8.0:atlas-package"
+      - name: publish-artifact
+        value: "true"
+
+
+
+
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
