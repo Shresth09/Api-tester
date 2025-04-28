@@ -1,0 +1,35 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: jira-plugin-build
+  namespace: your-namespace
+spec:
+  tasks:
+    - name: build-package
+      taskSpec:
+        params:
+          - name: jdk-version
+            description: "JDK version to use"
+            default: "11"
+          - name: goals
+            description: "Maven goals to run"
+            default: "compile install"
+          - name: publish-artifact
+            description: "Whether to publish artifact"
+            default: "true"
+        steps:
+          - name: setup-jdk
+            image: maven:3.8.1-openjdk-11
+            script: |
+              #!/bin/bash
+              echo "Using JDK version $(params.jdk-version)"
+          - name: run-maven
+            image: maven:3.8.1-openjdk-11
+            script: |
+              #!/bin/bash
+              echo "Running Maven goals: $(params.goals)"
+              mvn $(params.goals)
+              if [ "$(params.publish-artifact)" == "true" ]; then
+                echo "Publishing artifact..."
+                # Add artifact publishing logic here
+              fi
