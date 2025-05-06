@@ -10,14 +10,16 @@ String urlToSend = jira_nam_base_url + "/rest/api/latest/search?jql=" + encodedJ
 
 
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+// Build the JQL query by enclosing the field name in double quotes because it has a space
 String jqlQuery = "\"Planview ID\" ~ \"" + planviewID + "\" AND issuetype = \"Planview\"";
+
+// URL encode the entire query to safely handle spaces and special characters
 String encodedJql = URLEncoder.encode(jqlQuery, StandardCharsets.UTF_8);
+
+// Construct the complete URL
 String urlToSend = jira_nam_base_url + "/rest/api/latest/search?jql=" + encodedJql + "&expand=names";
 
-
-
--------_-_-_-_-_-_
-
-String jqlQuery = "\"Planview ID\" ~ \"" + planviewID + "\" AND issuetype = \"Planview\"";
-String encodedJql = URLEncoder.encode(jqlQuery, StandardCharsets.UTF_8);
-String urlToSend = jira_nam_base_url + "/rest/api/latest/search?jql=" + encodedJql + "&expand=names"; 
+System.out.println("URL to send: " + urlToSend);
