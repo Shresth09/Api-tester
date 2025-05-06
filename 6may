@@ -1,25 +1,38 @@
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 
-String jqlQuery = "Planview ID ~ \"" + planviewID + "\" AND issuetype = \"Planview\"";
-String encodedJql = URLEncoder.encode(jqlQuery, StandardCharsets.UTF_8);
-String urlToSend = jira_nam_base_url + "/rest/api/latest/search?jql=" + encodedJql + "&expand=names";
+public class JiraService {
 
+    public String callJiraApi(String planviewId) {
+        String jiraBaseUrl = "https://your-jira-instance/rest/api/latest/search";
 
+        try {
+            // Construct JQL Query with Encoding
+            String jqlQuery = URLEncoder.encode("\"Planview ID\" ~ " + planviewId + " AND issuetype = Planview", StandardCharsets.UTF_8);
+            String urlToSend = jiraBaseUrl + "?jql=" + jqlQuery + "&expand=names";
 
+            // Setup Headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth("your-username", "your-api-token");
+            headers.set("Accept", "application/json");
 
+            // Create Request Entity
+            HttpEntity<String> entity = new HttpEntity<>(headers);
 
+            // Make API Call
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> response = restTemplate.exchange(urlToSend, HttpMethod.GET, entity, String.class);
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+            return response.getBody();
 
-// Build the JQL query by enclosing the field name in double quotes because it has a space
-String jqlQuery = "\"Planview ID\" ~ \"" + planviewID + "\" AND issuetype = \"Planview\"";
-
-// URL encode the entire query to safely handle spaces and special characters
-String encodedJql = URLEncoder.encode(jqlQuery, StandardCharsets.UTF_8);
-
-// Construct the complete URL
-String urlToSend = jira_nam_base_url + "/rest/api/latest/search?jql=" + encodedJql + "&expand=names";
-
-System.out.println("URL to send: " + urlToSend);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error in calling Jira API";
+        }
+    }
+}
