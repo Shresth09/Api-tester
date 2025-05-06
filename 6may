@@ -1,3 +1,27 @@
+    private String getCustomFieldValueFromOption(JsonNode fields, String customFieldId) {
+        if (fields != null && fields.has(customFieldId) && !fields.get(customFieldId).isNull()) {
+            JsonNode optionNode = fields.get(customFieldId);
+            if (optionNode.isObject() && optionNode.has("value")) {
+                return optionNode.get("value").asText();
+            }
+        }
+        return null;
+    }
+
+    private String getCustomFieldValueFromUser(JsonNode fields, String customFieldId) {
+        if (fields != null && fields.has(customFieldId) && !fields.get(customFieldId).isNull()) {
+            JsonNode userNode = fields.get(customFieldId);
+            if (userNode.isObject() && userNode.has("displayName")) {
+                return userNode.get("displayName").asText();
+            }
+        }
+        return null;
+    }
+
+
+
+
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
