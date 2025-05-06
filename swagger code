@@ -1,0 +1,88 @@
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+@RestController
+@RequestMapping("/api")
+public class JiraController {
+
+    @Operation(
+        summary = "Call RRP Manual Push API for Planview ID",
+        description = "Fetch Jira issues based on the provided query parameter and map Planview ID to call RRPManual Push endpoint."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Success",
+            content = @Content(
+                examples = @ExampleObject(
+                    name = "Sample Success Response",
+                    value = "{ \"jiraResponse\": [...] }"
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content = @Content(
+                examples = @ExampleObject(
+                    name = "Sample Error Response",
+                    value = "{ \"error\": \"Invalid key Provided\" }"
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content = @Content(
+                examples = @ExampleObject(
+                    name = "Sample Failure Response",
+                    value = "{ \"error\": \"Failed to fetch issues: Internal server error.\" }"
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(
+                examples = @ExampleObject(
+                    name = "Sample Failure Response",
+                    value = "Jira Authorization failed OR 'Event Manager' does not have necessary permission to run rrpManualPush REST Endpoint."
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Forbidden",
+            content = @Content(
+                examples = @ExampleObject(
+                    name = "Sample Failure Response",
+                    value = "Method Type Mismatch for rrpManualPush REST Endpoint."
+                )
+            )
+        )
+    })
+    @PostMapping(value = "/jiraRRP", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ObjectNode> jiraRRPCall(
+        @Parameter(
+            name = "Body",
+            description = "Request body containing Planview ID.",
+            required = true,
+            example = "{\"rrpInput\":[{\"planviewID\":\"20250987650\"}]}"
+        )
+        @RequestBody String body) {
+        
+        // Call service method to process request
+        // Example: ObjectNode response = jiraService.processRequest(body);
+        
+        return ResponseEntity.ok().body(null);  // Replace null with actual response processing
+    }
+}
