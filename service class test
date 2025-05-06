@@ -1,0 +1,292 @@
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.*;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
+
+import java.io.IOException;
+import java.util.Collections;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class JiraServiceTest {
+
+    @InjectMocks
+    private JiraService jiraService;
+
+    @Mock
+    private RestTemplate restTemplate;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    private final String jiraBaseUrl = "http://localhost:8080";
+    private final String jiraToken = "testToken";
+
+    @Test
+    void testJiraRRPData_Success() throws IOException {
+        // Mock input body
+        String requestBody = "{\"rrpInput\":[{\"planviewID\":\"PV-123\"}]}";
+        JsonNode rootNode = objectMapper.readTree(requestBody);
+        JsonNode planViewIdNode = rootNode.path("rrpInput").get(0).path("planviewID");
+
+        // Mock Jira API response
+        String jiraResponseBody = """
+                {
+                  "expand": "names",
+                  "startAt": 0,
+                  "maxResults": 50,
+                  "total": 1,
+                  "names": {
+                    "customfield_10001": "Project Type",
+                    "customfield_10002": "Technical Manager",
+                    "customfield_10003": "Project / Program Manager",
+                    "customfield_10004": "Impacted Application/s",
+                    "customfield_10005": "Planview SDLC Phase",
+                    "customfield_10006": "Work Status",
+                    "customfield_10007": "Work Type",
+                    "customfield_10008": "Planview Release Date",
+                    "customfield_10009": "TISO",
+                    "customfield_10010": "Planview LOB"
+                  },
+                  "issues": [
+                    {
+                      "expand": "names",
+                      "id": "10000",
+                      "self": "http://localhost:8080/rest/api/latest/issue/10000",
+                      "key": "TEST-1",
+                      "fields": {
+                        "summary": "Test Issue",
+                        "description": "Test Description",
+                        "customfield_10001": { "value": "Agile" },
+                        "customfield_10003": "Test User (test@example.com)",
+                        "customfield_10004": "App1; App2",
+                        "customfield_10005": "Planning",
+                        "customfield_10006": { "value": "In Progress" },
+                        "customfield_10007": "Task",
+                        "customfield_10008": "2025-05-10",
+                        "customfield_10010": "Test LOB"
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        ResponseEntity<JsonNode> jiraResponseEntity = new ResponseEntity<>(objectMapper.readTree(jiraResponseBody), HttpStatus.OK);
+
+        // Mock RestTemplate exchange method
+        when(objectMapper.readTree(requestBody)).thenReturn(rootNode);
+        when(restTemplate.exchange(
+                eq("http://localhost:8080/rest/api/latest/search?jql=\"Planview ID\"='PV-123' and issuetype = 'Planview'&expand=names"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(JsonNode.class)
+        )).thenReturn(jiraResponseEntity);
+
+        // Set private fields using ReflectionTestUtils
+        ReflectionTestUtils.setField(jiraService, "jiraBaseUrl", jiraBaseUrl);
+        ReflectionTestUtils.setField(jiraService, "jiraToken", jiraToken);
+
+        // Call the service method
+        ResponseEntity<ObjectNode> responseEntity = jiraService.jiraRRPData(requestBody);
+
+        // Assertions
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        ObjectNode responseBody = responseEntity.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Success", responseBody.path("jiraResponse").get(0).path("responseStatus").asText());
+        assertEquals("PV-123", responseBody.path("jiraResponse").get(0).path("projectId").asText());
+        assertEquals("Test Issue", responseBody.path("jiraResponse").get(0).path("name").asText());
+        assertEquals("Agile", responseBody.path("jiraResponse").get(0).path("sdlcType").asText());
+        assertEquals("Test User", responseBody.path("jiraResponse").get(0).path("efResponderList").get(0).path("soeId").asText());
+        assertEquals("App1", responseBody.path("jiraResponse").get(0).path("csiIdList").get(0).path("csiId").asText());
+        assertEquals("Planning", responseBody.path("jiraResponse").get(0).path("sdlcPhase").asText());
+        assertEquals("In Progress", responseBody.path("jiraResponse").get(0).path("pmoProjectStatus").asText());
+        assertEquals("Task", responseBody.path("jiraResponse").get(0).path("type").asText());
+        assertEquals("2025-05-10", responseBody.path("jiraResponse").get(0).path("releaseDate").asText());
+        assertEquals("Test LOB", responseBody.path("jiraResponse").get(0).path("lob").asText());
+        assertEquals("Test Description", responseBody.path("jiraResponse").get(0).path("description").asText());
+    }
+
+    @Test
+    void testJiraRRPData_PlanviewIdNotFound() throws IOException {
+        // Mock input body
+        String requestBody = "{\"rrpInput\":[{\"planviewID\":\"PV-456\"}]}";
+        JsonNode rootNode = objectMapper.readTree(requestBody);
+
+        // Mock Jira API response with no issues found
+        String jiraResponseBody = """
+                {
+                  "expand": "names",
+                  "startAt": 0,
+                  "maxResults": 50,
+                  "total": 0,
+                  "names": {},
+                  "issues": []
+                }
+                """;
+        ResponseEntity<JsonNode> jiraResponseEntity = new ResponseEntity<>(objectMapper.readTree(jiraResponseBody), HttpStatus.OK);
+
+        // Mock RestTemplate exchange method
+        when(objectMapper.readTree(requestBody)).thenReturn(rootNode);
+        when(restTemplate.exchange(
+                eq("http://localhost:8080/rest/api/latest/search?jql=\"Planview ID\"='PV-456' and issuetype = 'Planview'&expand=names"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(JsonNode.class)
+        )).thenReturn(jiraResponseEntity);
+
+        // Set private fields
+        ReflectionTestUtils.setField(jiraService, "jiraBaseUrl", jiraBaseUrl);
+        ReflectionTestUtils.setField(jiraService, "jiraToken", jiraToken);
+
+        // Call the service method
+        ResponseEntity<ObjectNode> responseEntity = jiraService.jiraRRPData(requestBody);
+
+        // Assertions
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        ObjectNode responseBody = responseEntity.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Fail", responseBody.path("jiraResponse").get(0).path("responseStatus").asText());
+        assertEquals("PV-456", responseBody.path("jiraResponse").get(0).path("projectId").asText());
+        assertEquals("Planview Id not found in Jira", responseBody.path("jiraResponse").get(0).path("errorSummary").asText());
+    }
+
+    @Test
+    void testJiraRRPData_IOException() throws IOException {
+        // Mock input body that causes IOException
+        String requestBody = "invalid json";
+        when(objectMapper.readTree(requestBody)).thenThrow(new IOException("Parsing error"));
+
+        // Call the service method
+        ResponseEntity<ObjectNode> responseEntity = jiraService.jiraRRPData(requestBody);
+
+        // Assertions
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        ObjectNode responseBody = responseEntity.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Fail", responseBody.path("responseStatus").asText());
+        assertEquals("Error processing input JSON", responseBody.path("errorSummary").asText());
+    }
+
+    @Test
+    void testJiraRRPData_JiraApiError() throws IOException {
+        // Mock input body
+        String requestBody = "{\"rrpInput\":[{\"planviewID\":\"PV-789\"}]}";
+        JsonNode rootNode = objectMapper.readTree(requestBody);
+
+        // Mock RestTemplate to throw an exception
+        when(objectMapper.readTree(requestBody)).thenReturn(rootNode);
+        when(restTemplate.exchange(
+                anyString(),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(JsonNode.class)
+        )).thenThrow(new RuntimeException("Jira API error"));
+
+        // Set private fields
+        ReflectionTestUtils.setField(jiraService, "jiraBaseUrl", jiraBaseUrl);
+        ReflectionTestUtils.setField(jiraService, "jiraToken", jiraToken);
+
+        // Call the service method
+        ResponseEntity<ObjectNode> responseEntity = jiraService.jiraRRPData(requestBody);
+
+        // Assertions
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+        ObjectNode responseBody = responseEntity.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Fail", responseBody.path("responseStatus").asText());
+        assertEquals("Error communicating with Jira", responseBody.path("errorSummary").asText());
+    }
+
+    @Test
+    void testJiraRRPData_MandatoryFieldMissing() throws IOException {
+        // Mock input body
+        String requestBody = "{\"rrpInput\":[{\"planviewID\":\"PV-MISSING\"}]}";
+        JsonNode rootNode = objectMapper.readTree(requestBody);
+
+        // Mock Jira API response with missing mandatory field (Project / Program Manager)
+        String jiraResponseBody = """
+                {
+                  "expand": "names",
+                  "startAt": 0,
+                  "maxResults": 50,
+                  "total": 1,
+                  "names": {
+                    "customfield_10001": "Project Type",
+                    "customfield_10002": "Technical Manager",
+                    "customfield_10003": "Project / Program Manager",
+                    "customfield_10004": "Impacted Application/s",
+                    "customfield_10005": "Planview SDLC Phase",
+                    "customfield_10006": "Work Status",
+                    "customfield_10007": "Work Type",
+                    "customfield_10008": "Planview Release Date",
+                    "customfield_10009": "TISO",
+                    "customfield_10010": "Planview LOB"
+                  },
+                  "issues": [
+                    {
+                      "expand": "names",
+                      "id": "10001",
+                      "self": "http://localhost:8080/rest/api/latest/issue/10001",
+                      "key": "TEST-2",
+                      "fields": {
+                        "summary": "Missing Field Issue",
+                        "customfield_10001": { "value": "Agile" },
+                        "customfield_10004": "App3",
+                        "customfield_10005": "Analysis",
+                        "customfield_10006": { "value": "To Do" },
+                        "customfield_10007": "Story",
+                        "customfield_10008": "2025-05-15",
+                        "customfield_10010": "Another LOB"
+                      }
+                    }
+                  ]
+                }
+                """;
+        ResponseEntity<JsonNode> jiraResponseEntity = new ResponseEntity<>(objectMapper.readTree(jiraResponseBody), HttpStatus.OK);
+
+        // Mock RestTemplate exchange method
+        when(objectMapper.readTree(requestBody)).thenReturn(rootNode);
+        when(restTemplate.exchange(
+                anyString(),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(JsonNode.class)
+        )).thenReturn(jiraResponseEntity);
+
+        // Set private fields
+        ReflectionTestUtils.setField(jiraService, "jiraBaseUrl", jiraBaseUrl);
+        ReflectionTestUtils.setField(jiraService, "jiraToken", jiraToken);
+
+        // Call the service method
+        ResponseEntity<ObjectNode> responseEntity = jiraService.jiraRRPData(requestBody);
+
+        // Assertions
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        ObjectNode responseBody = responseEntity.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Fail", responseBody.path("jiraResponse").get(0).path("responseStatus").asText());
+        assertEquals("PV-MISSING", responseBody.path("jiraResponse").get(0).path("projectId").asText());
+        assertEquals("[Project / Program Manager]", responseBody.path("jiraResponse").get(0).path("errorSummary").asText());
+    }
+
+    // Add more test cases to cover different scenarios:
+    // - Different project types (Maintenance, Waterfall) and their mandatory fields
+    // - Missing CSI ID
+    // - Custom fields with option values
+    // - Custom fields with user values
+    // - Edge cases like empty impacted applications, null custom field values
+    // - Long description truncation
+}
