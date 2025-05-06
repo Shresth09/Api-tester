@@ -1,112 +1,66 @@
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
-@Service
-public class JiraService {
-
-    private final RestTemplate restTemplate;
-
-    @Value("${jira.base-url}")
-    private String jiraBaseUrl;
-
-    @Value("${jira.username}")
-    private String jiraUsername;
-
-    @Value("${jira.password}")
-    private String jiraPassword;
-
-    public JiraService(RestTemplateBuilder restTemplateBuilder) {
-        this.restTemplate = restTemplateBuilder.build();
-    }
-
-    public String searchJiraIssuesByPlanviewId(String planviewId) {
-        String jql = "\"Planview ID\" ~ '" + planviewId + "' and issuetype = Planview";
-        String uri = UriComponentsBuilder.fromHttpUrl(jiraBaseUrl)
-                .path("/rest/api/latest/search")
-                .queryParam("jql", jql)
-                .build()
-                .toUriString();
-
-        HttpHeaders headers = new HttpHeaders();
-        // Basic Authentication
-        String auth = jiraUsername + ":" + jiraPassword;
-        byte[] encodedAuth = java.util.Base64.getEncoder().encode(auth.getBytes());
-        headers.set("Authorization", "Basic " + new String(encodedAuth));
-        headers.set("Content-Type", "application/json");
-
-        HttpEntity<String> requestEntity = new HttpEntity<>(headers);
-
-        try {
-            ResponseEntity<String> responseEntity = restTemplate.exchange(
-                    uri,
-                    HttpMethod.GET,
-                    requestEntity,
-                    String.class // Or a custom class to map the JSON response
-            );
-            return responseEntity.getBody();
-        } catch (Exception e) {
-            // Handle exceptions appropriately (logging, custom exception)
-            e.printStackTrace();
-            return null;
-        }
-    }
-}
- 
-
-
-
-
-
-_-_--_-_-_-_-_-(_(_(_-_-_(_(_(
-
-
-
-
-
-
-
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.*;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JiraService {
 
-    public String callJiraApi(String planviewId) {
-        String jiraBaseUrl = "https://your-jira-instance/rest/api/latest/search";
+    private static final String JIRA_BASE_URL = "https://your-jira-instance/rest/api/latest/search";
+    private static final String USERNAME = "your-username";
+    private static final String API_TOKEN = "your-api-token";
 
+    public String getJiraIssues(String planviewId) {
         try {
-            // Construct JQL Query with Encoding
-            String jqlQuery = URLEncoder.encode("\"Planview ID\" ~ " + planviewId + " AND issuetype = Planview", StandardCharsets.UTF_8);
-            String urlToSend = jiraBaseUrl + "?jql=" + jqlQuery + "&expand=names";
+            // Construct and encode JQL query
+            String jqlQuery = URLEncoder.encode("\"Planview ID\" ~ \"" + planviewId + "\" AND issuetype = \"Planview\"", StandardCharsets.UTF_8);
+            String urlToSend = JIRA_BASE_URL + "?jql=" + jqlQuery + "&expand=names";
 
-            // Setup Headers
+            // Setup headers
             HttpHeaders headers = new HttpHeaders();
-            headers.setBasicAuth("your-username", "your-api-token");
+            headers.setBasicAuth(USERNAME, API_TOKEN);
             headers.set("Accept", "application/json");
 
-            // Create Request Entity
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            // Make API Call
+            // Make API call
             RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<String> response = restTemplate.exchange(urlToSend, HttpMethod.GET, entity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(urlToSend, HttpMethod.GET, new HttpEntity<>(headers), String.class);
 
-            return response.getBody();
-
+            return processJiraResponse(response.getBody());
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error in calling Jira API";
+            return "{\"error\": \"Failed to fetch data from Jira\"}";
+        }
+    }
+
+    private String processJiraResponse(String jsonResponse) {
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(jsonResponse);
+            JsonNode issuesNode = rootNode.path("issues");
+
+            if (issuesNode.isEmpty()) {
+                Map<String, Object> errorMap = new HashMap<>();
+                errorMap.put("responseStatus", "Fail");
+                errorMap.put("errorSummary", "Planview ID not found in Jira");
+                results.add(errorMap);
+            } else {
+                for (JsonNode issueNode : issuesNode) {
+                    Map<String, Object> issueDetails = new HashMap<>();
+                    issueDetails.put("scCode", issueNode.path("key").asText());
+                    issueDetails.put("name", issueNode.path("fields").path("summary").asText());
+                    issueDetails.put("sdlcType", issueNode.path("fields").path("customfield_XXXXX").asText()); // Replace XXXXX with actual custom field ID
+                    results.add(issueDetails);
+                }
+            }
+
+            return objectMapper.writeValueAsString(Collections.singletonMap("jiraResponse", results));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "{\"error\": \"Failed to parse Jira response\"}";
         }
     }
 }
