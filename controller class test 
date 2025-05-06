@@ -1,0 +1,95 @@
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(JiraRRPController.class)
+public class JiraRRPControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private JiraService jiraService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Test
+    void jiraRRPCall_Success() throws Exception {
+        // Mock request body
+        String requestBody = "{\"rrpInput\":[{\"planviewID\":\"PV-123\"}]}";
+
+        // Mock successful service response
+        ObjectNode successResponse = objectMapper.createObjectNode();
+        ObjectNode jiraResponse = objectMapper.createObjectNode();
+        jiraResponse.put("responseStatus", "Success");
+        successResponse.set("jiraResponse", objectMapper.createArrayNode().add(jiraResponse));
+        ResponseEntity<ObjectNode> mockResponseEntity = ResponseEntity.ok(successResponse);
+
+        when(jiraService.jiraRRPData(anyString())).thenReturn(mockResponseEntity);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/jira/jiraRRP")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(successResponse)));
+    }
+
+    @Test
+    void jiraRRPCall_BadRequest() throws Exception {
+        // Mock invalid request body
+        String requestBody = "{\"invalid\": \"json\"}";
+
+        // Mock service returning a bad request
+        ObjectNode errorResponse = objectMapper.createObjectNode();
+        errorResponse.put("responseStatus", "Fail");
+        errorResponse.put("errorSummary", "Error processing input JSON");
+        ResponseEntity<ObjectNode> mockResponseEntity = ResponseEntity.badRequest().body(errorResponse);
+
+        when(jiraService.jiraRRPData(anyString())).thenReturn(mockResponseEntity);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/jira/jiraRRP")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(errorResponse)));
+    }
+
+    @Test
+    void jiraRRPCall_InternalServerError() throws Exception {
+        // Mock request body
+        String requestBody = "{\"rrpInput\":[{\"planviewID\":\"PV-456\"}]}";
+
+        // Mock service returning an internal server error
+        ObjectNode errorResponse = objectMapper.createObjectNode();
+        errorResponse.put("responseStatus", "Fail");
+        errorResponse.put("errorSummary", "Error communicating with Jira");
+        ResponseEntity<ObjectNode> mockResponseEntity = ResponseEntity.internalServerError().body(errorResponse);
+
+        when(jiraService.jiraRRPData(anyString())).thenReturn(mockResponseEntity);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/jira/jiraRRP")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(errorResponse)));
+    }
+
+    // You can add more test cases to cover other scenarios or edge cases
+}
