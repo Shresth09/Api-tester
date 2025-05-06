@@ -13,3 +13,11 @@ String urlToSend = jira_nam_base_url + "/rest/api/latest/search?jql=" + encodedJ
 String jqlQuery = "\"Planview ID\" ~ \"" + planviewID + "\" AND issuetype = \"Planview\"";
 String encodedJql = URLEncoder.encode(jqlQuery, StandardCharsets.UTF_8);
 String urlToSend = jira_nam_base_url + "/rest/api/latest/search?jql=" + encodedJql + "&expand=names";
+
+
+
+-------_-_-_-_-_-_
+
+String jqlQuery = "\"Planview ID\" ~ \"" + planviewID + "\" AND issuetype = \"Planview\"";
+String encodedJql = URLEncoder.encode(jqlQuery, StandardCharsets.UTF_8);
+String urlToSend = jira_nam_base_url + "/rest/api/latest/search?jql=" + encodedJql + "&expand=names"; 
