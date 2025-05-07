@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Jira AUI-like Button</title>
+<style>
+.aui-button {
+  display: inline-block;
+  padding: 7px 12px;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 1.42857143;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  background-image: none;
+  border: 1px solid transparent;
+  border-radius: 3px;
+}
+
+.aui-button-primary {
+  color: #fff;
+  background-color: #0052cc;
+  border-color: #0052cc;
+}
+
+.aui-button-primary:hover,
+.aui-button-primary:focus {
+  background-color: #004499;
+  border-color: #004499;
+}
+
+.aui-button-secondary {
+  color: #333;
+  background-color: #fff;
+  border-color: #ccc;
+}
+
+.aui-button-secondary:hover,
+.aui-button-secondary:focus {
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+
+/* You can add more AUI button styles as needed, 
+   like subtle, link, etc. */
+</style>
+</head>
+<body>
+
+<button class="aui-button aui-button-primary">Primary Button</button>
+<button class="aui-button aui-button-secondary">Secondary Button</button>
+
+</body>
+</html>
