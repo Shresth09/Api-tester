@@ -1,0 +1,15 @@
+<web-resource key="my-plugin-resources" name="My Plugin Resources">
+    <resource type="download" name="ScanR_Logo.png" location="/images/ScanR_Logo.png"/>
+    <context>atl.general</context>
+</web-resource>
+
+
+
+<header class="aui-dialog2-header">
+    <img src="$webResourceManager.getStaticResourceUrl('my-plugin-resources:ScanR_Logo.png')" 
+         alt="Logo" style="height: 40px; margin-right: 10px;">
+    <h2 class="aui-dialog2-header-main">Exit Report Summary</h2>
+    <a class="aui-dialog2-header-close">
+        <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+    </a>
+</header>
