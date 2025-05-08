@@ -1,0 +1,76 @@
+var globalTestExitReport = "";
+var globalMitigationPlanAttachment = "";
+
+async function initStuffTER() {
+    var globalIssueKey = getIssueKey();
+
+    try {
+        var globalFieldValues = await fetchCustomFieldValue(globalIssueKey);
+
+        globalTestExitReport = globalFieldValues.test_exit_report;
+        globalMitigationPlanAttachment = globalFieldValues.mitigation_plan_attachment;
+
+        console.log("Test Exit Report Filename: " + globalTestExitReport);
+        console.log("Mitigation Plan Filename: " + globalMitigationPlanAttachment);
+
+    } catch (error) {
+        console.log("Error:", error);
+    }
+}
+
+function getIssueKey() {
+    var url = window.location.href;
+    var issueKeyPattern = /browse\/([A-Z]+-\d+)/;
+    var match = url.match(issueKeyPattern);
+
+    if (match) {
+        return match[1];
+    }
+
+    var issueKeyElement = AJS.$("#key-val");
+    if (issueKeyElement.length) {
+        return issueKeyElement.text().trim();
+    }
+
+    var selectedIssueKey = AJS.$(".selected-issue-key").text();
+    if (selectedIssueKey) {
+        return selectedIssueKey.trim();
+    }
+
+    return null;
+}
+
+function fetchCustomFieldValue(issueKey) {
+    console.log("Fetching attachments for issue: " + issueKey);
+
+    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
+
+    return new Promise((resolve, reject) => {
+        jQuery.ajax({
+            url: jiraApiUrl,
+            type: 'GET',
+            dataType: 'json',
+            success: function (response) {
+                var attachments = response.fields.attachment || [];
+
+                var testExitReport = attachments.find(attachment => 
+                    attachment.filename.toLowerCase().includes("test exit report summary"));
+                
+                var mitigationPlanAttachment = attachments.find(attachment => 
+                    attachment.filename.toLowerCase().includes("mitigation"));
+
+                resolve({
+                    test_exit_report: testExitReport ? testExitReport.filename : null,
+                    mitigation_plan_attachment: mitigationPlanAttachment ? mitigationPlanAttachment.filename : null
+                });
+            },
+            error: function () {
+                console.log("Error fetching data");
+                reject("Error fetching data");
+            }
+        });
+    });
+}
+
+// Initialize script
+initStuffTER();
