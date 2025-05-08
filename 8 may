@@ -1,3 +1,21 @@
+
+
+var payload = JSON.stringify({
+    test_exit_report_summary_attachment: globalTestExitReport ? globalTestExitReport : "",
+    mitigation_plan_attachment: globalMitigationPlanAttachment ? globalMitigationPlanAttachment : "",
+    send_email: false,
+    approvers: [],
+    to: [],
+    cc: []
+});
+
+console.log("Payload: ", payload);
+
+
+
+
+
+
 var globalTestExitReport = "";
 var globalMitigationPlanAttachment = "";
 
