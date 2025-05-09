@@ -1,85 +1,37 @@
 AJS.$("#download-ter-report-button").on("click", function() {
-    var $apiTerResponse = AJS.$("#api-ter-response");
-    var downloadvar = $apiTerResponse.html();
-    var $suggestedTextArea = $apiTerResponse.find("#suggested-story-textarea");
-
-    if ($suggestedTextArea.length > 0) {
-        $suggestedTextArea.css('height', 'auto');
-    }
-
-    console.log("downloadvar content:", downloadvar); // Add this line
-
+    var suggestedTERSummary = AJS.$("#suggested-story-textarea").val(); // Get the actual textarea value
+    var globalTestExitReportContent = /* ... logic to get content for $(globalTestExitReport) ... */;
+    var globalMitigationPlanAttachmentContent = /* ... logic to get content for $(globalMitigationPlanAttachment) ... */;
     var jiralssueReffUrl = AJS.params.baseURL + "/browse/" + globalIssuekey;
-    var printwindow = window.open('', '_blank');
-    printwindow.document.open();
-    printwindow.document.write(`
+
+    var printHTML = `
         <html>
-        <head>
-            <title>Citi-Plugin Test Exit Report for ${globalIssuekey}</title>
-            <style type="text/css" media="print">
-                .collapsible-section > div {
-                    max-height: none !important;
-                    overflow: visible !important;
-                }
-            </style>
-        </head>
-        <br>
-        <a href="${jiraIssueReffUrl}">View Issue</a>
-        <br>
+        <head><title>Citi-Plugin Test Exit Report for ${globalIssuekey}</title></head>
         <body>
-            ${downloadvar}
+            <p><a href="${jiraIssueReffUrl}">View Issue</a></p>
+            <div>
+                <h3>Request Attachments</h3>
+                <div>
+                    ${globalTestExitReportContent} <br>
+                    ${globalMitigationPlanAttachmentContent}
+                </div>
+            </div>
+            <br>
+            <div>
+                <h3>Generated Summary</h3>
+                <div>
+                    ${suggestedTERSummary}
+                </div>
+            </div>
         </body>
         </html>
-    `);
-    printwindow.document.close();
-    printwindow.focus();
-    printWindow.print();
-    printwindow.close();
-});
- 
+    `;
 
-
-
-
-
-
-
-
-:!? *! '/'! *! *! *! *! *!! *! *! *! *! 
-
-
-
-AJS.$("#download-ter-report-button").on("click", function() {
-    var downloadvar = AJS.$("#api-ter-response").html();
-    var jiralssueReffUrl = AJS.params.baseURL + "/browse/" + globalIssuekey;
     var printwindow = window.open('', '_blank');
     printwindow.document.open();
-    printwindow.document.write('<html><head><title>Citi-Plugin Test Exit Report for ' + globalIssuekey + '</title><style type="text/css" media="print">.collapsible-section > div { max-height: none !important; overflow: visible !important; }</style></head><br><a href="' + jiraIssueReffUrl + '">View Issue</a><br><body>' + downloadvar + '</body></html>');
+    printwindow.document.write(printHTML);
     printwindow.document.close();
     printwindow.focus();
     printWindow.print();
     printwindow.close();
 });
-
-
-
-
-printwindow.document.write(`
-    <html>
-    <head>
-        <title>Citi-Plugin Test Exit Report for ${globalIssuekey}</title>
-        <style type="text/css" media="print">
-            .collapsible-section > div {
-                max-height: none !important;
-                overflow: visible !important;
-            }
-        </style>
-    </head>
-    <br>
-    <a href="${jiraIssueReffUrl}">View Issue</a>
-    <br>
-    <body>
-        ${downloadvar}
-    </body>
-    </html>
-`);
