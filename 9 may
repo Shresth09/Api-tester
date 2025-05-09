@@ -9,3 +9,26 @@ AJS.$("#download-ter-report-button").on("click", function() {
     printWindow.print();
     printwindow.close();
 });
+
+
+
+
+printwindow.document.write(`
+    <html>
+    <head>
+        <title>Citi-Plugin Test Exit Report for ${globalIssuekey}</title>
+        <style type="text/css" media="print">
+            .collapsible-section > div {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+        </style>
+    </head>
+    <br>
+    <a href="${jiraIssueReffUrl}">View Issue</a>
+    <br>
+    <body>
+        ${downloadvar}
+    </body>
+    </html>
+`);
