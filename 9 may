@@ -1,3 +1,16 @@
+.textarea-a {
+    width: 100%;
+    min-height: 100px !important; /* Ensure a reasonable default height */
+    height: auto !important; /* Force auto-expansion */
+    display: block !important; /* Ensure block-level rendering */
+    overflow-y: hidden; /* Hide scrollbar */
+    resize: none; /* Prevent manual resizing */
+    white-space: pre-wrap; /* Preserve formatting */
+}
+
+
+
+
 AJS.$("#download-ter-report-button").on("click", function() {
     var downloadvar = AJS.$("#api-ter-response").html(); // Capture full modal content
     var jiraIssueReffUrl = AJS.params.baseURL + "/browse/" + globalIssuekey;
