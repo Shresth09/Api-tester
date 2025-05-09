@@ -1,0 +1,11 @@
+AJS.$("#download-ter-report-button").on("click", function() {
+    var downloadvar = AJS.$("#api-ter-response").html();
+    var jiralssueReffUrl = AJS.params.baseURL + "/browse/" + globalIssuekey;
+    var printwindow = window.open('', '_blank');
+    printwindow.document.open();
+    printwindow.document.write('<html><head><title>Citi-Plugin Test Exit Report for ' + globalIssuekey + '</title><style type="text/css" media="print">.collapsible-section > div { max-height: none !important; overflow: visible !important; }</style></head><br><a href="' + jiraIssueReffUrl + '">View Issue</a><br><body>' + downloadvar + '</body></html>');
+    printwindow.document.close();
+    printwindow.focus();
+    printWindow.print();
+    printwindow.close();
+});
