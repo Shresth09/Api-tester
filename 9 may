@@ -12,3 +12,11 @@ AJS.$("#download-ter-report-button").on("click", function() {
     printWindow.print();
     printWindow.close();
 });
+
+
+
+
+
+<textarea id="suggested-summary-textarea" class="textarea long-field" 
+                style="width: 100%; height: auto;" 
+                oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px';">${suggestedTERSummary}</textarea>
