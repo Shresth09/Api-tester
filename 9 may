@@ -1,3 +1,16 @@
+<div>
+  <a id="show-popup" class="aui-button">
+    <span style="font-size: 24px;">&#10023;</span> <!-- Big star -->
+    <span style="font-size: 12px; position: absolute; top: 5px; left: 15px;">&#128966;</span> <!-- Small star -->
+    Scan Assist
+  </a>
+</div>
+
+
+
+
+
+
 <button style="font-size: 2em;">
   <span style="color: purple;">&#10023;</span>
   <span style="font-size: 0.5em; color: orangered; position: relative; top: -0.6em; left: 0.8em;">&#128966;</span>
