@@ -1,35 +1,43 @@
-.textarea-a {
+Yes! If `<textarea>` isn't working properly due to Jira's UI constraints, you can use alternative elements like **`<div>` with content-editable**, or **AUI components**.
+
+### **Alternative 1: Use a `<div>` Instead of a `<textarea>`**
+If Jira’s styling is restricting `<textarea>`, you can replace it with a `<div>` that behaves similarly but **auto-expands** dynamically.
+
+```html
+<div id="suggested-summary-content" class="editable-div" contenteditable="true">
+    ${suggestedTERSummary}
+</div>
+```
+
+#### **CSS for Auto-Expanding**
+```css
+.editable-div {
     width: 100%;
-    min-height: 100px !important; /* Ensure a reasonable default height */
-    height: auto !important; /* Force auto-expansion */
-    display: block !important; /* Ensure block-level rendering */
-    overflow-y: hidden; /* Hide scrollbar */
-    resize: none; /* Prevent manual resizing */
-    white-space: pre-wrap; /* Preserve formatting */
+    min-height: 100px;
+    height: auto !important;
+    overflow-y: hidden;
+    white-space: pre-wrap;
+    border: 1px solid #A4ACAF;
+    padding: 10px;
+    resize: none;
+    display: block;
 }
+```
 
+### **Alternative 2: Use AUI Components**
+Jira uses Atlassian's UI library (**AUI**), which includes editable fields that work well within Jira plugins. Try this AUI field:
 
+```html
+<div class="aui-message aui-message-warning" role="alert">
+    <p contenteditable="true">${suggestedTERSummary}</p>
+</div>
+```
+This integrates well with Jira's UI, **avoiding textarea restrictions** while allowing text editing.
 
+### **Why These Work Better**
+✔ `<div contenteditable="true">` **auto-expands** as text increases.  
+✔ **Avoids Jira’s built-in restrictions** on `<textarea>`.  
+✔ Works smoothly inside Jira plugin web panels.  
+✔ **No scrolling issues**—text remains fully visible.  
 
-AJS.$("#download-ter-report-button").on("click", function() {
-    var downloadvar = AJS.$("#api-ter-response").html(); // Capture full modal content
-    var jiraIssueReffUrl = AJS.params.baseURL + "/browse/" + globalIssuekey;
-
-    var printWindow = window.open('', '_blank');
-    printWindow.document.open();
-    printWindow.document.write(`<html><head><title>Citi-Plugin Test Exit Report for ${globalIssuekey}</title>
-    <style>textarea { width: 100%; height: auto; min-height: 300px; white-space: pre-wrap; }</style></head>
-    <body><a href="${jiraIssueReffUrl}">View Issue</a><br>${downloadvar}</body></html>`);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
-});
-
-
-
-
-
-<textarea id="suggested-summary-textarea" class="textarea long-field" 
-                style="width: 100%; height: auto;" 
-                oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px';">${suggestedTERSummary}</textarea>
+Try this approach and let me know how it works! 🚀
