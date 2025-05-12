@@ -1,0 +1,15 @@
+<div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between;">
+    <div>
+        <label>
+            <input type="checkbox" id="update-ac"> Update Acceptance Criteria
+        </label><br/>
+        <label>
+            <input type="checkbox" id="update-desc"> Update Description
+        </label>
+    </div>
+    <div>
+        <button class="aui-button" id="accept-suggested-story">
+            <span class="aui-icon aui-icon-small aui-iconfont-approve"></span> Accept
+        </button>
+    </div>
+</div>
