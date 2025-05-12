@@ -1,15 +1,68 @@
-<div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between;">
-    <div>
-        <label>
-            <input type="checkbox" id="update-ac"> Update Acceptance Criteria
-        </label><br/>
-        <label>
-            <input type="checkbox" id="update-desc"> Update Description
-        </label>
-    </div>
-    <div>
-        <button class="aui-button" id="accept-suggested-story">
-            <span class="aui-icon aui-icon-small aui-iconfont-approve"></span> Accept
-        </button>
-    </div>
-</div>
+AJS.$("#accept-suggested-story").on("click", function() {
+    var updateAC = AJS.$("#update-ac").prop("checked");
+    var updateDesc = AJS.$("#update-desc").prop("checked");
+
+    var newDescription = AJS.$("#suggested-story-textarea").val();
+    var newAcceptanceCriteria = AJS.$("#suggested-story-textareal").val(); // Corrected the ID here
+
+    console.log("Update Acceptance Criteria checked:", updateAC);
+    console.log("Update Description checked:", updateDesc);
+    console.log("New Description val:", newDescription);
+    console.log("New Acceptance Criteria val:", newAcceptanceCriteria);
+
+    if (!updateAC && !updateDesc) {
+        // Display message and highlight checkboxes
+        alert("Please select at least one field to update.");
+        AJS.$("#update-ac").closest(".field-group").css("outline", "2px solid red");
+        AJS.$("#update-desc").closest(".field-group").css("outline", "2px solid red");
+        return; // Stop further execution
+    } else {
+        // Remove red outline if it was previously applied
+        AJS.$("#update-ac").closest(".field-group").css("outline", "");
+        AJS.$("#update-desc").closest(".field-group").css("outline", "");
+    }
+
+    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + globalIssuekey;
+    var data = {
+        "fields": {}
+    };
+
+    if (updateDesc) {
+        data.fields.description = newDescription;
+    }
+
+    if (updateAC) {
+        data.fields["$acceptanceCriteriaFieldKey"] = newAcceptanceCriteria;
+    }
+
+    console.log("Payload data:", JSON.stringify(data));
+
+    if (Object.keys(data.fields).length > 0) {
+        jQuery.ajax({
+            url: jiraApiUrl,
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function() {
+                console.log("Description value updated successfully!");
+                updateScoreDisplay(100);
+                updateCustomFieldValue(globalIssuekey, '$scoreFieldkey', 100);
+                var fieldSelector = "#" + "$acceptanceCriteriaFieldKey" + "-val";
+                alert("Selected fields updated successfully");
+                if (updateDesc) {
+                    AJS.$("#description-val").text(newDescription);
+                }
+                if (updateAC) {
+                    AJS.$(fieldSelector).text(newAcceptanceCriteria);
+                }
+                AJS.$("#api-modal").attr("aria-hidden", "true").hide();
+                AJS.dialog2("#api-modal").hide();
+                window.location.reload();
+            },
+            error: function() {
+                console.log("Error updating issue fields");
+                alert("Error updating issue fields");
+            }
+        });
+    }
+});
