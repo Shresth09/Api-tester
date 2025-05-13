@@ -1,9 +1,28 @@
-function createAndManageModal(modalId, logoSrc, contentHtml) {
+AJS.$("#show-popup").click(function() {
+    console.log("Show popup clicked");
+
+    var initialContent = "Loading data...";
+    var myModalId = createAndManageModal("myCustomModal", initialContent);
+
+    // You can now use 'myModalId' if you need to interact with the modal later
+    // For example, to update its content:
+    // AJS.$("#" + myModalId + "-content").html("New data loaded!");
+
+    // You might also make an AJAX call here to load dynamic content
+    // AJS.$.ajax({
+    //     url: "/your/api/endpoint",
+    //     success: function(data) {
+    //         AJS.$("#" + myModalId + "-content").html(data);
+    //     }
+    // });
+});
+
+function createAndManageModal(modalId, contentHtml) {
     // 1. Define the HTML structure of the modal dynamically
     var modalHtml = `
         <div id="${modalId}" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true">
             <header class="aui-dialog2-header">
-                <img src="${logoSrc}" alt="Logo" style="height: 50px; ">
+                <img src="${$logo}" alt="Logo" style="height: 50px; ">
                 <a class="aui-dialog2-header-close">
                     <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
                 </a>
@@ -47,22 +66,3 @@ function createAndManageModal(modalId, logoSrc, contentHtml) {
     // Return the modal's ID so you can potentially interact with it further
     return modalId;
 }
-
-// Example of how you might call this function on a button click:
-AJS.$("#show-popup").click(function() {
-    var logoUrl = "$logo"; // Replace with your actual logo URL
-    var initialContent = "Loading data...";
-    var myModalId = createAndManageModal("myCustomModal", logoUrl, initialContent);
-
-    // You can now use 'myModalId' if you need to interact with the modal later
-    // For example, to update its content:
-    // AJS.$("#" + myModalId + "-content").html("New data loaded!");
-
-    // You might also make an AJAX call here to load dynamic content
-    // AJS.$.ajax({
-    //     url: "/your/api/endpoint",
-    //     success: function(data) {
-    //         AJS.$("#" + myModalId + "-content").html(data);
-    //     }
-    // });
-});
