@@ -1,68 +1,68 @@
-AJS.$("#accept-suggested-story").on("click", function() {
-    var updateAC = AJS.$("#update-ac").prop("checked");
-    var updateDesc = AJS.$("#update-desc").prop("checked");
+function createAndManageModal(modalId, logoSrc, contentHtml) {
+    // 1. Define the HTML structure of the modal dynamically
+    var modalHtml = `
+        <div id="${modalId}" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true">
+            <header class="aui-dialog2-header">
+                <img src="${logoSrc}" alt="Logo" style="height: 50px; ">
+                <a class="aui-dialog2-header-close">
+                    <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+                </a>
+            </header>
+            <div class="aui-dialog2-content">
+                <div id="${modalId}-content">${contentHtml}</div>
+            </div>
+            <footer class="aui-dialog2-footer">
+                <div class="aui-dialog2-footer-actions">
+                    <button id="${modalId}-download-button" class="aui-button">
+                        <span class="aui-icon aui-icon-small aui-iconfont-download"></span> Download
+                    </button>
+                    <button id="${modalId}-close-button" class="aui-button aui-button-primary">Close</button>
+                </div>
+            </footer>
+        </div>
+    `;
 
-    var newDescription = AJS.$("#suggested-story-textarea").val();
-    var newAcceptanceCriteria = AJS.$("#suggested-story-textareal").val(); // Corrected the ID here
+    // 2. Append the new modal HTML to the body
+    AJS.$("body").append(modalHtml);
 
-    console.log("Update Acceptance Criteria checked:", updateAC);
-    console.log("Update Description checked:", updateDesc);
-    console.log("New Description val:", newDescription);
-    console.log("New Acceptance Criteria val:", newAcceptanceCriteria);
+    // 3. Initialize and show the dialog2 component on the *newly added* modal
+    var dialog = AJS.dialog2("#" + modalId);
+    dialog.show();
 
-    if (!updateAC && !updateDesc) {
-        // Display message and highlight checkboxes
-        alert("Please select at least one field to update.");
-        AJS.$("#update-ac").closest(".field-group").css("outline", "2px solid red");
-        AJS.$("#update-desc").closest(".field-group").css("outline", "2px solid red");
-        return; // Stop further execution
-    } else {
-        // Remove red outline if it was previously applied
-        AJS.$("#update-ac").closest(".field-group").css("outline", "");
-        AJS.$("#update-desc").closest(".field-group").css("outline", "");
-    }
+    // 4. Attach the event listener for closing the *new* modal
+    AJS.$("#" + modalId + "-close-button, #" + modalId + " .aui-dialog2-header-close").click(function() {
+        dialog.hide(); // Use the dialog object if available
+        setTimeout(function() {
+            AJS.$("#" + modalId).remove();
+            console.log("Modal with ID '" + modalId + "' destroyed.");
+        }, 300);
+    });
 
-    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + globalIssuekey;
-    var data = {
-        "fields": {}
-    };
+    // 5. (Optional) Attach event listener for the download button (you can customize this)
+    AJS.$("#" + modalId + "-download-button").click(function() {
+        console.log("Download button clicked for modal '" + modalId + "'");
+        // Add your download logic here
+    });
 
-    if (updateDesc) {
-        data.fields.description = newDescription;
-    }
+    // Return the modal's ID so you can potentially interact with it further
+    return modalId;
+}
 
-    if (updateAC) {
-        data.fields["$acceptanceCriteriaFieldKey"] = newAcceptanceCriteria;
-    }
+// Example of how you might call this function on a button click:
+AJS.$("#show-popup").click(function() {
+    var logoUrl = "$logo"; // Replace with your actual logo URL
+    var initialContent = "Loading data...";
+    var myModalId = createAndManageModal("myCustomModal", logoUrl, initialContent);
 
-    console.log("Payload data:", JSON.stringify(data));
+    // You can now use 'myModalId' if you need to interact with the modal later
+    // For example, to update its content:
+    // AJS.$("#" + myModalId + "-content").html("New data loaded!");
 
-    if (Object.keys(data.fields).length > 0) {
-        jQuery.ajax({
-            url: jiraApiUrl,
-            type: 'PUT',
-            contentType: 'application/json',
-            data: JSON.stringify(data),
-            success: function() {
-                console.log("Description value updated successfully!");
-                updateScoreDisplay(100);
-                updateCustomFieldValue(globalIssuekey, '$scoreFieldkey', 100);
-                var fieldSelector = "#" + "$acceptanceCriteriaFieldKey" + "-val";
-                alert("Selected fields updated successfully");
-                if (updateDesc) {
-                    AJS.$("#description-val").text(newDescription);
-                }
-                if (updateAC) {
-                    AJS.$(fieldSelector).text(newAcceptanceCriteria);
-                }
-                AJS.$("#api-modal").attr("aria-hidden", "true").hide();
-                AJS.dialog2("#api-modal").hide();
-                window.location.reload();
-            },
-            error: function() {
-                console.log("Error updating issue fields");
-                alert("Error updating issue fields");
-            }
-        });
-    }
+    // You might also make an AJAX call here to load dynamic content
+    // AJS.$.ajax({
+    //     url: "/your/api/endpoint",
+    //     success: function(data) {
+    //         AJS.$("#" + myModalId + "-content").html(data);
+    //     }
+    // });
 });
