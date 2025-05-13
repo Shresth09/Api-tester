@@ -1,3 +1,100 @@
+AJS.$("#show-popup").click(function() {
+    console.log("Show popup clicked");
+
+    var description = globalDescription;
+    var acceptanceCriteria = globalAcceptanceCriteria;
+
+    if (!description || !description.trim()) {
+        console.log("Description not provided in the issue.");
+        var modalId = createAndManageModal("errorModal", "<p style='color: red; font: Citi-Sans-Text-Regular;'>Error: Description is not provided in the issue.</p>");
+        // Optionally, you might not want a download button for an error modal
+        AJS.$("#" + modalId + "-download-button").hide();
+        AJS.$("#no-score-text").text("Description not provided!");
+        return;
+    }
+
+    var initialContent = "Loading data..."; // Proceed to load actual content if description exists
+    var myModalId = createAndManageModal("dataModal", initialContent);
+
+    // You can now use 'myModalId' to update its content after an AJAX call, for example:
+    // AJS.$.ajax({
+    //     url: "/your/api/endpoint",
+    //     success: function(data) {
+    //         AJS.$("#" + myModalId + "-content").html(data);
+    //     }
+    // });
+});
+
+function createAndManageModal(modalId, contentHtml) {
+    // 1. Define the HTML structure of the modal dynamically
+    var modalHtml = `
+        <div id="${modalId}" class="aui-dialog2 aui-dialog2-medium" role="dialog" aria-hidden="true">
+            <header class="aui-dialog2-header">
+                <img src="${$logo}" alt="Logo" style="height: 50px; ">
+                <a class="aui-dialog2-header-close">
+                    <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+                </a>
+            </header>
+            <div class="aui-dialog2-content">
+                <div id="${modalId}-content">${contentHtml}</div>
+            </div>
+            <footer class="aui-dialog2-footer">
+                <div class="aui-dialog2-footer-actions">
+                    <button id="${modalId}-download-button" class="aui-button">
+                        <span class="aui-icon aui-icon-small aui-iconfont-download"></span> Download Report
+                    </button>
+                    <button id="${modalId}-close-button" class="aui-button aui-button-primary">Close</button>
+                </div>
+            </footer>
+        </div>
+    `;
+
+    // 2. Append the new modal HTML to the body
+    AJS.$("body").append(modalHtml);
+
+    // 3. Initialize and show the dialog2 component on the *newly added* modal
+    var dialog = AJS.dialog2("#" + modalId);
+    dialog.show();
+
+    // 4. Attach the event listener for closing the *new* modal
+    AJS.$("#" + modalId + "-close-button, #" + modalId + " .aui-dialog2-header-close").click(function() {
+        dialog.hide(); // Use the dialog object if available
+        setTimeout(function() {
+            AJS.$("#" + modalId).remove();
+            console.log("Modal with ID '" + modalId + "' destroyed.");
+        }, 300);
+    });
+
+    // 5. Attach event listener for the download button
+    AJS.$("#" + modalId + "-download-button").click(function() {
+        var downloadVar = AJS.$("#" + modalId + "-content").html();
+        var jiraIssueReffUrl = AJS.params.baseURL + "/browse/" + globalIssueKey;
+
+        // Create a new window for printing
+        var printWindow = window.open('', '_blank');
+        printWindow.document.open();
+        printWindow.document.write('<html><head><title>Print</title></head><body>' + downloadVar + '</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    });
+
+    // Return the modal's ID so you can potentially interact with it further
+    return modalId;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 function createAndManageModal(modalId, contentHtml) {
     // 1. Define the HTML structure of the modal dynamically
     var modalHtml = `
