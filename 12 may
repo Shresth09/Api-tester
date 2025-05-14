@@ -1,82 +1,44 @@
-You can modify your `fetchCustomFieldValue` function to also retrieve the value of your custom field (`$exitReportSummaryFieldKey`) and store it as a global variable, just like your attachments. Here’s how you can do it:
+var formattedData = `
+<details class="collapsible-section">
+    <summary style="cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between;">
+        <span style="margin-right: 5px;"><b>Request Attachments</b></span>
+        <span class="arrow" style="color: #A4ACAF;"></span>
+    </summary>
+    <div style="margin-top: 5px;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="padding: 5px; border: 1px solid #A4ACAF;">
+                    <a href="${globalTestExitReport.url}" target="_blank" style="color: #255BE3;">
+                        ${globalTestExitReport.filename}
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 5px; border: 1px solid #A4ACAF;">
+                    <a href="${globalMitigationPlanAttachment.url}" target="_blank" style="color: #255BE3;">
+                        ${globalMitigationPlanAttachment.filename}
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </div>
+</details>
 
-### **Updated Code**
-#### **1. Define a new global variable**
-```javascript
-var globalExitReportSummary = "";
-```
+<div style="border-top: 1px solid #A4ACAF; padding: 10px 0;">
+    <div style="margin-top: 10px;">
+        <span><b>Generated Summary -</b></span>
+    </div>
+    <div style="margin-top: 5px;">
+        <div id="suggested-summary-content" class="editable-div" contenteditable="true">
+            ${suggestedTERSummary}
+        </div>
+    </div>
+    <div style="margin-top: 10px; text-align: right;">
+        <button class="aui-button" id="accept-suggested-summary">
+            <span class="aui-icon aui-icon-small aui-iconfont-approve"></span> Accept
+        </button>
+    </div>
+</div>`;
 
-#### **2. Modify `fetchCustomFieldValue` function**
-```javascript
-function fetchCustomFieldValue(issueKey) {
-    var jiraApiUrl = AJS.params.baseURL + "/rest/api/2/issue/" + issueKey;
-
-    return new Promise((resolve, reject) => {
-        jQuery.ajax({
-            url: jiraApiUrl,
-            type: 'GET',
-            dataType: 'json',
-            success: function (response) {
-                var attachments = response.fields.attachment || [];
-                
-                var testExitReport = attachments.find(attachment =>
-                    attachment.filename.toLowerCase().includes("test exit report summary"));
-                
-                var mitigationPlanAttachment = attachments.find(attachment =>
-                    attachment.filename.toLowerCase().includes("mitigation"));
-
-                // Retrieve the custom field value
-                var exitReportSummary = response.fields[$exitReportSummaryFieldKey] || "";
-
-                resolve({
-                    test_exit_report: testExitReport ? { 
-                        filename: testExitReport.filename, 
-                        url: testExitReport.content 
-                    } : null,
-                    
-                    mitigation_plan_attachment: mitigationPlanAttachment ? { 
-                        filename: mitigationPlanAttachment.filename, 
-                        url: mitigationPlanAttachment.content 
-                    } : null,
-
-                    exit_report_summary: exitReportSummary
-                });
-            },
-            error: function () {
-                reject("Error fetching data");
-            }
-        });
-    });
-}
-```
-
-#### **3. Update `initStuffTER` function**
-```javascript
-async function initStuffTER() {
-    var globalIssueKey = getIssueKey();
-
-    try {
-        var globalFieldValues = await fetchCustomFieldValue(globalIssueKey);
-
-        globalTestExitReport = globalFieldValues.test_exit_report || { filename: "", url: "" };
-        globalMitigationPlanAttachment = globalFieldValues.mitigation_plan_attachment || { filename: "", url: "" };
-        globalExitReportSummary = globalFieldValues.exit_report_summary || "";
-
-        console.log("Test Exit Report Filename: " + globalTestExitReport.filename);
-        console.log("Test Exit Report URL: " + globalTestExitReport.url);
-        console.log("Mitigation Plan Filename: " + globalMitigationPlanAttachment.filename);
-        console.log("Mitigation Plan URL: " + globalMitigationPlanAttachment.url);
-        console.log("Exit Report Summary: " + globalExitReportSummary);
-
-    } catch (error) {
-        console.log("Error:", error);
-    }
-}
-```
-
-### **Key Enhancements**
-- **Added `globalExitReportSummary`**: This stores the custom field value from Jira.
-- **Modified `fetchCustomFieldValue`**: Now extracts the custom field value along with attachments.
-- **Updated `initStuffTER`**: Now initializes `globalExitReportSummary` alongside attachments.
-
-Now you have all three values stored as global variables, ready to be used anywhere in your Jira plugin! 🚀 Let me know if you need any refinements.
+AJS.$("#api-ter-response").html(formattedData);
+AJS.dialog2("#ter-modal").show();
