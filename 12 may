@@ -7,15 +7,18 @@
     <style>
         .container {
             font-size: 20px;
-            font-family: Arial, sans-serif;
+            font-family: monospace;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
         .line {
+            display: block;
             overflow: hidden;
             white-space: nowrap;
-            border-right: 2px solid black; /* Simulates a cursor */
-            display: inline-block;
-            animation: typing 1.5s steps(20, end) forwards, blinkCursor 0.75s infinite;
+            width: 0;
+            border-right: 2px solid black; /* Cursor effect */
+            animation: typing 1.5s steps(20, end) forwards;
         }
 
         .line:nth-child(1) { animation-delay: 0s; }
@@ -26,19 +29,15 @@
             from { width: 0; }
             to { width: 100%; }
         }
-
-        @keyframes blinkCursor {
-            50% { border-color: transparent; }
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="line">Scanning Story...</div>
+        <span class="line">Scanning Story...</span>
         <br>
-        <div class="line">Connecting ScanR...</div>
+        <span class="line">Connecting ScanR...</span>
         <br>
-        <div class="line">Generating Results...</div>
+        <span class="line">Generating Results...</span>
     </div>
 </body>
 </html>
