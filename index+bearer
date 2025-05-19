@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        textarea {
+            height: 100px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .response-group {
+            margin-top: 20px;
+        }
+        .response-code, .response-body {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .header-group {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .header-item {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        .header-item label {
+            width: 120px;
+            text-align: left;
+            margin-right: 10px;
+        }
+        .header-item input[type="text"] {
+            flex-grow: 1;
+        }
+        .add-header-button {
+            background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .add-header-button:hover {
+            background-color: #1e7e34;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>API Tester</h2>
+        <div class="form-group">
+            <label for="requestType">Request Type</label>
+            <select id="requestType">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="apiUrl">API URL</label>
+            <input type="text" id="apiUrl" placeholder="Enter API URL">
+        </div>
+
+        <div class="header-group">
+            <label>Request Headers</label>
+            <div id="headersContainer">
+                <div class="header-item">
+                    <label for="headerName0">Name:</label>
+                    <input type="text" id="headerName0" placeholder="Header Name">
+                    <label for="headerValue0">Value:</label>
+                    <input type="text" id="headerValue0" placeholder="Header Value">
+                </div>
+            </div>
+            <button type="button" class="add-header-button" onclick="addHeaderField()">Add Header</button>
+        </div>
+
+        <div class="form-group">
+            <label for="requestBody">Request Body</label>
+            <textarea id="requestBody" placeholder="Enter request body (JSON format)"></textarea>
+        </div>
+        <button onclick="sendRequest()">Send Request</button>
+        <div class="response-group">
+            <h3>Response</h3>
+            <div class="response-code">
+                <strong>Response Code:</strong> <span id="responseCode"></span>
+            </div>
+            <div class="response-body">
+                <strong>Response Body:</strong>
+                <pre id="responseBody"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let headerCounter = 1;
+
+        function addHeaderField() {
+            const headersContainer = document.getElementById('headersContainer');
+            const newHeaderDiv = document.createElement('div');
+            newHeaderDiv.classList.add('header-item');
+            newHeaderDiv.innerHTML = `
+                <label for="headerName${headerCounter}">Name:</label>
+                <input type="text" id="headerName${headerCounter}" placeholder="Header Name">
+                <label for="headerValue${headerCounter}">Value:</label>
+                <input type="text" id="headerValue${headerCounter}" placeholder="Header Value">
+            `;
+            headersContainer.appendChild(newHeaderDiv);
+            headerCounter++;
+        }
+
+        function sendRequest() {
+            const requestType = document.getElementById('requestType').value;
+            const apiUrl = document.getElementById('apiUrl').value;
+            const requestBody = document.getElementById('requestBody').value;
+            const headersContainer = document.getElementById('headersContainer');
+            const headerInputs = headersContainer.querySelectorAll('.header-item input[type="text"]');
+            let headers = {
+                'Content-Type': 'application/json'
+            };
+
+            for (let i = 0; i < headerInputs.length; i += 2) {
+                const nameInput = headerInputs[i];
+                const valueInput = headerInputs[i + 1];
+                if (nameInput.value && valueInput.value) {
+                    headers[nameInput.value] = valueInput.value;
+                }
+            }
+
+            let options = {
+                method: requestType,
+                headers: headers
+            };
+
+            if (requestType !== 'GET' && requestBody) {
+                options.body = requestBody;
+            }
+
+            fetch(apiUrl, options)
+                .then(response => {
+                    document.getElementById('responseCode').textContent = response.status;
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('responseBody').textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    document.getElementById('responseBody').textContent = `Error: ${error}`;
+                });
+        }
+    </script>
+</body>
+</html>
