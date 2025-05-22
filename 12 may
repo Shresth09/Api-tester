@@ -13,7 +13,7 @@ tasks:
       - name: goals
         value:
           - clean
-          - atlas-package
+          - package
           - '-U'
       - name: publish-artifact
         value: 'true'
