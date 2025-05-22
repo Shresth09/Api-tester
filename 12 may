@@ -1,3 +1,7 @@
+<bean id="templateRenderer" class="com.atlassian.jira.web.util.TemplateRendererImpl"/>
+
+
+
 <plugin>
     <groupId>org.apache.felix</groupId>
     <artifactId>maven-bundle-plugin</artifactId>
