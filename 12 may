@@ -1,43 +1,69 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:atlassian-scanner="http://www.atlassian.com/schema/atlassian-scanner"
-       xsi:schemaLocation="
-           http://www.springframework.org/schema/beans
-           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
-           http://www.atlassian.com/schema/atlassian-scanner
-           http://www.atlassian.com/schema/atlassian-scanner/atlassian-scanner.xsd">
+You're already using the **correct approach** by injecting `TemplateRenderer` via `@ComponentImport`. However, given the **class loader issue** you're encountering, there are still a few areas to check and adjust.
 
-    <!-- Scan indexes for Spring Components -->
-    <atlassian-scanner:scan-indexes/>
+---
 
-    <!-- Import TemplateRenderer as a Component -->
-    <component-import key="templateRenderer" interface="com.atlassian.templaterenderer.TemplateRenderer"/>
+### **Fixes & Next Steps**
+#### **1. Correct Syntax in `IssueCRUD` Constructor**
+Your constructor syntax has issues (`this.templateRenderer templateRenderer;`). Correct it like this:
 
-</beans>
-
-
-
-
-package com.example.plugins;
-
-import com.atlassian.templaterenderer.TemplateRenderer;
-import com.atlassian.plugin.spring.scanner.component.imports.ComponentImport;
-import javax.inject.Inject;
-import org.springframework.stereotype.Component;
-
-@Component
-public class TemplateRendererContext {
-
-    @ComponentImport
-    private final TemplateRenderer templateRenderer;
-
-    @Inject
-    public TemplateRendererContext(TemplateRenderer templateRenderer) {
-        this.templateRenderer = templateRenderer;
-    }
-
-    public TemplateRenderer getTemplateRenderer() {
-        return templateRenderer;
-    }
+```java
+@Inject
+public IssueCRUD(@ComponentImport TemplateRenderer templateRenderer, 
+                 @ComponentImport PluginSettingsFactory pluginSettingsFactory) {
+    this.templateRenderer = templateRenderer;
+    this.pluginSettingsFactory = pluginSettingsFactory;
 }
+```
+✅ **Fixes constructor syntax**  
+✅ **Ensures correct dependency injection**
+
+---
+
+#### **2. Verify `atlassian-template-renderer-api` is Resolved**
+Run the following command to check if the dependency is correctly pulled in:
+```sh
+mvn dependency:tree | grep "atlassian-template-renderer"
+```
+If missing, manually specify:
+```xml
+<dependency>
+    <groupId>com.atlassian.jira</groupId>
+    <artifactId>atlassian-template-renderer</artifactId>
+    <version>${jira.version}</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+---
+
+#### **3. Ensure Your `plugin-context.xml` Uses Component Import**
+Your Spring configuration should **NOT manually define a bean for `TemplateRenderer`** (this can cause class loader conflicts). Instead, it should **import the existing instance provided by Jira**:
+```xml
+<component-import key="templateRenderer" interface="com.atlassian.templaterenderer.TemplateRenderer"/>
+<component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
+```
+✅ **Ensures Jira supplies the correct OSGi-injected instance**  
+✅ **Avoids class loader proxy errors**
+
+---
+
+#### **4. Check the `.vm` File Path**
+Your `issuecrud-page.vm` should be placed inside:
+```
+src/main/resources/templates/issuecrud-page.vm
+```
+Confirm this using:
+```sh
+ls src/main/resources/templates
+```
+If the file **is not found**, you may get rendering errors.
+
+---
+
+### **Final Steps**
+1️⃣ Fix the constructor syntax in `IssueCRUD`.  
+2️⃣ Run `mvn dependency:tree` and confirm the `template-renderer` dependency is resolved.  
+3️⃣ Ensure `plugin-context.xml` imports `TemplateRenderer` instead of manually defining it.  
+4️⃣ Verify `issuecrud-page.vm` exists in `src/main/resources/templates/`.
+
+Try these changes and let me know if the error persists! 🚀
