@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:atlassian-scanner="http://www.atlassian.com/schema/atlassian-scanner"
@@ -12,41 +11,28 @@
     <!-- Scan indexes for Spring Components -->
     <atlassian-scanner:scan-indexes/>
 
-    <!-- Define TemplateRenderer Bean -->
-    <bean id="templateRenderer" class="com.atlassian.jira.web.util.TemplateRendererImpl">
-        <property name="velocityManager" ref="velocityManager"/>
-    </bean>
+    <!-- Import TemplateRenderer as a Component -->
+    <component-import key="templateRenderer" interface="com.atlassian.templaterenderer.TemplateRenderer"/>
 
-    <!-- Define Velocity Manager Bean (Required for rendering templates) -->
-    <bean id="velocityManager" class="com.atlassian.jira.web.util.VelocityManager">
-        <property name="velocityEngine" ref="velocityEngine"/>
-    </bean>
-
-    <!-- Define Velocity Engine Bean -->
-    <bean id="velocityEngine" class="org.apache.velocity.app.VelocityEngine"/>
 </beans>
 
 
 
 
-
-
-
-
-
-
-package com.example.plugins.context;
+package com.example.plugins;
 
 import com.atlassian.templaterenderer.TemplateRenderer;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.atlassian.plugin.spring.scanner.component.imports.ComponentImport;
+import javax.inject.Inject;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TemplateRendererContext {
 
+    @ComponentImport
     private final TemplateRenderer templateRenderer;
 
-    @Autowired
+    @Inject
     public TemplateRendererContext(TemplateRenderer templateRenderer) {
         this.templateRenderer = templateRenderer;
     }
