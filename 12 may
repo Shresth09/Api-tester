@@ -1,43 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Typewriter Effect</title>
-    <style>
-        .container {
-            font-size: 20px;
-            font-family: monospace;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-
-        .line {
-            display: block;
-            overflow: hidden;
-            white-space: nowrap;
-            width: 0;
-            border-right: 2px solid black; /* Cursor effect */
-            animation: typing 1.5s steps(20, end) forwards;
-        }
-
-        .line:nth-child(1) { animation-delay: 0s; }
-        .line:nth-child(2) { animation-delay: 2s; }
-        .line:nth-child(3) { animation-delay: 4s; }
-
-        @keyframes typing {
-            from { width: 0; }
-            to { width: 100%; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <span class="line">Scanning Story...</span>
-        <br>
-        <span class="line">Connecting ScanR...</span>
-        <br>
-        <span class="line">Generating Results...</span>
-    </div>
-</body>
-</html>
+<plugin>
+    <groupId>org.apache.felix</groupId>
+    <artifactId>maven-bundle-plugin</artifactId>
+    <version>4.2.1</version>
+    <extensions>true</extensions>
+    <configuration>
+        <instructions>
+            <Import-Package>
+                org.springframework.aop;version="5.3.0",
+                org.eclipse.gemini.blueprint.context.support
+            </Import-Package>
+        </instructions>
+    </configuration>
+</plugin>
