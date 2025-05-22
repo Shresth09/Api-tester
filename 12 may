@@ -12,3 +12,49 @@
         </instructions>
     </configuration>
 </plugin>
+
+
+
+
+
+tasks:
+  - taskRef: java-maven-build
+    params:
+      - name: jdk-version
+        value: 11
+      - name: maven-version
+        value: 3.8.1
+      - name: goals
+        value: package
+      - name: publish-artifact
+        value: true
+
+  # Add a step to print the dependency tree
+  - script: |
+      mvn dependency:tree
+    displayName: "Debug Dependencies"
+
+
+
+
+
+
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>maven-bundle-plugin</artifactId>
+            <version>4.2.1</version>
+            <extensions>true</extensions>
+            <configuration>
+                <instructions>
+                    <Import-Package>
+                        org.springframework.aop;version="5.3.0";resolution:=optional,
+                        org.eclipse.gemini.blueprint.context.support;resolution:=optional
+                    </Import-Package>
+                </instructions>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
