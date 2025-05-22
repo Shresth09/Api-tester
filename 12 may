@@ -1,42 +1,30 @@
-<bean id="templateRenderer" class="com.atlassian.jira.web.util.TemplateRendererImpl"/>
+<?xml version="1.0" encoding="UTF-8"?>
 
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:atlassian-scanner="http://www.atlassian.com/schema/atlassian-scanner"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+           http://www.atlassian.com/schema/atlassian-scanner
+           http://www.atlassian.com/schema/atlassian-scanner/atlassian-scanner.xsd">
 
+    <!-- Scan indexes for Spring Components -->
+    <atlassian-scanner:scan-indexes/>
 
-<plugin>
-    <groupId>org.apache.felix</groupId>
-    <artifactId>maven-bundle-plugin</artifactId>
-    <version>4.2.1</version>
-    <extensions>true</extensions>
-    <configuration>
-        <instructions>
-            <Import-Package>
-                org.springframework.aop;version="5.3.0",
-                org.eclipse.gemini.blueprint.context.support
-            </Import-Package>
-        </instructions>
-    </configuration>
-</plugin>
+    <!-- Define TemplateRenderer Bean -->
+    <bean id="templateRenderer" class="com.atlassian.jira.web.util.TemplateRendererImpl">
+        <property name="velocityManager" ref="velocityManager"/>
+    </bean>
 
+    <!-- Define Velocity Manager Bean (Required for rendering templates) -->
+    <bean id="velocityManager" class="com.atlassian.jira.web.util.VelocityManager">
+        <property name="velocityEngine" ref="velocityEngine"/>
+    </bean>
 
-
-
-
-tasks:
-  - taskRef: java-maven-build
-    params:
-      - name: jdk-version
-        value: 11
-      - name: maven-version
-        value: 3.8.1
-      - name: goals
-        value: package
-      - name: publish-artifact
-        value: true
-
-  # Add a step to print the dependency tree
-  - script: |
-      mvn dependency:tree
-    displayName: "Debug Dependencies"
+    <!-- Define Velocity Engine Bean -->
+    <bean id="velocityEngine" class="org.apache.velocity.app.VelocityEngine"/>
+</beans>
 
 
 
@@ -44,21 +32,26 @@ tasks:
 
 
 
-<build>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>maven-bundle-plugin</artifactId>
-            <version>4.2.1</version>
-            <extensions>true</extensions>
-            <configuration>
-                <instructions>
-                    <Import-Package>
-                        org.springframework.aop;version="5.3.0";resolution:=optional,
-                        org.eclipse.gemini.blueprint.context.support;resolution:=optional
-                    </Import-Package>
-                </instructions>
-            </configuration>
-        </plugin>
-    </plugins>
-</build>
+
+
+
+package com.example.plugins.context;
+
+import com.atlassian.templaterenderer.TemplateRenderer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TemplateRendererContext {
+
+    private final TemplateRenderer templateRenderer;
+
+    @Autowired
+    public TemplateRendererContext(TemplateRenderer templateRenderer) {
+        this.templateRenderer = templateRenderer;
+    }
+
+    public TemplateRenderer getTemplateRenderer() {
+        return templateRenderer;
+    }
+}
