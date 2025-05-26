@@ -1,25 +1,64 @@
-<build>
-  <plugins>
-    <!-- Other plugin configurations -->
+@RestController
+@RequestMapping("/jira-integrations")
+public class JiraIntegrationController {
 
-    <plugin>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>maven-bundle-plugin</artifactId>
-      <version>4.2.1</version>
-      <extensions>true</extensions>
-      <configuration>
-        <instructions>
-          <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-          <Bundle-Version>${project.version}</Bundle-Version>
-          <!-- Import all spring packages necessary for dynamic proxies -->
-          <Import-Package>
-              org.springframework.core*;resolution:=optional,
-              org.springframework.aop*;resolution:=optional,
-              org.eclipse.gemini.blueprint.context.support*;resolution:=optional,
-              *
-          </Import-Package>
-        </instructions>
-      </configuration>
-    </plugin>
-  </plugins>
-</build>
+    @PostMapping("/rrpApacPush")
+    public ResponseEntity<Map<String, String>> processRequest(@RequestBody Map<String, Object> payload) {
+        String requestStatus = (String) payload.get("requestStatus");
+        String fromDate = (String) payload.get("fromDate");
+        String toDate = (String) payload.get("toDate");
+
+        List<Map<String, Object>> projectActivities = (List<Map<String, Object>>) payload.get("projectActivities");
+
+        for (Map<String, Object> activity : projectActivities) {
+            String projectId = (String) activity.get("projectId");
+            List<Map<String, Object>> csiAssetActivities = (List<Map<String, Object>>) activity.get("csiAssetActivity");
+
+            List<String> newLabels = new ArrayList<>();
+            for (Map<String, Object> csiActivity : csiAssetActivities) {
+                String csiId = (String) csiActivity.get("csiId");
+                String rrpId = (String) csiActivity.get("rrpId");
+                String currentActivityName = ((String) csiActivity.get("currentActivityName")).replace(" ", "-");
+                String lockedBy = (String) csiActivity.get("lockedBy");
+
+                newLabels.add(csiId + " || " + rrpId + " || " + currentActivityName + " || " + lockedBy);
+            }
+
+            processJiraIssue(projectId, newLabels);
+        }
+
+        return ResponseEntity.ok(Collections.singletonMap("jiraResponse", "JIRA API call is successful"));
+    }
+
+    private void processJiraIssue(String projectId, List<String> newLabels) {
+        // Fetch issue details
+        Optional<Issue> issueOpt = getIssueDetails(projectId);
+
+        if (issueOpt.isPresent()) {
+            Issue issue = issueOpt.get();
+
+            // Retrieve existing labels
+            CustomField infoSecField = getCustomFieldByName("InfoSec: RRP Integration Details");
+            List<String> existingLabels = (List<String>) issue.getCustomFieldValue(infoSecField);
+
+            Set<String> finalLabels = new HashSet<>(existingLabels != null ? existingLabels : Collections.emptyList());
+            finalLabels.addAll(newLabels);
+
+            setJiraIssue(issue, infoSecField.getIdAsLong(), finalLabels);
+        }
+    }
+
+    private Optional<Issue> getIssueDetails(String pid) {
+        // Replace with actual Jira query logic
+        return Optional.empty();
+    }
+
+    private CustomField getCustomFieldByName(String fieldName) {
+        // Replace with actual Jira custom field retrieval logic
+        return null;
+    }
+
+    private void setJiraIssue(Issue issue, Long fieldId, Set<String> labels) {
+        // Replace with actual Jira label updating logic
+    }
+}
