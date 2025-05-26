@@ -1,3 +1,36 @@
+Set<String> updatedLabels = new HashSet<>(existingLabels);
+
+JsonNode projectActivities = jsonBody.get("projectActivities");
+if (projectActivities != null && projectActivities.isArray()) {
+    for (int i = 0; i < projectActivities.size(); i++) {
+        JsonNode activity = projectActivities.get(i);
+        JsonNode csiAssetActivities = activity.get("csiAssetActivity");
+
+        if (csiAssetActivities != null && csiAssetActivities.isArray()) {
+            for (int j = 0; j < csiAssetActivities.size(); j++) {
+                JsonNode csiActivity = csiAssetActivities.get(j);
+
+                String newLabel = csiActivity.get("csiId").asText() + " || " +
+                                  csiActivity.get("rrpId").asText() + " || " +
+                                  csiActivity.get("currentActivityName").asText().replace(" ", "-") + " || " +
+                                  csiActivity.get("lockedBy").asText();
+
+                updatedLabels.add(newLabel);
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 @Service
 public class JiraIntegrationService {
 
