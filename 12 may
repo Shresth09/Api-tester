@@ -1,64 +1,116 @@
-@RestController
-@RequestMapping("/jira-integrations")
-public class JiraIntegrationController {
+@Service
+public class JiraIntegrationService {
 
-    @PostMapping("/rrpApacPush")
-    public ResponseEntity<Map<String, String>> processRequest(@RequestBody Map<String, Object> payload) {
-        String requestStatus = (String) payload.get("requestStatus");
-        String fromDate = (String) payload.get("fromDate");
-        String toDate = (String) payload.get("toDate");
+    @Value("${jira.token}")
+    private String jiraToken;
 
-        List<Map<String, Object>> projectActivities = (List<Map<String, Object>>) payload.get("projectActivities");
+    @Value("${jira.nam.base.url}")
+    private String jiraNamBaseUrl;
 
-        for (Map<String, Object> activity : projectActivities) {
-            String projectId = (String) activity.get("projectId");
-            List<Map<String, Object>> csiAssetActivities = (List<Map<String, Object>>) activity.get("csiAssetActivity");
+    private final RestTemplate restTemplate;
 
-            List<String> newLabels = new ArrayList<>();
-            for (Map<String, Object> csiActivity : csiAssetActivities) {
-                String csiId = (String) csiActivity.get("csiId");
-                String rrpId = (String) csiActivity.get("rrpId");
-                String currentActivityName = ((String) csiActivity.get("currentActivityName")).replace(" ", "-");
-                String lockedBy = (String) csiActivity.get("lockedBy");
+    public JiraIntegrationService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
-                newLabels.add(csiId + " || " + rrpId + " || " + currentActivityName + " || " + lockedBy);
+    public ResponseEntity<ObjectNode> jiraRRPApacPushData(String body) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode responseNode = objectMapper.createObjectNode();
+
+        try {
+            JsonNode jsonBody = objectMapper.readTree(body);
+            List<JsonNode> projectActivities = jsonBody.get("projectActivities").findValues("projectId");
+
+            for (JsonNode projectActivity : projectActivities) {
+                String planviewID = projectActivity.asText();
+
+                // Fetch issue details
+                ResponseEntity<JsonNode> jiraResponse = getIssueDetails(planviewID);
+
+                if (jiraResponse.getStatusCode().is2xxSuccessful()) {
+                    JsonNode jiraData = jiraResponse.getBody();
+                    
+                    if (jiraData != null) {
+                        processJiraLabels(jiraData, jsonBody);
+                    }
+                }
             }
 
-            processJiraIssue(projectId, newLabels);
-        }
+            responseNode.put("jiraResponse", "JIRA API call is successful");
+            return ResponseEntity.ok(responseNode);
 
-        return ResponseEntity.ok(Collections.singletonMap("jiraResponse", "JIRA API call is successful"));
-    }
-
-    private void processJiraIssue(String projectId, List<String> newLabels) {
-        // Fetch issue details
-        Optional<Issue> issueOpt = getIssueDetails(projectId);
-
-        if (issueOpt.isPresent()) {
-            Issue issue = issueOpt.get();
-
-            // Retrieve existing labels
-            CustomField infoSecField = getCustomFieldByName("InfoSec: RRP Integration Details");
-            List<String> existingLabels = (List<String>) issue.getCustomFieldValue(infoSecField);
-
-            Set<String> finalLabels = new HashSet<>(existingLabels != null ? existingLabels : Collections.emptyList());
-            finalLabels.addAll(newLabels);
-
-            setJiraIssue(issue, infoSecField.getIdAsLong(), finalLabels);
+        } catch (Exception e) {
+            responseNode.put("error", "Failed to process JIRA request: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseNode);
         }
     }
 
-    private Optional<Issue> getIssueDetails(String pid) {
-        // Replace with actual Jira query logic
-        return Optional.empty();
+    private ResponseEntity<JsonNode> getIssueDetails(String planviewID) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + jiraToken);
+        headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        String jqlQuery = "\"Planview ID\"~" + planviewID + " and issuetype=Planview";
+        String urlToSend = UriComponentsBuilder.fromHttpUrl(jiraNamBaseUrl)
+                .path("/rest/api/latest/search")
+                .queryParam("jql", jqlQuery)
+                .queryParam("expand", "names")
+                .build()
+                .toUriString();
+
+        return restTemplate.exchange(urlToSend, HttpMethod.GET, entity, JsonNode.class);
     }
 
-    private CustomField getCustomFieldByName(String fieldName) {
-        // Replace with actual Jira custom field retrieval logic
-        return null;
+    private void processJiraLabels(JsonNode jiraData, JsonNode jsonBody) {
+        // Extracting issue ID and existing labels
+        JsonNode issues = jiraData.get("issues");
+        
+        if (issues != null && issues.isArray()) {
+            for (JsonNode issue : issues) {
+                String issueId = issue.get("id").asText();
+
+                // Extracting custom field data directly instead of calling another method
+                JsonNode customFieldData = issue.get("fields").get("customfield_InfoSec_RRP");
+
+                List<String> existingLabels = new ArrayList<>();
+                if (customFieldData != null && customFieldData.isArray()) {
+                    for (JsonNode labelNode : customFieldData) {
+                        existingLabels.add(labelNode.asText());
+                    }
+                }
+
+                Set<String> updatedLabels = new HashSet<>(existingLabels);
+                jsonBody.get("projectActivities").forEach(activity -> {
+                    activity.get("csiAssetActivity").forEach(csiActivity -> {
+                        String newLabel = csiActivity.get("csiId").asText() + " || " +
+                                          csiActivity.get("rrpId").asText() + " || " +
+                                          csiActivity.get("currentActivityName").asText().replace(" ", "-") + " || " +
+                                          csiActivity.get("lockedBy").asText();
+                        updatedLabels.add(newLabel);
+                    });
+                });
+
+                setJiraIssue(issueId, updatedLabels);
+            }
+        }
     }
 
-    private void setJiraIssue(Issue issue, Long fieldId, Set<String> labels) {
-        // Replace with actual Jira label updating logic
+    private void setJiraIssue(String issueId, Set<String> labels) {
+        // Implement API call to update Jira issue labels
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode payload = mapper.createObjectNode();
+        payload.putPOJO("fields", Collections.singletonMap("customfield_InfoSec_RRP", labels));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + jiraToken);
+        headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> entity = new HttpEntity<>(payload.toString(), headers);
+        String url = jiraNamBaseUrl + "/rest/api/latest/issue/" + issueId;
+
+        restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
     }
 }
