@@ -1,3 +1,159 @@
+@Service
+public class JiraIntegrationService {
+
+    @Value("${jira.token}")
+    private String jiraToken;
+
+    @Value("${jira.nam.base.url}")
+    private String jiraNamBaseUrl;
+
+    private final RestTemplate restTemplate;
+
+    public JiraIntegrationService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    public ResponseEntity<ObjectNode> jiraRRPApacPushData(String body) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode responseNode = objectMapper.createObjectNode();
+
+        try {
+            JsonNode jsonBody = objectMapper.readTree(body);
+            List<JsonNode> projectActivities = jsonBody.get("projectActivities").findValues("projectId");
+
+            for (JsonNode projectActivity : projectActivities) {
+                String planviewID = projectActivity.asText();
+
+                // Fetch issue details dynamically
+                ResponseEntity<JsonNode> jiraResponse = getIssueDetails(planviewID);
+
+                if (jiraResponse.getStatusCode().is2xxSuccessful()) {
+                    JsonNode jiraData = jiraResponse.getBody();
+                    
+                    if (jiraData != null) {
+                        processJiraLabels(jiraData, jsonBody);
+                    }
+                }
+            }
+
+            responseNode.put("jiraResponse", "JIRA API call is successful");
+            return ResponseEntity.ok(responseNode);
+
+        } catch (Exception e) {
+            responseNode.put("error", "Failed to process JIRA request: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseNode);
+        }
+    }
+
+    private ResponseEntity<JsonNode> getIssueDetails(String planviewID) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + jiraToken);
+        headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        String jqlQuery = "\"Planview ID\"~" + planviewID + " and issuetype=Planview";
+        String urlToSend = UriComponentsBuilder.fromHttpUrl(jiraNamBaseUrl)
+                .path("/rest/api/latest/search")
+                .queryParam("jql", jqlQuery)
+                .queryParam("expand", "names")
+                .build()
+                .toUriString();
+
+        return restTemplate.exchange(urlToSend, HttpMethod.GET, entity, JsonNode.class);
+    }
+
+    private void processJiraLabels(JsonNode jiraData, JsonNode jsonBody) {
+        JsonNode issues = jiraData.get("issues");
+
+        if (issues != null && issues.isArray()) {
+            for (JsonNode issue : issues) {
+                String issueId = issue.get("id").asText();
+                JsonNode fields = issue.get("fields");
+
+                // Find the dynamic custom field key
+                String customFieldKey = findCustomFieldKey(fields);
+                JsonNode customFieldData = customFieldKey != null ? fields.get(customFieldKey) : null;
+
+                List<String> existingLabels = new ArrayList<>();
+                if (customFieldData != null && customFieldData.isArray()) {
+                    for (JsonNode labelNode : customFieldData) {
+                        existingLabels.add(labelNode.asText());
+                    }
+                }
+
+                Set<String> updatedLabels = new HashSet<>(existingLabels);
+                JsonNode projectActivities = jsonBody.get("projectActivities");
+
+                if (projectActivities != null && projectActivities.isArray()) {
+                    for (int i = 0; i < projectActivities.size(); i++) {
+                        JsonNode activity = projectActivities.get(i);
+                        JsonNode csiAssetActivities = activity.get("csiAssetActivity");
+
+                        if (csiAssetActivities != null && csiAssetActivities.isArray()) {
+                            for (int j = 0; j < csiAssetActivities.size(); j++) {
+                                JsonNode csiActivity = csiAssetActivities.get(j);
+
+                                String newLabel = csiActivity.get("csiId").asText() + " || " +
+                                                  csiActivity.get("rrpId").asText() + " || " +
+                                                  csiActivity.get("currentActivityName").asText().replace(" ", "-") + " || " +
+                                                  csiActivity.get("lockedBy").asText();
+
+                                updatedLabels.add(newLabel);
+                            }
+                        }
+                    }
+                }
+
+                setJiraIssue(issueId, updatedLabels, customFieldKey);
+            }
+        }
+    }
+
+    private String findCustomFieldKey(JsonNode fields) {
+        if (fields != null) {
+            Iterator<Map.Entry<String, JsonNode>> fieldIterator = fields.fields();
+            while (fieldIterator.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fieldIterator.next();
+                if (entry.getKey().startsWith("customfield_") && entry.getValue().isArray()) {
+                    return entry.getKey(); // Assuming this is the correct custom field
+                }
+            }
+        }
+        return null;
+    }
+
+    private void setJiraIssue(String issueId, Set<String> labels, String customFieldKey) {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode payload = mapper.createObjectNode();
+        payload.putPOJO("fields", Collections.singletonMap(customFieldKey, labels));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + jiraToken);
+        headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> entity = new HttpEntity<>(payload.toString(), headers);
+        String url = jiraNamBaseUrl + "/rest/api/latest/issue/" + issueId;
+
+        restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+    }
+} 
+
+
+
+
+
+
+
+
+
+
+,.,., 
+,.,.,..,.,.,., 
+
+
+
 Set<String> updatedLabels = new HashSet<>(existingLabels);
 
 JsonNode projectActivities = jsonBody.get("projectActivities");
