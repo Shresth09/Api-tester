@@ -1,31 +1,3 @@
-private void setJiraIssue(String issueId, Set<String> labels) {
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectNode payload = mapper.createObjectNode();
-    ObjectNode updateLabels = payload.putObject("update").putArray("labels");
-
-    for (String label : labels) {
-        ObjectNode addLabel = updateLabels.addObject();
-        addLabel.put("add", label);
-    }
-
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", "Bearer " + jiraToken);
-    headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
-    headers.setContentType(MediaType.APPLICATION_JSON);
-
-    HttpEntity<String> entity = new HttpEntity<>(payload.toString(), headers);
-    String url = jiraNamBaseUrl + "/rest/api/latest/issue/" + issueId;
-
-    restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
-}
-
-
-
-
-
-
-
-
 @Service
 public class JiraIntegrationService {
 
@@ -137,7 +109,7 @@ public class JiraIntegrationService {
                     }
                 }
 
-                setJiraIssue(issueId, updatedLabels, customFieldKey);
+                setJiraIssue(issueId, updatedLabels);
             }
         }
     }
@@ -160,10 +132,15 @@ public class JiraIntegrationService {
         return null; // Field not found
     }
 
-    private void setJiraIssue(String issueId, Set<String> labels, String customFieldKey) {
+    private void setJiraIssue(String issueId, Set<String> labels) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode payload = mapper.createObjectNode();
-        payload.putPOJO("fields", Collections.singletonMap(customFieldKey, labels));
+        ArrayNode updateLabels = payload.putObject("update").putArray("labels");
+
+        for (String label : labels) {
+            ObjectNode addLabel = updateLabels.addObject();
+            addLabel.put("add", label);
+        }
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + jiraToken);
