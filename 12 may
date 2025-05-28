@@ -1,3 +1,31 @@
+private void setJiraIssue(String issueId, Set<String> labels, String customFieldKey) {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode payload = mapper.createObjectNode();
+    ArrayNode updateLabels = payload.putObject("update").putArray(customFieldKey);
+
+    for (String label : labels) {
+        ObjectNode addLabel = updateLabels.addObject();
+        addLabel.put("add", "\"" + label.trim() + "\""); // Ensure label is treated as a single string
+    }
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + jiraToken);
+    headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+    headers.setContentType(MediaType.APPLICATION_JSON);
+
+    HttpEntity<String> entity = new HttpEntity<>(payload.toString(), headers);
+    String url = jiraNamBaseUrl + "/rest/api/latest/issue/" + issueId;
+
+    ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+
+    if (!response.getStatusCode().is2xxSuccessful()) {
+        throw new RuntimeException("Failed to update issue: " + issueId);
+    }
+}
+
+
+
+
 @Service
 public class JiraIntegrationService {
 
