@@ -1,31 +1,3 @@
-private void setJiraIssue(String issueId, Set<String> labels, String customFieldKey) {
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectNode payload = mapper.createObjectNode();
-    ArrayNode updateLabels = payload.putObject("update").putArray(customFieldKey);
-
-    for (String label : labels) {
-        ObjectNode addLabel = updateLabels.addObject();
-        addLabel.put("add", "\"" + label.trim().replace("||", "_") + "\""); // Wrapped in quotes, replacing "||" with "_"
-    }
-
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", "Bearer " + jiraToken);
-    headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
-    headers.setContentType(MediaType.APPLICATION_JSON);
-
-    HttpEntity<String> entity = new HttpEntity<>(payload.toString(), headers);
-    String url = jiraNamBaseUrl + "/rest/api/latest/issue/" + issueId;
-
-    ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
-
-    if (!response.getStatusCode().is2xxSuccessful()) {
-        throw new RuntimeException("Failed to update issue: " + issueId);
-    }
-}
-
-
-
-
 @Service
 public class JiraIntegrationService {
 
@@ -53,10 +25,8 @@ public class JiraIntegrationService {
 
             for (JsonNode projectActivity : projectActivities) {
                 String planviewID = projectActivity.asText();
-
                 // Fetch issue details dynamically
                 ResponseEntity<JsonNode> jiraResponse = getIssueDetails(planviewID);
-
                 if (jiraResponse.getStatusCode().is2xxSuccessful()) {
                     JsonNode jiraData = jiraResponse.getBody();
                     if (jiraData != null) {
@@ -64,16 +34,14 @@ public class JiraIntegrationService {
                     }
                 }
             }
-
-            if (!failedIssues.isEmpty()) {
+            
+            if (!failedIssues.isEmpty()){
                 responseNode.put("jiraResponse", "Partial Success: Some issues failed to update.");
                 responseNode.putPOJO("failedIssues", failedIssues);
-            } else {
+            } else{
                 responseNode.put("jiraResponse", "JIRA API call successful.");
             }
-
             return ResponseEntity.ok(responseNode);
-
         } catch (Exception e) {
             responseNode.put("error", "Failed to process JIRA request: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseNode);
@@ -86,7 +54,6 @@ public class JiraIntegrationService {
         headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
-
         String jqlQuery = "\"Planview ID\"~" + planviewID + " and issuetype=Planview";
         String urlToSend = UriComponentsBuilder.fromHttpUrl(jiraNamBaseUrl)
                 .path("/rest/api/latest/search")
@@ -100,31 +67,28 @@ public class JiraIntegrationService {
 
     private void processJiraLabels(JsonNode jiraData, JsonNode jsonBody, List<String> failedIssues) {
         JsonNode issues = jiraData.get("issues");
-
         if (issues != null && issues.isArray()) {
             String customFieldKey = findCustomFieldKey(jiraData);
             if (customFieldKey == null) {
                 return;
             }
-
             for (JsonNode issue : issues) {
                 String issueId = issue.get("id").asText();
-
-                Set<String> updatedLabels = new LinkedHashSet<>();  // Ensures unique labels while preserving order
+                // Build a unique, ordered set of new labels
+                Set<String> updatedLabels = new LinkedHashSet<>();
 
                 JsonNode projectActivities = jsonBody.get("projectActivities");
-
                 if (projectActivities != null && projectActivities.isArray()) {
                     for (JsonNode activity : projectActivities) {
                         JsonNode csiAssetActivities = activity.get("csiAssetActivity");
-
                         if (csiAssetActivities != null && csiAssetActivities.isArray()) {
                             for (JsonNode csiActivity : csiAssetActivities) {
-                                String newLabel = csiActivity.get("csiId").asText() + " || " +
-                                                  csiActivity.get("rrpId").asText() + " || " +
-                                                  csiActivity.get("currentActivityName").asText().replace(" ", "-") + " || ";
-
-                                updatedLabels.add(newLabel);  // Ensures no duplicates
+                                // Remove extra whitespace around each field and delimiter
+                                String newLabel = csiActivity.get("csiId").asText().trim() + "||" +
+                                                  csiActivity.get("rrpId").asText().trim() + "||" +
+                                                  csiActivity.get("currentActivityName").asText().trim() + "||" +
+                                                  csiActivity.get("lockedBy").asText().trim();
+                                updatedLabels.add(newLabel);
                             }
                         }
                     }
@@ -139,30 +103,37 @@ public class JiraIntegrationService {
         }
     }
 
+    /**
+     * Finds the custom field key for the field "InfoSec: RRP Integration Details" via the "names" mapping.
+     */
     private String findCustomFieldKey(JsonNode jiraData) {
         JsonNode names = jiraData.get("names");
-
         if (names != null) {
             Iterator<Map.Entry<String, JsonNode>> fieldIterator = names.fields();
             while (fieldIterator.hasNext()) {
                 Map.Entry<String, JsonNode> entry = fieldIterator.next();
                 if ("InfoSec: RRP Integration Details".equals(entry.getValue().asText())) {
-                    return entry.getKey(); // Return the corresponding custom field ID (e.g., customfield_19403)
+                    return entry.getKey(); // For example, "customfield_19403"
                 }
             }
         }
-
-        return null; // Field not found
+        return null;
     }
 
+    /**
+     * Updates the custom field (of type label) using the "set" operation so that the field exactly contains the desired labels.
+     */
     private void setJiraIssue(String issueId, Set<String> labels, String customFieldKey) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode payload = mapper.createObjectNode();
-        ArrayNode updateLabels = payload.putObject("update").putArray(customFieldKey);
-
+        
+        // Use the "set" operator to assign an array of labels so that Jira treats each array element as a single label.
+        ObjectNode updateObj = payload.putObject("update");
+        ArrayNode customFieldArray = updateObj.putArray(customFieldKey);
+        ObjectNode setObj = customFieldArray.addObject();
+        ArrayNode setLabels = setObj.putArray("set");
         for (String label : labels) {
-            ObjectNode addLabel = updateLabels.addObject();
-            addLabel.put("add", label);
+            setLabels.add(sanitizeLabel(label));
         }
 
         HttpHeaders headers = new HttpHeaders();
@@ -172,11 +143,18 @@ public class JiraIntegrationService {
 
         HttpEntity<String> entity = new HttpEntity<>(payload.toString(), headers);
         String url = jiraNamBaseUrl + "/rest/api/latest/issue/" + issueId;
-
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
-
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new RuntimeException("Failed to update issue: " + issueId);
         }
+    }
+    
+    /**
+     * Sanitizes the label by removing unwanted whitespace.
+     * This ensures that the label does not contain extraneous spaces that might cause Jira to interpret parts separately.
+     */
+    private String sanitizeLabel(String label) {
+        // Remove any newline or carriage return characters and trim spaces.
+        return label.replaceAll("[\\r\\n]", "").trim();
     }
 }
