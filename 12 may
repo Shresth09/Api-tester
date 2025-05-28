@@ -76,37 +76,27 @@ public class JiraIntegrationService {
         if (issues != null && issues.isArray()) {
             String customFieldKey = findCustomFieldKey(jiraData);
             if (customFieldKey == null) {
-                return; // If field not found, skip processing
+                return;
             }
 
             for (JsonNode issue : issues) {
                 String issueId = issue.get("id").asText();
-                JsonNode fields = issue.get("fields");
-                JsonNode customFieldData = fields.get(customFieldKey);
 
-                List<String> existingLabels = new ArrayList<>();
-                if (customFieldData != null && customFieldData.isArray()) {
-                    for (JsonNode labelNode : customFieldData) {
-                        existingLabels.add(labelNode.asText());
-                    }
-                }
+                Set<String> updatedLabels = new LinkedHashSet<>();  // Ensures unique labels while preserving order
 
-                Set<String> updatedLabels = new HashSet<>(existingLabels);
                 JsonNode projectActivities = jsonBody.get("projectActivities");
 
                 if (projectActivities != null && projectActivities.isArray()) {
-                    for (int i = 0; i < projectActivities.size(); i++) {
-                        JsonNode activity = projectActivities.get(i);
+                    for (JsonNode activity : projectActivities) {
                         JsonNode csiAssetActivities = activity.get("csiAssetActivity");
 
                         if (csiAssetActivities != null && csiAssetActivities.isArray()) {
-                            for (int j = 0; j < csiAssetActivities.size(); j++) {
-                                JsonNode csiActivity = csiAssetActivities.get(j);
+                            for (JsonNode csiActivity : csiAssetActivities) {
                                 String newLabel = csiActivity.get("csiId").asText() + " || " +
                                                   csiActivity.get("rrpId").asText() + " || " +
-                                                  csiActivity.get("currentActivityName").asText().replace(" ", "-") + " || " +
-                                                  csiActivity.get("lockedBy").asText();
-                                updatedLabels.add(newLabel);
+                                                  csiActivity.get("currentActivityName").asText().replace(" ", "-") + " || ";
+
+                                updatedLabels.add(newLabel);  // Ensures no duplicates
                             }
                         }
                     }
