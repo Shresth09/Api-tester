@@ -17,6 +17,8 @@ public class JiraIntegrationService {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode responseNode = objectMapper.createObjectNode();
 
+        List<String> failedIssues = new ArrayList<>();
+
         try {
             JsonNode jsonBody = objectMapper.readTree(body);
             List<JsonNode> projectActivities = jsonBody.get("projectActivities").findValues("projectId");
@@ -29,14 +31,19 @@ public class JiraIntegrationService {
 
                 if (jiraResponse.getStatusCode().is2xxSuccessful()) {
                     JsonNode jiraData = jiraResponse.getBody();
-                    
                     if (jiraData != null) {
-                        processJiraLabels(jiraData, jsonBody);
+                        processJiraLabels(jiraData, jsonBody, failedIssues);
                     }
                 }
             }
 
-            responseNode.put("jiraResponse", "JIRA API call is successful");
+            if (!failedIssues.isEmpty()) {
+                responseNode.put("jiraResponse", "Partial Success: Some issues failed to update.");
+                responseNode.putPOJO("failedIssues", failedIssues);
+            } else {
+                responseNode.put("jiraResponse", "JIRA API call successful.");
+            }
+
             return ResponseEntity.ok(responseNode);
 
         } catch (Exception e) {
@@ -63,13 +70,11 @@ public class JiraIntegrationService {
         return restTemplate.exchange(urlToSend, HttpMethod.GET, entity, JsonNode.class);
     }
 
-    private void processJiraLabels(JsonNode jiraData, JsonNode jsonBody) {
+    private void processJiraLabels(JsonNode jiraData, JsonNode jsonBody, List<String> failedIssues) {
         JsonNode issues = jiraData.get("issues");
 
         if (issues != null && issues.isArray()) {
-            // Extract the correct custom field key using the Jira response
             String customFieldKey = findCustomFieldKey(jiraData);
-
             if (customFieldKey == null) {
                 return; // If field not found, skip processing
             }
@@ -97,19 +102,21 @@ public class JiraIntegrationService {
                         if (csiAssetActivities != null && csiAssetActivities.isArray()) {
                             for (int j = 0; j < csiAssetActivities.size(); j++) {
                                 JsonNode csiActivity = csiAssetActivities.get(j);
-
                                 String newLabel = csiActivity.get("csiId").asText() + " || " +
                                                   csiActivity.get("rrpId").asText() + " || " +
                                                   csiActivity.get("currentActivityName").asText().replace(" ", "-") + " || " +
                                                   csiActivity.get("lockedBy").asText();
-
                                 updatedLabels.add(newLabel);
                             }
                         }
                     }
                 }
 
-                setJiraIssue(issueId, updatedLabels, customFieldKey);
+                try {
+                    setJiraIssue(issueId, updatedLabels, customFieldKey);
+                } catch (Exception e) {
+                    failedIssues.add(issueId);
+                }
             }
         }
     }
@@ -121,8 +128,6 @@ public class JiraIntegrationService {
             Iterator<Map.Entry<String, JsonNode>> fieldIterator = names.fields();
             while (fieldIterator.hasNext()) {
                 Map.Entry<String, JsonNode> entry = fieldIterator.next();
-
-                // Check if the field name matches the target field
                 if ("InfoSec: RRP Integration Details".equals(entry.getValue().asText())) {
                     return entry.getKey(); // Return the corresponding custom field ID (e.g., customfield_19403)
                 }
@@ -150,6 +155,10 @@ public class JiraIntegrationService {
         HttpEntity<String> entity = new HttpEntity<>(payload.toString(), headers);
         String url = jiraNamBaseUrl + "/rest/api/latest/issue/" + issueId;
 
-        restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("Failed to update issue: " + issueId);
+        }
     }
 }
