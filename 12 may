@@ -5,7 +5,7 @@ private void setJiraIssue(String issueId, Set<String> labels, String customField
 
     for (String label : labels) {
         ObjectNode addLabel = updateLabels.addObject();
-        addLabel.put("add", "\"" + label.trim() + "\""); // Ensure label is treated as a single string
+        addLabel.put("add", "\"" + label.trim().replace("||", "_") + "\""); // Wrapped in quotes, replacing "||" with "_"
     }
 
     HttpHeaders headers = new HttpHeaders();
