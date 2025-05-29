@@ -1,3 +1,72 @@
+@RestController
+@RequestMapping("/jira")
+@Tag(name = "JIRA Integrations", description = "Endpoints for Jira integrations")
+public class JiraIntegrationController {
+
+    private final JiraIntegrationService jiraIntegrationService;
+
+    public JiraIntegrationController(JiraIntegrationService jiraIntegrationService) {
+        this.jiraIntegrationService = jiraIntegrationService;
+    }
+
+    @Operation(
+        summary = "Call RRP Manual Push API for Planview ID",
+        description = "Fetch Jira issues based on the provided query parameter and map Planview ID to call RRPManual Push endpoint."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success",
+            content = @Content(examples = @ExampleObject(name = "Sample Success Response", value = "{ \"jiraResponse\": [...] }"))),
+        @ApiResponse(responseCode = "400", description = "Bad Request",
+            content = @Content(examples = @ExampleObject(name = "Sample Error Response", value = "{ \"error\": \"Invalid key Provided\" }"))),
+        @ApiResponse(responseCode = "500", description = "Internal Server Error",
+            content = @Content(examples = @ExampleObject(name = "Sample Failure Response", value = "{ \"error\": \"Failed to fetch issues: Internal server error.\" }"))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized",
+            content = @Content(examples = @ExampleObject(name = "Sample Failure Response", value = "Jira Authorization failed OR 'Event Manager' does not have necessary permission to run rrpManualPush REST Endpoint."))),
+        @ApiResponse(responseCode = "403", description = "Forbidden",
+            content = @Content(examples = @ExampleObject(name = "Sample Failure Response", value = "Method Type Mismatch for rrpManualPush REST Endpoint.")))
+    })
+    @PostMapping(value = "/jiraRRP", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ObjectNode> jiraRRPCall(
+        @Parameter(name = "Body", description = "Request body containing Planview ID.", required = true,
+            example = "{\"rrpInput\":[{\"planviewID\":\"20250987650\"}]}") 
+        @RequestBody String Body) {
+        return jiraIntegrationService.jiraRRPApacPushData(Body);
+    }
+
+    @Operation(
+        summary = "Call RRP APAC Push API",
+        description = "Push Jira data based on the provided request body, ensuring proper integration with JIRA."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success",
+            content = @Content(examples = @ExampleObject(name = "Sample Success Response", value = "{ \"jiraResponse\": \"JIRA API call successful\" }"))),
+        @ApiResponse(responseCode = "400", description = "Bad Request",
+            content = @Content(examples = @ExampleObject(name = "Sample Error Response", value = "{ \"error\": \"Invalid request format\" }"))),
+        @ApiResponse(responseCode = "500", description = "Internal Server Error",
+            content = @Content(examples = @ExampleObject(name = "Sample Failure Response", value = "{ \"error\": \"Failed to process JIRA request\" }"))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized",
+            content = @Content(examples = @ExampleObject(name = "Sample Failure Response", value = "Jira Authorization failed or insufficient permissions"))),
+        @ApiResponse(responseCode = "403", description = "Forbidden",
+            content = @Content(examples = @ExampleObject(name = "Sample Failure Response", value = "Access denied to the requested operation")))
+    })
+    @PostMapping(value = "/rrpApacPush", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ObjectNode> jiraRRPApacPushCall(
+        @Parameter(name = "Body", description = "Request body for pushing Jira data.", required = true,
+            example = "{ \"projectActivities\": [ { \"projectId\": \"P0179312\", \"instance\": \"GCT-NAM\", \"csiAssetActivity\": [ { \"rrpId\": \"457687\", \"csiId\": \"162455\", \"currentActivityName\": \"End\", \"lockedBy\": \"\" }, { \"rrpId\": \"890897\", \"csiId\": \"153456\", \"currentActivityName\": \"End\", \"lockedBy\": \"\" } ] } ] }")
+        @RequestBody String Body) {
+        return jiraIntegrationService.jiraRRPApacPushData(Body);
+    }
+} 
+
+
+
+
+
+
+
+:=:=:=:=:=:=:=*=*=*=*=*=*==*
+*=*==*=*=*=:=:=:=:==*=*=*=*=
+
 @Service
 public class JiraIntegrationService {
 
