@@ -1,3 +1,61 @@
+/* Ensure the modal dialog itself is a flex container and takes up 80% of viewport */
+.my-custom-modal.aui-dialog2 { /* Added .aui-dialog2 for higher specificity */
+    width: 80vw !important;
+    max-width: 80vw !important;
+    height: 80vh !important;
+    max-height: 80vh !important;
+
+    /* Override AUI's default display properties if they are not flex */
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important; /* Ensure padding/border don't add to total width/height */
+}
+
+/* Ensure the header does not take up extra space */
+.my-custom-modal .aui-dialog2-header {
+    flex: 0 0 auto !important; /* flex-grow:0, flex-shrink:0, flex-basis:auto */
+    min-height: auto !important; /* Prevent min-height from expanding it */
+    box-sizing: border-box !important;
+    padding: 20px !important; /* Default AUI padding, adjust if needed */
+}
+
+/* Make the content area flexible and take up remaining space */
+.my-custom-modal .aui-dialog2-content {
+    flex: 1 1 auto !important; /* flex-grow:1, flex-shrink:1, flex-basis:auto - fills remaining space */
+    overflow-y: auto !important; /* Add scroll if content exceeds height */
+    box-sizing: border-box !important;
+    padding: 20px !important; /* Default AUI padding, adjust if needed */
+}
+
+/* Ensure the footer does not take up extra space */
+.my-custom-modal .aui-dialog2-footer {
+    flex: 0 0 auto !important; /* flex-grow:0, flex-shrink:0, flex-basis:auto */
+    min-height: auto !important; /* Prevent min-height from expanding it */
+    box-sizing: border-box !important;
+    padding: 20px !important; /* Default AUI padding, adjust if needed */
+}
+
+/* If the actions div inside the footer is causing issues */
+.my-custom-modal .aui-dialog2-footer-actions {
+    display: flex !important; /* Ensure buttons align correctly */
+    justify-content: flex-end !important; /* Align actions to the right (AUI default) */
+    align-items: center !important; /* Vertically center items if needed */
+    flex-wrap: wrap !important; /* Allow buttons to wrap if space is tight */
+    gap: 10px !important; /* Space between buttons */
+}
+ 
+
+
+
+
+
+
+
+
+(=-) -) (=() - =(? -? - +(? (? (?? 
+
+
+
 /* Ensure the modal dialog itself is a flex container to manage its children */
 .my-custom-modal {
     width: 80vw !important; /* 80% of viewport width */
