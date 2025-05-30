@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Circular Progress Bar</title>
+    <title>Reusable Circular Progress Bar</title>
     <style>
         body {
             font-family: sans-serif;
@@ -14,38 +14,64 @@
             min-height: 100vh;
             background-color: #f0f0f0;
             margin: 0;
-            gap: 30px; /* Space between progress bar and controls */
+            gap: 50px; /* Space between different progress bars and controls */
         }
 
-        .progress-container {
+        /* --- Progress Bar Component Styling --- */
+        .circular-progress-bar {
+            --size: 200px;       /* Default size of the progress bar */
+            --stroke-width: 15px; /* Default stroke width */
+            --track-color: #e6e6e6;
+            --text-color: #333;
+
             position: relative;
-            width: 200px;
-            height: 200px;
+            width: var(--size);
+            height: var(--size);
         }
 
-        .progress-ring {
+        .circular-progress-bar svg {
+            width: 100%;
+            height: 100%;
             transform: rotate(-90deg); /* Start the circle from the top */
         }
 
-        .progress-ring-track {
-            stroke: #e6e6e6; /* Light gray for the background track */
+        .circular-progress-bar .progress-ring-track {
+            stroke: var(--track-color);
+            stroke-width: var(--stroke-width);
+            fill: transparent;
+            /* Dynamically set r, cx, cy in JS or based on calculations if size changes */
         }
 
-        .progress-ring-bar {
-            transition: stroke-dasharray 0.35s ease-out, stroke 0.35s ease-out; /* Smooth animation for progress and color */
-            /* Initial color will be set by JS */
+        .circular-progress-bar .progress-ring-bar {
+            stroke-width: var(--stroke-width);
+            fill: transparent;
+            transition: stroke-dasharray 0.35s ease-out, stroke 0.35s ease-out;
         }
 
-        .progress-text {
+        .circular-progress-bar .progress-text {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 2.5em;
+            font-size: calc(var(--size) * 0.125); /* Adjust font size relative to component size */
             font-weight: bold;
-            color: #333;
+            color: var(--text-color);
         }
 
+        /* Color classes */
+        .circular-progress-bar .red {
+            stroke: #ff4d4d; /* Red */
+        }
+
+        .circular-progress-bar .yellow {
+            stroke: #ffd700; /* Yellow */
+        }
+
+        .circular-progress-bar .green {
+            stroke: #5cb85c; /* Green */
+        }
+
+        /* --- Controls Styling --- */
         .controls {
             display: flex;
             gap: 10px;
@@ -74,95 +100,137 @@
         button:hover {
             background-color: #0056b3;
         }
-
-        /* Color classes (will be applied by JavaScript) */
-        .red {
-            stroke: #ff4d4d; /* Red */
-        }
-
-        .yellow {
-            stroke: #ffd700; /* Yellow */
-        }
-
-        .green {
-            stroke: #5cb85c; /* Green */
-        }
     </style>
 </head>
 <body>
-    <div class="progress-container">
-        <svg class="progress-ring" width="200" height="200">
-            <circle class="progress-ring-track"
-                    stroke="#e6e6e6"
-                    stroke-width="15"
-                    fill="transparent"
-                    r="90"
-                    cx="100"
-                    cy="100"/>
-            <circle class="progress-ring-bar"
-                    stroke-width="15"
-                    fill="transparent"
-                    r="90"
-                    cx="100"
-                    cy="100"/>
+
+    <h1>Reusable Circular Progress Bars</h1>
+
+    <div id="progressBar1" class="circular-progress-bar" style="--size: 150px; --stroke-width: 12px;">
+        <svg class="progress-ring">
+            <circle class="progress-ring-track" r="calc(var(--size) / 2 - var(--stroke-width) / 2)"
+                    cx="calc(var(--size) / 2)" cy="calc(var(--size) / 2)"/>
+            <circle class="progress-ring-bar" r="calc(var(--size) / 2 - var(--stroke-width) / 2)"
+                    cx="calc(var(--size) / 2)" cy="calc(var(--size) / 2)"/>
         </svg>
-        <div class="progress-text">0%</div>
+        <div class="progress-text"></div>
+    </div>
+    <div class="controls">
+        <label for="percentageInput1">Progress Bar 1 (%):</label>
+        <input type="number" id="percentageInput1" value="60" min="0" max="100">
+        <button onclick="updateProgressBar('progressBar1', document.getElementById('percentageInput1').value)">Update</button>
     </div>
 
-    <div class="controls">
-        <label for="percentageInput">Enter Percentage:</label>
-        <input type="number" id="percentageInput" value="60" min="0" max="100">
-        <button onclick="updateProgressBar()">Update Progress</button>
+    <div id="progressBar2" class="circular-progress-bar" style="--size: 100px; --stroke-width: 10px;">
+        <svg class="progress-ring">
+            <circle class="progress-ring-track" r="calc(var(--size) / 2 - var(--stroke-width) / 2)"
+                    cx="calc(var(--size) / 2)" cy="calc(var(--size) / 2)"/>
+            <circle class="progress-ring-bar" r="calc(var(--size) / 2 - var(--stroke-width) / 2)"
+                    cx="calc(var(--size) / 2)" cy="calc(var(--size) / 2)"/>
+        </svg>
+        <div class="progress-text"></div>
     </div>
+    <div class="controls">
+        <label for="percentageInput2">Progress Bar 2 (%):</label>
+        <input type="number" id="percentageInput2" value="25" min="0" max="100">
+        <button onclick="updateProgressBar('progressBar2', document.getElementById('percentageInput2').value)">Update</button>
+    </div>
+
+    <div id="progressBar3" class="circular-progress-bar" style="--size: 250px; --stroke-width: 20px;">
+        <svg class="progress-ring">
+            <circle class="progress-ring-track" r="calc(var(--size) / 2 - var(--stroke-width) / 2)"
+                    cx="calc(var(--size) / 2)" cy="calc(var(--size) / 2)"/>
+            <circle class="progress-ring-bar" r="calc(var(--size) / 2 - var(--stroke-width) / 2)"
+                    cx="calc(var(--size) / 2)" cy="calc(var(--size) / 2)"/>
+        </svg>
+        <div class="progress-text"></div>
+    </div>
+    <div class="controls">
+        <label for="percentageInput3">Progress Bar 3 (%):</label>
+        <input type="number" id="percentageInput3" value="85" min="0" max="100">
+        <button onclick="updateProgressBar('progressBar3', document.getElementById('percentageInput3').value)">Update</button>
+    </div>
+
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const progressBar = document.querySelector('.progress-ring-bar');
-            const progressText = document.querySelector('.progress-text');
-            const radius = progressBar.r.baseVal.value;
+        // Store references to progress bar elements and their circumference for efficiency
+        const progressBars = {};
+
+        function initProgressBar(progressBarElement) {
+            const svg = progressBarElement.querySelector('.progress-ring');
+            const progressBar = progressBarElement.querySelector('.progress-ring-bar');
+            const progressText = progressBarElement.querySelector('.progress-text');
+
+            // Get computed style properties for dynamic calculations
+            const size = parseFloat(getComputedStyle(progressBarElement).getPropertyValue('--size'));
+            const strokeWidth = parseFloat(getComputedStyle(progressBarElement).getPropertyValue('--stroke-width'));
+
+            const radius = (size / 2) - (strokeWidth / 2);
             const circumference = 2 * Math.PI * radius;
 
             progressBar.style.strokeDasharray = `${circumference} ${circumference}`;
             progressBar.style.strokeDashoffset = circumference;
 
-            function setProgress(percent) {
-                const offset = circumference - (percent / 100) * circumference;
-                progressBar.style.strokeDashoffset = offset;
-                progressText.textContent = `${percent}%`;
+            // Store for later updates
+            progressBars[progressBarElement.id] = {
+                progressBar,
+                progressText,
+                circumference,
+                radius
+            };
+        }
 
-                // Remove existing color classes
-                progressBar.classList.remove('red', 'yellow', 'green');
+        function setProgressBarPercentage(progressBarId, percent) {
+            const { progressBar, progressText, circumference } = progressBars[progressBarId];
+            const offset = circumference - (percent / 100) * circumference;
+            progressBar.style.strokeDashoffset = offset;
+            progressText.textContent = `${percent}%`;
 
-                // Add new color class based on percentage
-                if (percent >= 0 && percent <= 40) {
-                    progressBar.classList.add('red');
-                } else if (percent > 40 && percent <= 70) {
-                    progressBar.classList.add('yellow');
-                } else if (percent > 70 && percent <= 100) {
-                    progressBar.classList.add('green');
-                }
+            // Remove existing color classes
+            progressBar.classList.remove('red', 'yellow', 'green');
+
+            // Add new color class based on percentage
+            if (percent >= 0 && percent <= 40) {
+                progressBar.classList.add('red');
+            } else if (percent > 40 && percent <= 70) {
+                progressBar.classList.add('yellow');
+            } else if (percent > 70 && percent <= 100) {
+                progressBar.classList.add('green');
+            }
+        }
+
+        // Global function to update a specific progress bar
+        window.updateProgressBar = function(progressBarId, percentageValue) {
+            let percentage = parseInt(percentageValue);
+
+            if (isNaN(percentage) || percentage < 0) {
+                percentage = 0;
+            } else if (percentage > 100) {
+                percentage = 100;
             }
 
-            // Make updateProgressBar globally accessible (since it's called from onclick)
-            window.updateProgressBar = function() {
-                const percentageInput = document.getElementById('percentageInput');
-                let percentage = parseInt(percentageInput.value);
-
-                if (isNaN(percentage) || percentage < 0) {
-                    percentage = 0;
-                } else if (percentage > 100) {
-                    percentage = 100;
-                }
-                percentageInput.value = percentage; // Update input field to clamped value
-                setProgress(percentage);
-            };
-
-            // Initial state (set to 60% to match the image on load)
-            window.updateProgressBar(); // Call it immediately to set initial progress
+            // Update the corresponding input field if it exists (for real-time updates)
+            const inputElement = document.getElementById(`percentageInput${progressBarId.replace('progressBar', '')}`);
+            if (inputElement) {
+                inputElement.value = percentage;
+            }
             
-            // Optional: Update on input change as well (real-time feedback)
-            document.getElementById('percentageInput').addEventListener('input', () => {
-                window.updateProgressBar();
+            setProgressBarPercentage(progressBarId, percentage);
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize all progress bars found on the page
+            document.querySelectorAll('.circular-progress-bar').forEach(barElement => {
+                initProgressBar(barElement);
+                // Set initial percentage for each bar based on its associated input
+                const inputId = `percentageInput${barElement.id.replace('progressBar', '')}`;
+                const initialPercentage = document.getElementById(inputId)?.value || 0;
+                window.updateProgressBar(barElement.id, initialPercentage);
+
+                // Add real-time update listener for each input
+                document.getElementById(inputId)?.addEventListener('input', (event) => {
+                    window.updateProgressBar(barElement.id, event.target.value);
+                });
             });
         });
     </script>
