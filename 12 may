@@ -1,22 +1,52 @@
+It's frustrating when CSS doesn't behave as expected, especially with complex frameworks like AUI! The fact that the footer is still expanded, even with aggressive flexbox rules, strongly suggests that AUI's internal JavaScript or very high-specificity CSS is fighting you.
+Yes, you absolutely can create a custom footer instead of using aui-dialog2-footer. This is often a good strategy when the default AUI components are too restrictive or are causing persistent layout issues.
+Here's how you can approach creating a custom footer within your existing modal structure, along with the updated CSS:
+1. Modify your VM file to use a custom footer class:
+<div id="${modalId}" class="aui-dialog2 aui-dialog2-medium my-custom-modal" role="dialog" aria-hidden="true">
+
+    <header class="aui-dialog2-header">
+        <img src="$logo" alt="Logo" style="height: 50px; ">
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
+    </header>
+
+    <div class="aui-dialog2-content">
+        <div id="${modalId}-content">${contentHtml}</div>
+    </div>
+
+    <div class="my-custom-modal-footer">
+        <div class="my-custom-modal-footer-actions">
+            <button id="${modalId}-download-button" class="aui-button">
+                <span class="aui-icon aui-icon-small aui-iconfont-download"></span> Download Report
+            </button>
+            <button id="${modalId}-close-button" class="aui-button aui-button-primary">Close</button>
+        </div>
+    </div>
+    </div>
+
+Key change in VM:
+ * We've replaced <footer class="aui-dialog2-footer"> with <div class="my-custom-modal-footer">.
+ * We've also given the inner actions div a custom class: my-custom-modal-footer-actions.
+2. Update your CSS for the custom footer:
 /* Ensure the modal dialog itself is a flex container and takes up 80% of viewport */
-.my-custom-modal.aui-dialog2 { /* Added .aui-dialog2 for higher specificity */
+.my-custom-modal.aui-dialog2 {
     width: 80vw !important;
     max-width: 80vw !important;
     height: 80vh !important;
     max-height: 80vh !important;
 
-    /* Override AUI's default display properties if they are not flex */
     display: flex !important;
     flex-direction: column !important;
-    box-sizing: border-box !important; /* Ensure padding/border don't add to total width/height */
+    box-sizing: border-box !important;
 }
 
 /* Ensure the header does not take up extra space */
 .my-custom-modal .aui-dialog2-header {
     flex: 0 0 auto !important; /* flex-grow:0, flex-shrink:0, flex-basis:auto */
-    min-height: auto !important; /* Prevent min-height from expanding it */
+    min-height: auto !important;
     box-sizing: border-box !important;
-    padding: 20px !important; /* Default AUI padding, adjust if needed */
+    padding: 20px !important; /* Adjust if needed */
 }
 
 /* Make the content area flexible and take up remaining space */
@@ -24,91 +54,128 @@
     flex: 1 1 auto !important; /* flex-grow:1, flex-shrink:1, flex-basis:auto - fills remaining space */
     overflow-y: auto !important; /* Add scroll if content exceeds height */
     box-sizing: border-box !important;
-    padding: 20px !important; /* Default AUI padding, adjust if needed */
+    padding: 20px !important; /* Adjust if needed */
 }
 
-/* Ensure the footer does not take up extra space */
-.my-custom-modal .aui-dialog2-footer {
-    flex: 0 0 auto !important; /* flex-grow:0, flex-shrink:0, flex-basis:auto */
-    min-height: auto !important; /* Prevent min-height from expanding it */
+/* Custom Footer Styles */
+.my-custom-modal-footer {
+    flex: 0 0 auto !important; /* Ensure it takes up only its content height */
+    min-height: auto !important;
     box-sizing: border-box !important;
-    padding: 20px !important; /* Default AUI padding, adjust if needed */
+    padding: 20px !important; /* Standard AUI-like padding */
+    border-top: 1px solid #ccc !important; /* Add a top border like AUI dialogs */
+    background-color: #f5f5f5 !important; /* Light background for footer */
+
+    /* Ensure actions are aligned correctly within the footer */
+    display: flex !important;
+    justify-content: flex-end !important; /* Align actions to the right */
+    align-items: center !important;
 }
 
-/* If the actions div inside the footer is causing issues */
-.my-custom-modal .aui-dialog2-footer-actions {
-    display: flex !important; /* Ensure buttons align correctly */
-    justify-content: flex-end !important; /* Align actions to the right (AUI default) */
-    align-items: center !important; /* Vertically center items if needed */
-    flex-wrap: wrap !important; /* Allow buttons to wrap if space is tight */
+.my-custom-modal-footer-actions {
+    display: flex !important;
     gap: 10px !important; /* Space between buttons */
 }
- 
 
-
-
-
-
-
-
-
-(=-) -) (=() - =(? -? - +(? (? (?? 
-
-
-
-/* Ensure the modal dialog itself is a flex container to manage its children */
-.my-custom-modal {
-    width: 80vw !important; /* 80% of viewport width */
-    max-width: 80vw !important; /* Max width also 80% of viewport width */
-    height: 80vh !important; /* 80% of viewport height */
-    max-height: 80vh !important; /* Max height also 80% of viewport height */
-
-    /* For older browsers or if flexbox isn't automatically applied by AUI */
-    display: flex !important;
-    flex-direction: column !important; /* Stack header, content, footer vertically */
-}
-
-/* Adjust header to occupy its natural height */
-.my-custom-modal .aui-dialog2-header {
-    flex-shrink: 0 !important; /* Prevent header from shrinking */
-    /* Add any specific styling for your header if needed */
-}
-
-/* Make the content area flexible and take up remaining space */
-.my-custom-modal .aui-dialog2-content {
-    flex-grow: 1 !important; /* Allow content to grow and fill available space */
-    overflow-y: auto !important; /* Add scroll if content exceeds height */
-    padding-top: 20px !important; /* Adjust padding if needed to maintain spacing */
-    padding-bottom: 20px !important;
-}
-
-/* Adjust footer to occupy its natural height */
-.my-custom-modal .aui-dialog2-footer {
-    flex-shrink: 0 !important; /* Prevent footer from shrinking */
-    /* Add any specific styling for your footer if needed */
-}
-
-
-
-
-
-
-<div id="${modalId}" class="aui-dialog2 aui-dialog2-medium my-custom-modal" role="dialog" aria-hidden="true">
-    <header class="aui-dialog2-header">
-        <img src="$logo" alt="Logo" style="height: 50px; ">
-        <a class="aui-dialog2-header-close">
-            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-        </a>
-    </header>
-    <div class="aui-dialog2-content">
-        <div id="${modalId}-content">${contentHtml}</div>
+Why this might work when the previous attempts didn't:
+By replacing aui-dialog2-footer with my-custom-modal-footer, you are completely sidestepping any deeply nested AUI CSS rules or JavaScript manipulations that might be affecting the original aui-dialog2-footer element. You are now in full control of the footer's layout and styling.
+The flexbox properties (flex: 0 0 auto !important;, min-height: auto !important;, box-sizing: border-box !important;) on .my-custom-modal-footer are crucial to ensure it only takes up the space its content requires and nothing more.
+Important Considerations:
+ * AUI Styling for Buttons: You're still using aui-button and aui-button-primary, which is good! These will retain the standard Jira button look and feel.
+ * Visual Consistency: I've added border-top and background-color to my-custom-modal-footer to mimic the default AUI dialog footer appearance. You can adjust these to match your desired look.
+ * JavaScript for Modal (if any): If your modal is opened or closed by specific JavaScript that relies on the aui-dialog2-footer class for some reason (unlikely for basic AUI dialogs but worth considering for complex interactions), you might need to update that JavaScript. However, the AUI dialog JS usually targets the main aui-dialog2 element.
+ * Testing: As always, thoroughly test this in Jira to ensure it functions as expected and doesn't introduce any new layout issues.
+This approach gives you maximum control over the footer's height and positioning, as you're no longer fighting AUI's specific rules for its built-in footer component.
+You're hitting a common frustration with overriding deeply styled components like AUI's aui-dialog2. When the previous robust flexbox solution isn't working, it strongly suggests that AUI's JavaScript or highly specific CSS is dynamically calculating and applying styles that override your attempts.
+Yes, you absolutely can create a custom footer! This is often the most reliable solution when AUI's default structure is fighting you. The trick is to prevent AUI from applying its footer styles to the element you want to control.
+Here's how you can achieve this:
+1. Modify your VM file: Remove the AUI footer class and replace it with your custom class.
+Instead of:
+<footer class="aui-dialog2-footer">
+    <div class="aui-dialog2-footer-actions">
+        <button id="${modalId}-download-button" class="aui-button">
+            <span class="aui-icon aui-icon-small aui-iconfont-download"></span> Download Report
+        </button>
+        <button id="${modalId}-close-button" class="aui-button aui-button-primary">Close</button>
     </div>
-    <footer class="aui-dialog2-footer">
-        <div class="aui-dialog2-footer-actions">
-            <button id="${modalId}-download-button" class="aui-button">
-                <span class="aui-icon aui-icon-small aui-iconfont-download"></span> Download Report
-            </button>
-            <button id="${modalId}-close-button" class="aui-button aui-button-primary">Close</button>
-        </div>
-    </footer>
+</footer>
+
+Change it to:
+<div class="my-custom-footer">
+    <div class="my-custom-footer-actions">
+        <button id="${modalId}-download-button" class="aui-button">
+            <span class="aui-icon aui-icon-small aui-iconfont-download"></span> Download Report
+        </button>
+        <button id="${modalId}-close-button" class="aui-button aui-button-primary">Close</button>
+    </div>
 </div>
+
+Important: Keep your my-custom-modal class on the main dialog div.
+2. Update your CSS file to style your custom footer.
+Now, your CSS will directly target your custom footer classes. The flexbox properties from the previous answer will still be relevant for the main dialog and content, ensuring the content fills the space and your custom footer is positioned correctly.
+/* --- Main Dialog Sizing and Flexbox Container --- */
+.my-custom-modal.aui-dialog2 {
+    width: 80vw !important;
+    max-width: 80vw !important;
+    height: 80vh !important;
+    max-height: 80vh !important;
+
+    /* These are crucial for flexbox layout */
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+}
+
+/* --- Header Styling (AUI default) --- */
+.my-custom-modal .aui-dialog2-header {
+    flex-shrink: 0 !important; /* Prevents header from shrinking */
+    /* Add any AUI default padding/styles you want to preserve if they are removed by overriding */
+    padding: 20px !important;
+    box-sizing: border-box !important;
+}
+
+/* --- Content Area Styling (fills remaining space) --- */
+.my-custom-modal .aui-dialog2-content {
+    flex-grow: 1 !important;   /* Allows content to grow */
+    flex-shrink: 1 !important;  /* Allows content to shrink */
+    flex-basis: auto !important; /* Uses content's natural size as basis */
+    overflow-y: auto !important; /* Adds scrollbar if content overflows */
+    box-sizing: border-box !important;
+    padding: 20px !important; /* Add AUI default content padding if needed */
+}
+
+/* --- YOUR CUSTOM FOOTER STYLES --- */
+.my-custom-footer {
+    flex-shrink: 0 !important; /* Prevent your custom footer from shrinking */
+    flex-grow: 0 !important;   /* Prevent your custom footer from growing */
+    box-sizing: border-box !important;
+    padding: 20px !important; /* Add desired padding to your custom footer */
+    background-color: #f5f5f5 !important; /* Optional: AUI default footer background color */
+    border-top: 1px solid #ccc !important; /* Optional: AUI default footer border */
+
+    /* Flexbox for content within your custom footer (e.g., buttons) */
+    display: flex !important;
+    justify-content: flex-end !important; /* Align actions to the right, similar to AUI */
+    align-items: center !important; /* Vertically center buttons */
+}
+
+.my-custom-footer-actions {
+    /* Style for the container of your buttons if needed */
+    display: flex !important;
+    gap: 10px !important; /* Space between buttons */
+}
+
+/* You might still want to use AUI button styles for consistency */
+.my-custom-footer .aui-button {
+    /* No specific overrides needed here unless you want to change AUI button appearance */
+}
+
+Why this approach works better:
+ * Avoids AUI Conflicts: By removing the aui-dialog2-footer class from your footer element, you essentially tell AUI's JavaScript and CSS to "ignore" that part of your dialog for its specific footer styling.
+ * Full Control: You now have complete control over the CSS for your my-custom-footer and its internal elements.
+ * Maintains Overall Dialog Structure: The flexbox rules on .my-custom-modal (display: flex, flex-direction: column, flex-grow: 1 on content, flex-shrink: 0 on header/footer) still ensure the dialog itself resizes correctly and its sections are laid out properly. Your custom footer just becomes another fixed-height (or auto-height) section within that flex container.
+Final checks:
+ * Clear Caches: After deploying the updated plugin, make sure you clear your browser cache and potentially Jira's plugin cache (if you experience issues).
+ * Inspect Element: Always, always use the browser's developer tools to inspect the my-custom-footer element. Check its "Computed" styles and the "Styles" tab to confirm that your CSS rules are being applied correctly and no conflicting AUI styles are winning the cascade. Look for min-height, height, padding, and margin.
+ * Content within Footer: Be mindful of any content you place inside my-custom-footer. If you put something very tall in there without appropriate overflow handling or smaller sizing, it will still expand your footer.
+This approach gives you the most control and is the standard way to customize AUI components when direct overrides become too difficult.
