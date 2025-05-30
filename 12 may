@@ -1,238 +1,137 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reusable Circular Progress Bar</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f0f0f0;
-            margin: 0;
-            gap: 50px; /* Space between different progress bars and controls */
-        }
+It seems you want to transition from a linear progress bar to a circular one. Since you're using CSS classes like red, yellow, and green to change the background-color of your linear progress bar, we'll need to adapt that concept for a circular progress bar.
+There are a few common ways to create circular progress bars in HTML/CSS:
+ * Using SVG (Scalable Vector Graphics): This is generally the most flexible and recommended approach for complex or highly customizable circular progress bars. You can use <circle> elements within an <svg> tag and manipulate their stroke-dasharray and stroke-dashoffset properties to create the progress effect.
+ * Using CSS conic-gradient(): This is a more modern CSS-only approach and is excellent for simpler circular progress bars without needing SVG. It's supported in most modern browsers.
+ * Using CSS border-radius and transform: rotate() (older/more complex): This approach involves creating two half-circles and rotating them. It's generally less preferred than SVG or conic-gradient() for progress bars due to its complexity.
+Given your existing setup with dynamic progressBarClass and cscore, SVG or CSS conic-gradient() would be good choices. I'll provide an example using SVG as it offers the most robust solution for various progress states and styles, and it's widely supported. I'll also show how you might adapt the color classes.
+Circular Progress Bar using SVG
+This approach uses a <circle> element with a stroke to draw the circle. The progress is controlled by manipulating stroke-dasharray and stroke-dashoffset.
+HTML:
+<div class="circular-progress-container" style="width: 100px; height: 100px;">
+    <svg viewBox="0 0 36 36" class="circular-chart">
+        <path class="circle-bg"
+            d="M18 2.0845
+              a 15.9155 15.9155 0 0 1 0 31.831
+              a 15.9155 15.9155 0 0 1 0 -31.831"
+        />
+        <path id="modal-score-progress-circle"
+              class="circle ${progressBarClass}"
+              stroke-dasharray="${cscore}, 100"
+              d="M18 2.0845
+                a 15.9155 15.9155 0 0 1 0 31.831
+                a 15.9155 15.9155 0 0 1 0 -31.831"
+        />
+        <text x="18" y="20.35" class="percentage">${cscore}%</text>
+    </svg>
+</div>
 
-        /* --- Progress Bar Component Styling --- */
-        .circular-progress-bar {
-            --size: 200px;       /* Default size of the progress bar */
-            --stroke-width: 15px; /* Default stroke width */
-            --track-color: #e6e6e6;
-            --text-color: #333;
+Explanation of HTML:
+ * .circular-progress-container: A wrapper div to control the overall size of the circular progress bar.
+ * <svg viewBox="0 0 36 36" class="circular-chart">:
+   * viewBox: Defines the coordinate system for the SVG. 0 0 36 36 means the SVG content will fit within a 36x36 unit box.
+   * circular-chart: A class for styling the SVG.
+ * <path class="circle-bg" ... />: This path draws the background circle (the full 100% of the circle).
+   * The d attribute contains SVG path data to draw a circle.
+ * <path id="modal-score-progress-circle" class="circle ${progressBarClass}" stroke-dasharray="${cscore}, 100" ... />: This path draws the progress itself.
+   * id="modal-score-progress-circle": Similar to your linear bar's ID for potential JavaScript manipulation.
+   * class="circle ${progressBarClass}": circle for base styling, and ${progressBarClass} (e.g., red, yellow, green) will dynamically apply the color.
+   * stroke-dasharray="${cscore}, 100": This is key for progress. It tells SVG to draw a dash of length ${cscore} and then a gap of length 100 - ${cscore}. Since the total circumference is effectively 100 units in this context (relative to our dash array), ${cscore} directly represents the percentage.
+ * <text x="18" y="20.35" class="percentage">${cscore}%</text>: Displays the percentage text in the center of the circle.
+CSS:
+.circular-progress-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    /* Adjust width/height as needed */
+    width: 100px; /* Example size */
+    height: 100px; /* Example size */
+}
 
-            position: relative;
-            width: var(--size);
-            height: var(--size);
-        }
+.circular-chart {
+    display: block;
+    margin: 10px auto;
+}
 
-        .circular-progress-bar svg {
-            width: 100%;
-            height: 100%;
-            transform: rotate(-90deg); /* Start the circle from the top */
-        }
+.circle-bg {
+    fill: none;
+    stroke: #eee; /* Background circle color */
+    stroke-width: 3.8;
+}
 
-        .circular-progress-bar .progress-ring-track {
-            stroke: var(--track-color);
-            stroke-width: var(--stroke-width);
-            fill: transparent;
-            /* Dynamically set r, cx, cy in JS or based on calculations if size changes */
-        }
+.circle {
+    fill: none;
+    stroke-width: 2.8;
+    stroke-linecap: round; /* Makes the end of the stroke rounded */
+    transition: stroke-dasharray 0.5s ease; /* Smooth transition for progress */
+}
 
-        .circular-progress-bar .progress-ring-bar {
-            stroke-width: var(--stroke-width);
-            fill: transparent;
-            transition: stroke-dasharray 0.35s ease-out, stroke 0.35s ease-out;
-        }
+/* Base color for the progress circle */
+.circle {
+    stroke: #F5F5F5; /* Default background color from your linear bar */
+}
 
-        .circular-progress-bar .progress-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: calc(var(--size) * 0.125); /* Adjust font size relative to component size */
-            font-weight: bold;
-            color: var(--text-color);
-        }
+/* Color classes for the progress circle */
+.circle.red {
+    stroke: #ee7359;
+}
 
-        /* Color classes */
-        .circular-progress-bar .red {
-            stroke: #ff4d4d; /* Red */
-        }
+.circle.yellow {
+    stroke: gold;
+}
 
-        .circular-progress-bar .yellow {
-            stroke: #ffd700; /* Yellow */
-        }
+.circle.green {
+    stroke: #87C55F;
+}
 
-        .circular-progress-bar .green {
-            stroke: #5cb85c; /* Green */
-        }
+.percentage {
+    fill: #333; /* Color of the percentage text */
+    font-family: sans-serif;
+    font-size: 0.5em; /* Relative to SVG viewbox size */
+    text-anchor: middle; /* Center the text horizontally */
+}
 
-        /* --- Controls Styling --- */
-        .controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
+Explanation of CSS:
+ * .circular-progress-container: Basic styling to center the SVG.
+ * .circular-chart: Ensures the SVG is a block element and centers it.
+ * .circle-bg: Styles the background circle.
+ * .circle: Styles the progress circle.
+   * fill: none;: Essential for circles to not fill the interior.
+   * stroke-width: Thickness of the circle line.
+   * stroke-linecap: round;: Gives the ends of the progress line a rounded look.
+   * transition: stroke-dasharray 0.5s ease;: This provides the smooth animation when cscore changes.
+ * The .circle.red, .circle.yellow, and .circle.green classes now apply the stroke color instead of background-color.
+ * .percentage: Styles the text inside the circle.
+How to use with your dynamic values:
+You'll need to make sure ${progressBarClass} and ${cscore} are correctly injected into your HTML/template. For example, if you're using a templating engine (like EJS, Handlebars, React, Angular, Vue, etc.) or just plain JavaScript:
+// Example using JavaScript to update
+const cscore = 75; // Your dynamic score
+let progressBarClass = '';
 
-        input[type="number"] {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 1em;
-            width: 80px;
-            text-align: center;
-        }
+if (cscore < 40) {
+    progressBarClass = 'red';
+} else if (cscore < 70) {
+    progressBarClass = 'yellow';
+} else {
+    progressBarClass = 'green';
+}
 
-        button {
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-        }
+const progressCircle = document.getElementById('modal-score-progress-circle');
+const percentageText = document.querySelector('.circular-progress-container .percentage');
 
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-<body>
+if (progressCircle && percentageText) {
+    progressCircle.setAttribute('stroke-dasharray', `${cscore}, 100`);
+    // Remove existing color classes
+    progressCircle.classList.remove('red', 'yellow', 'green');
+    // Add the new color class
+    progressCircle.classList.add(progressBarClass);
+    percentageText.textContent = `${cscore}%`;
+}
 
-    <h1>Reusable Circular Progress Bars</h1>
-
-    <div id="progressBar1" class="circular-progress-bar" style="--size: 150px; --stroke-width: 12px;">
-        <svg class="progress-ring">
-            <circle class="progress-ring-track" r="calc(var(--size) / 2 - var(--stroke-width) / 2)"
-                    cx="calc(var(--size) / 2)" cy="calc(var(--size) / 2)"/>
-            <circle class="progress-ring-bar" r="calc(var(--size) / 2 - var(--stroke-width) / 2)"
-                    cx="calc(var(--size) / 2)" cy="calc(var(--size) / 2)"/>
-        </svg>
-        <div class="progress-text"></div>
-    </div>
-    <div class="controls">
-        <label for="percentageInput1">Progress Bar 1 (%):</label>
-        <input type="number" id="percentageInput1" value="60" min="0" max="100">
-        <button onclick="updateProgressBar('progressBar1', document.getElementById('percentageInput1').value)">Update</button>
-    </div>
-
-    <div id="progressBar2" class="circular-progress-bar" style="--size: 100px; --stroke-width: 10px;">
-        <svg class="progress-ring">
-            <circle class="progress-ring-track" r="calc(var(--size) / 2 - var(--stroke-width) / 2)"
-                    cx="calc(var(--size) / 2)" cy="calc(var(--size) / 2)"/>
-            <circle class="progress-ring-bar" r="calc(var(--size) / 2 - var(--stroke-width) / 2)"
-                    cx="calc(var(--size) / 2)" cy="calc(var(--size) / 2)"/>
-        </svg>
-        <div class="progress-text"></div>
-    </div>
-    <div class="controls">
-        <label for="percentageInput2">Progress Bar 2 (%):</label>
-        <input type="number" id="percentageInput2" value="25" min="0" max="100">
-        <button onclick="updateProgressBar('progressBar2', document.getElementById('percentageInput2').value)">Update</button>
-    </div>
-
-    <div id="progressBar3" class="circular-progress-bar" style="--size: 250px; --stroke-width: 20px;">
-        <svg class="progress-ring">
-            <circle class="progress-ring-track" r="calc(var(--size) / 2 - var(--stroke-width) / 2)"
-                    cx="calc(var(--size) / 2)" cy="calc(var(--size) / 2)"/>
-            <circle class="progress-ring-bar" r="calc(var(--size) / 2 - var(--stroke-width) / 2)"
-                    cx="calc(var(--size) / 2)" cy="calc(var(--size) / 2)"/>
-        </svg>
-        <div class="progress-text"></div>
-    </div>
-    <div class="controls">
-        <label for="percentageInput3">Progress Bar 3 (%):</label>
-        <input type="number" id="percentageInput3" value="85" min="0" max="100">
-        <button onclick="updateProgressBar('progressBar3', document.getElementById('percentageInput3').value)">Update</button>
-    </div>
-
-
-    <script>
-        // Store references to progress bar elements and their circumference for efficiency
-        const progressBars = {};
-
-        function initProgressBar(progressBarElement) {
-            const svg = progressBarElement.querySelector('.progress-ring');
-            const progressBar = progressBarElement.querySelector('.progress-ring-bar');
-            const progressText = progressBarElement.querySelector('.progress-text');
-
-            // Get computed style properties for dynamic calculations
-            const size = parseFloat(getComputedStyle(progressBarElement).getPropertyValue('--size'));
-            const strokeWidth = parseFloat(getComputedStyle(progressBarElement).getPropertyValue('--stroke-width'));
-
-            const radius = (size / 2) - (strokeWidth / 2);
-            const circumference = 2 * Math.PI * radius;
-
-            progressBar.style.strokeDasharray = `${circumference} ${circumference}`;
-            progressBar.style.strokeDashoffset = circumference;
-
-            // Store for later updates
-            progressBars[progressBarElement.id] = {
-                progressBar,
-                progressText,
-                circumference,
-                radius
-            };
-        }
-
-        function setProgressBarPercentage(progressBarId, percent) {
-            const { progressBar, progressText, circumference } = progressBars[progressBarId];
-            const offset = circumference - (percent / 100) * circumference;
-            progressBar.style.strokeDashoffset = offset;
-            progressText.textContent = `${percent}%`;
-
-            // Remove existing color classes
-            progressBar.classList.remove('red', 'yellow', 'green');
-
-            // Add new color class based on percentage
-            if (percent >= 0 && percent <= 40) {
-                progressBar.classList.add('red');
-            } else if (percent > 40 && percent <= 70) {
-                progressBar.classList.add('yellow');
-            } else if (percent > 70 && percent <= 100) {
-                progressBar.classList.add('green');
-            }
-        }
-
-        // Global function to update a specific progress bar
-        window.updateProgressBar = function(progressBarId, percentageValue) {
-            let percentage = parseInt(percentageValue);
-
-            if (isNaN(percentage) || percentage < 0) {
-                percentage = 0;
-            } else if (percentage > 100) {
-                percentage = 100;
-            }
-
-            // Update the corresponding input field if it exists (for real-time updates)
-            const inputElement = document.getElementById(`percentageInput${progressBarId.replace('progressBar', '')}`);
-            if (inputElement) {
-                inputElement.value = percentage;
-            }
-            
-            setProgressBarPercentage(progressBarId, percentage);
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize all progress bars found on the page
-            document.querySelectorAll('.circular-progress-bar').forEach(barElement => {
-                initProgressBar(barElement);
-                // Set initial percentage for each bar based on its associated input
-                const inputId = `percentageInput${barElement.id.replace('progressBar', '')}`;
-                const initialPercentage = document.getElementById(inputId)?.value || 0;
-                window.updateProgressBar(barElement.id, initialPercentage);
-
-                // Add real-time update listener for each input
-                document.getElementById(inputId)?.addEventListener('input', (event) => {
-                    window.updateProgressBar(barElement.id, event.target.value);
-                });
-            });
-        });
-    </script>
-</body>
-</html>
+Key Advantages of SVG for this:
+ * Scalability: SVG scales perfectly without pixelation.
+ * Customization: Highly customizable (stroke width, colors, rounded ends, etc.).
+ * Accessibility: Semantic HTML elements.
+ * Animation: Easy to animate using CSS transition or more advanced JavaScript animations.
+Choose the SVG approach for a robust and visually appealing circular progress bar.
