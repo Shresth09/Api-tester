@@ -1,13 +1,56 @@
-<div id="${modalId}" class="aui-dialog2 aui-dialog2-medium my-custom-modal" role="dialog" aria-hidden="true">
+/* Ensure the modal dialog itself is a flex container to manage its children */
 .my-custom-modal {
-    width: 800px !important; /* Or whatever width you need */
-    max-width: 90% !important; /* Good practice for responsiveness */
-    height: 600px !important; /* Or whatever height you need */
-    max-height: 90vh !important; /* Good practice for responsiveness */
+    width: 80vw !important; /* 80% of viewport width */
+    max-width: 80vw !important; /* Max width also 80% of viewport width */
+    height: 80vh !important; /* 80% of viewport height */
+    max-height: 80vh !important; /* Max height also 80% of viewport height */
+
+    /* For older browsers or if flexbox isn't automatically applied by AUI */
+    display: flex !important;
+    flex-direction: column !important; /* Stack header, content, footer vertically */
 }
 
-/* You might also want to adjust the content area if the content itself needs more space */
-.my-custom-modal .aui-dialog2-content {
-    height: calc(100% - 150px) !important; /* Adjust as needed, accounting for header/footer */
-    overflow-y: auto; /* Add scroll if content exceeds height */
+/* Adjust header to occupy its natural height */
+.my-custom-modal .aui-dialog2-header {
+    flex-shrink: 0 !important; /* Prevent header from shrinking */
+    /* Add any specific styling for your header if needed */
 }
+
+/* Make the content area flexible and take up remaining space */
+.my-custom-modal .aui-dialog2-content {
+    flex-grow: 1 !important; /* Allow content to grow and fill available space */
+    overflow-y: auto !important; /* Add scroll if content exceeds height */
+    padding-top: 20px !important; /* Adjust padding if needed to maintain spacing */
+    padding-bottom: 20px !important;
+}
+
+/* Adjust footer to occupy its natural height */
+.my-custom-modal .aui-dialog2-footer {
+    flex-shrink: 0 !important; /* Prevent footer from shrinking */
+    /* Add any specific styling for your footer if needed */
+}
+
+
+
+
+
+
+<div id="${modalId}" class="aui-dialog2 aui-dialog2-medium my-custom-modal" role="dialog" aria-hidden="true">
+    <header class="aui-dialog2-header">
+        <img src="$logo" alt="Logo" style="height: 50px; ">
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
+    </header>
+    <div class="aui-dialog2-content">
+        <div id="${modalId}-content">${contentHtml}</div>
+    </div>
+    <footer class="aui-dialog2-footer">
+        <div class="aui-dialog2-footer-actions">
+            <button id="${modalId}-download-button" class="aui-button">
+                <span class="aui-icon aui-icon-small aui-iconfont-download"></span> Download Report
+            </button>
+            <button id="${modalId}-close-button" class="aui-button aui-button-primary">Close</button>
+        </div>
+    </footer>
+</div>
