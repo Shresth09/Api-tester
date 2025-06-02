@@ -1,5 +1,54 @@
 <div style="display: flex; justify-content: space-between; margin-top: 10px;">
     <div style="flex: 1; padding-right: 10px;">
+        <div class="custom-box">
+            <span class="rqm-label">Current Description</span>
+            <div style="min-height: 100px; white-space: pre-wrap; overflow-y: auto;">
+                ${globalDescription}
+            </div>
+        </div>
+    </div>
+
+    <div style="flex: 1; padding-left: 10px;">
+        <div class="custom-box">
+            <span class="rqm-label">Suggested Description</span>
+            <textarea id="suggested-story-textarea" class="textarea long-field" style="width: 100%; height: 100px;"></textarea>
+        </div>
+    </div>
+</div>
+
+<div style="display: flex; justify-content: space-between; margin-top: 20px;">
+    <div style="flex: 1; padding-right: 10px;">
+        <div class="custom-box">
+            <span class="rqm-label">Current Acceptance Criteria</span>
+            <div style="min-height: 100px; white-space: pre-wrap; overflow-y: auto;">
+                ${globalAcceptanceCriteria}
+            </div>
+        </div>
+    </div>
+
+    <div style="flex: 1; padding-left: 10px;">
+        <div class="custom-box">
+            <span class="rqm-label">Suggested Acceptance Criteria</span>
+            <div id="suggested-story-textareal" class="editable-div" contenteditable="true" style="width: 100%;">
+                ${suggestedAcceptanceCriteria}
+            </div>
+        </div>
+    </div>
+</div>
+ 
+
+
+
+
+
+
+*:*:*::**=*=*==*=*=*
+
+
+
+
+<div style="display: flex; justify-content: space-between; margin-top: 10px;">
+    <div style="flex: 1; padding-right: 10px;">
         <div style="margin-bottom: 5px;">
             <span><b>Current Description</b></span>
         </div>
