@@ -1,3 +1,122 @@
+You are absolutely right! My apologies. I misinterpreted the "editable div" part and focused too much on a generic solution for matching heights.
+You've provided your HTML structure, which is great. The issue is that the min-height: 100px; on the inner divs and height: 100px; on the textarea are fixing their initial heights, and then overflow-y: auto; handles the overflow, but the parent custom-box heights aren't synchronized.
+Let's refine the solution using your existing HTML structure and apply Flexbox to achieve the desired height matching.
+The key is to apply display: flex; and align-items: stretch; to the parent container of each pair of custom-box elements.
+Here's how you can modify your CSS and slightly adjust your HTML (mostly by adding a class to the outer flex containers for cleaner CSS):
+1. CSS for Matching Heights:
+/* This class will be applied to the direct parent of the two custom-box divs
+   that you want to have matching heights. */
+.flex-container-for-matching-heights {
+  display: flex;
+  align-items: stretch; /* This is the magic! It makes flex children stretch to the height of the tallest sibling. */
+  justify-content: space-between; /* Keeps your current spacing */
+  margin-top: 10px; /* Adjust as per your needs for the first pair */
+}
+
+/* Ensure the custom-box itself can grow within its flex item */
+.custom-box {
+    display: flex;
+    flex-direction: column; /* Allows the content inside custom-box to stack and take available height */
+    height: 100%; /* Makes the custom-box fill the height of its flex item parent */
+    border: 1px solid #ccc; /* Example border, you can remove this */
+    padding: 10px; /* Example padding */
+}
+
+/* Ensure the content areas inside custom-box can grow and handle overflow */
+.custom-box > div:nth-child(2), /* Targets the globalDescription and globalAcceptanceCriteria divs */
+.custom-box textarea,
+.custom-box .editable-div {
+    flex-grow: 1; /* Allows these elements to take up available vertical space */
+    min-height: 100px; /* You can keep this as a minimum, but flex-grow will make it expand */
+    /* Remove the fixed height: 100px from textarea if it exists in a separate rule */
+    /* Your existing overflow-y: auto; and white-space: pre-wrap; are good here */
+    overflow-y: auto;
+    white-space: pre-wrap;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+/* Specific adjustments for textarea to ensure it fills the height */
+.textarea.long-field {
+    height: auto; /* Override any fixed height */
+    resize: vertical; /* Allow manual vertical resizing if desired */
+}
+
+
+/* --- Your first requirement: No border for editable div --- */
+.editable-div {
+    border: none !important; /* !important ensures it overrides inline or other rules */
+    outline: none !important; /* Remove focus outline as well */
+    padding: 0; /* Adjust padding if border removal changes layout */
+    margin: 0; /* Adjust margin if border removal changes layout */
+    box-sizing: border-box; /* Ensure padding and border are included in width/height */
+}
+
+2. Modified HTML:
+You need to add the .flex-container-for-matching-heights class to your two main div containers that currently have display: flex; justify-content: space-between;.
+<div class="flex-container-for-matching-heights" style="margin-top: 10px;">
+    <div style="flex: 1; padding-right: 10px;">
+        <div class="custom-box">
+            <span class="rqm-label">Current Description</span>
+            <div style="min-height: 100px; white-space: pre-wrap; overflow-y: auto;">
+                ${globalDescription}
+            </div>
+        </div>
+    </div>
+
+    <div style="flex: 1; padding-left: 10px;">
+        <div class="custom-box">
+            <span class="rqm-label">Suggested Description</span>
+            <textarea id="suggested-story-textarea" class="textarea long-field" style="width: 100%;"></textarea>
+        </div>
+    </div>
+</div>
+
+<div class="flex-container-for-matching-heights" style="margin-top: 20px;">
+    <div style="flex: 1; padding-right: 10px;">
+        <div class="custom-box">
+            <span class="rqm-label">Current Acceptance Criteria</span>
+            <div style="min-height: 100px; white-space: pre-wrap; overflow-y: auto;">
+                ${globalAcceptanceCriteria}
+            </div>
+        </div>
+    </div>
+
+    <div style="flex: 1; padding-left: 10px;">
+        <div class="custom-box">
+            <span class="rqm-label">Suggested Acceptance Criteria</span>
+            <div id="suggested-story-textareal" class="editable-div" contenteditable="true">
+                ${suggestedAcceptanceCriteria}
+            </div>
+        </div>
+    </div>
+</div>
+
+Explanation of Changes:
+ * .flex-container-for-matching-heights class:
+   * This is now applied to the immediate parent of your two flex: 1 columns.
+   * display: flex; and align-items: stretch; are key here. align-items: stretch; makes sure that the direct children (your divs with flex: 1) stretch to the height of the tallest among them.
+ * .custom-box CSS:
+   * display: flex; and flex-direction: column;: This makes the custom-box itself a flex container, allowing its children (span and the content div/textarea/editable-div) to manage their vertical space.
+   * height: 100%;: This ensures that the custom-box itself takes up the full height available to it from its parent flex item (the div with flex: 1).
+ * Content div, textarea, and .editable-div CSS:
+   * flex-grow: 1;: This is crucial. It tells these content areas to expand and take up all available vertical space within their parent custom-box. If one has more content, it will naturally push the custom-box taller, and align-items: stretch; on the grand-parent will then make the sibling custom-box match that new height.
+   * Removed fixed height: 100px; from textarea: This was preventing it from growing. min-height: 100px; is fine to ensure a starting size.
+   * Removed inline width: 100%; from .editable-div: It's better to manage this in CSS.
+ * .editable-div border removal:
+   * I've added !important to border: none; and outline: none; to ensure they override any inline styles or other potentially conflicting rules. This is a common practice when you want to guarantee a style takes precedence.
+With these changes, your "Current Description" and "Suggested Description" boxes will have matching heights, and the same will apply to "Current Acceptance Criteria" and "Suggested Acceptance Criteria," regardless of their content length. The overflow-y: auto; will still handle content that exceeds the visible area.
+ 
+
+
+
+
+
+:_&::&&₹&_::&₹&#####
+
+
+
+
+
 <div style="display: flex; justify-content: space-between; margin-top: 10px;">
     <div style="flex: 1; padding-right: 10px;">
         <div class="custom-box">
