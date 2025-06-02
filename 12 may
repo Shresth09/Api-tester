@@ -1,137 +1,37 @@
-It seems you want to transition from a linear progress bar to a circular one. Since you're using CSS classes like red, yellow, and green to change the background-color of your linear progress bar, we'll need to adapt that concept for a circular progress bar.
-There are a few common ways to create circular progress bars in HTML/CSS:
- * Using SVG (Scalable Vector Graphics): This is generally the most flexible and recommended approach for complex or highly customizable circular progress bars. You can use <circle> elements within an <svg> tag and manipulate their stroke-dasharray and stroke-dashoffset properties to create the progress effect.
- * Using CSS conic-gradient(): This is a more modern CSS-only approach and is excellent for simpler circular progress bars without needing SVG. It's supported in most modern browsers.
- * Using CSS border-radius and transform: rotate() (older/more complex): This approach involves creating two half-circles and rotating them. It's generally less preferred than SVG or conic-gradient() for progress bars due to its complexity.
-Given your existing setup with dynamic progressBarClass and cscore, SVG or CSS conic-gradient() would be good choices. I'll provide an example using SVG as it offers the most robust solution for various progress states and styles, and it's widely supported. I'll also show how you might adapt the color classes.
-Circular Progress Bar using SVG
-This approach uses a <circle> element with a stroke to draw the circle. The progress is controlled by manipulating stroke-dasharray and stroke-dashoffset.
-HTML:
-<div class="circular-progress-container" style="width: 100px; height: 100px;">
-    <svg viewBox="0 0 36 36" class="circular-chart">
-        <path class="circle-bg"
-            d="M18 2.0845
-              a 15.9155 15.9155 0 0 1 0 31.831
-              a 15.9155 15.9155 0 0 1 0 -31.831"
-        />
-        <path id="modal-score-progress-circle"
-              class="circle ${progressBarClass}"
-              stroke-dasharray="${cscore}, 100"
-              d="M18 2.0845
-                a 15.9155 15.9155 0 0 1 0 31.831
-                a 15.9155 15.9155 0 0 1 0 -31.831"
-        />
-        <text x="18" y="20.35" class="percentage">${cscore}%</text>
-    </svg>
+<div style="display: flex; justify-content: space-between; margin-top: 10px;">
+    <div style="flex: 1; padding-right: 10px;">
+        <div style="margin-bottom: 5px;">
+            <span><b>Current Description</b></span>
+        </div>
+        <div style="border: 1px solid #ddd; padding: 8px; min-height: 100px; white-space: pre-wrap; overflow-y: auto;">
+            ${globalDescription}
+        </div>
+    </div>
+
+    <div style="flex: 1; padding-left: 10px;">
+        <div style="margin-bottom: 5px;">
+            <span><b>Suggested Description</b></span>
+        </div>
+        <textarea id="suggested-story-textarea" class="textarea long-field" style="width: 100%;
+        height: 100px;"></textarea>
+    </div>
 </div>
 
-Explanation of HTML:
- * .circular-progress-container: A wrapper div to control the overall size of the circular progress bar.
- * <svg viewBox="0 0 36 36" class="circular-chart">:
-   * viewBox: Defines the coordinate system for the SVG. 0 0 36 36 means the SVG content will fit within a 36x36 unit box.
-   * circular-chart: A class for styling the SVG.
- * <path class="circle-bg" ... />: This path draws the background circle (the full 100% of the circle).
-   * The d attribute contains SVG path data to draw a circle.
- * <path id="modal-score-progress-circle" class="circle ${progressBarClass}" stroke-dasharray="${cscore}, 100" ... />: This path draws the progress itself.
-   * id="modal-score-progress-circle": Similar to your linear bar's ID for potential JavaScript manipulation.
-   * class="circle ${progressBarClass}": circle for base styling, and ${progressBarClass} (e.g., red, yellow, green) will dynamically apply the color.
-   * stroke-dasharray="${cscore}, 100": This is key for progress. It tells SVG to draw a dash of length ${cscore} and then a gap of length 100 - ${cscore}. Since the total circumference is effectively 100 units in this context (relative to our dash array), ${cscore} directly represents the percentage.
- * <text x="18" y="20.35" class="percentage">${cscore}%</text>: Displays the percentage text in the center of the circle.
-CSS:
-.circular-progress-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    /* Adjust width/height as needed */
-    width: 100px; /* Example size */
-    height: 100px; /* Example size */
-}
+<div style="display: flex; justify-content: space-between; margin-top: 20px;">
+    <div style="flex: 1; padding-right: 10px;">
+        <div style="margin-bottom: 5px;">
+            <span><b>Current Acceptance Criteria</b></span>
+        </div>
+        <div style="border: 1px solid #ddd; padding: 8px; min-height: 100px; white-space: pre-wrap; overflow-y: auto;">
+            ${globalAcceptanceCriteria}
+        </div>
+    </div>
 
-.circular-chart {
-    display: block;
-    margin: 10px auto;
-}
-
-.circle-bg {
-    fill: none;
-    stroke: #eee; /* Background circle color */
-    stroke-width: 3.8;
-}
-
-.circle {
-    fill: none;
-    stroke-width: 2.8;
-    stroke-linecap: round; /* Makes the end of the stroke rounded */
-    transition: stroke-dasharray 0.5s ease; /* Smooth transition for progress */
-}
-
-/* Base color for the progress circle */
-.circle {
-    stroke: #F5F5F5; /* Default background color from your linear bar */
-}
-
-/* Color classes for the progress circle */
-.circle.red {
-    stroke: #ee7359;
-}
-
-.circle.yellow {
-    stroke: gold;
-}
-
-.circle.green {
-    stroke: #87C55F;
-}
-
-.percentage {
-    fill: #333; /* Color of the percentage text */
-    font-family: sans-serif;
-    font-size: 0.5em; /* Relative to SVG viewbox size */
-    text-anchor: middle; /* Center the text horizontally */
-}
-
-Explanation of CSS:
- * .circular-progress-container: Basic styling to center the SVG.
- * .circular-chart: Ensures the SVG is a block element and centers it.
- * .circle-bg: Styles the background circle.
- * .circle: Styles the progress circle.
-   * fill: none;: Essential for circles to not fill the interior.
-   * stroke-width: Thickness of the circle line.
-   * stroke-linecap: round;: Gives the ends of the progress line a rounded look.
-   * transition: stroke-dasharray 0.5s ease;: This provides the smooth animation when cscore changes.
- * The .circle.red, .circle.yellow, and .circle.green classes now apply the stroke color instead of background-color.
- * .percentage: Styles the text inside the circle.
-How to use with your dynamic values:
-You'll need to make sure ${progressBarClass} and ${cscore} are correctly injected into your HTML/template. For example, if you're using a templating engine (like EJS, Handlebars, React, Angular, Vue, etc.) or just plain JavaScript:
-// Example using JavaScript to update
-const cscore = 75; // Your dynamic score
-let progressBarClass = '';
-
-if (cscore < 40) {
-    progressBarClass = 'red';
-} else if (cscore < 70) {
-    progressBarClass = 'yellow';
-} else {
-    progressBarClass = 'green';
-}
-
-const progressCircle = document.getElementById('modal-score-progress-circle');
-const percentageText = document.querySelector('.circular-progress-container .percentage');
-
-if (progressCircle && percentageText) {
-    progressCircle.setAttribute('stroke-dasharray', `${cscore}, 100`);
-    // Remove existing color classes
-    progressCircle.classList.remove('red', 'yellow', 'green');
-    // Add the new color class
-    progressCircle.classList.add(progressBarClass);
-    percentageText.textContent = `${cscore}%`;
-}
-
-Key Advantages of SVG for this:
- * Scalability: SVG scales perfectly without pixelation.
- * Customization: Highly customizable (stroke width, colors, rounded ends, etc.).
- * Accessibility: Semantic HTML elements.
- * Animation: Easy to animate using CSS transition or more advanced JavaScript animations.
-Choose the SVG approach for a robust and visually appealing circular progress bar.
+    <div style="flex: 1; padding-left: 10px;">
+        <div style="margin-bottom: 5px;">
+            <span><b>Suggested Acceptance Criteria</b></span>
+        </div>
+        <textarea id="suggested-story-textareal" class="textarea long-field" style="width: 100%;
+        height: 100px;"></textarea>
+    </div>
+</div>
