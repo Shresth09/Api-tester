@@ -1,0 +1,15 @@
+JSONObject issueJson = new JSONObject(response.getBody());
+String issueType = issueJson.getJSONObject("fields").getJSONObject("issuetype").getString("name");
+String issueStatus = issueJson.getJSONObject("fields").getJSONObject("status").getString("name");
+
+if ("Planview".equals(issueType) && "Test Plan".equals(issueStatus)) {
+    planviewTestPlanEmail(queryParams, body, request, issueKey);
+} else if ("Test Plan".equals(issueType)) {
+    testPlanEmail(queryParams, body, request, issueKey);
+} else if ("Change Request".equals(issueType)) {
+    crEmail(queryParams, body, request, issueKey);
+} else if ("Implementation Approval".equals(issueType)) {
+    icaEmail(queryParams, body, request, issueKey);
+} else if ("Maintenance Request".equals(issueType)) {
+    maintenanceRequestEmail(queryParams, body, request, issueKey);
+}
