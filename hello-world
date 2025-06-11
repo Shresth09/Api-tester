@@ -1,35 +1,22 @@
-<atlassian-plugin key="hello-world-plugin" name="Hello World Plugin" pluginsVersion="2">
-    <plugin-info>
-        <description>A simple plugin that displays a Hello World popup.</description>
-        <version>1.0</version>
-        <vendor name="Your Company" url="http://example.com"/>
-    </plugin-info>
+// Initialize ObjectMapper
+ObjectMapper objectMapper = new ObjectMapper();
 
-    <web-item key="hello-world-button" section="jira.issue.tools" weight="100" name="Hello World Button">
-        <label>Hello World</label>
-        <link linkId="hello-world-link">#</link>
-    </web-item>
+// Convert response body to JsonNode
+JsonNode rootNode = objectMapper.readTree(response.getBody());
 
-    <web-resource key="hello-world-plugin-resources" name="Hello World Plugin Web Resources">
-        <dependency>com.atlassian.auiplugin:ajs</dependency>
-        <resource type="download" name="hello-world.js" location="/js/hello-world.js"/>
-        <context>atl.general</context>
-    </web-resource>
-</atlassian-plugin>
+// Extract issue type and status
+String issueType = rootNode.path("fields").path("issuetype").path("name").asText();
+String issueStatus = rootNode.path("fields").path("status").path("name").asText();
 
-
-
-
-
-
-
-
-
-
-
-AJS.toInit(function() {
-    AJS.$("#hello-world-link").click(function(e) {
-        e.preventDefault();
-        alert("Hello World");
-    });
-});
+// Replicate ScriptRunner logic
+if ("Planview".equals(issueType) && "Test Plan".equals(issueStatus)) {
+    planviewTestPlanEmail(queryParams, body, request, issueKey);
+} else if ("Test Plan".equals(issueType)) {
+    testPlanEmail(queryParams, body, request, issueKey);
+} else if ("Change Request".equals(issueType)) {
+    crEmail(queryParams, body, request, issueKey);
+} else if ("Implementation Approval".equals(issueType)) {
+    icaEmail(queryParams, body, request, issueKey);
+} else if ("Maintenance Request".equals(issueType)) {
+    maintenanceRequestEmail(queryParams, body, request, issueKey);
+}
