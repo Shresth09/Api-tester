@@ -1,7 +1,14 @@
-JSONObject issueJson = new JSONObject(response.getBody());
-String issueType = issueJson.getJSONObject("fields").getJSONObject("issuetype").getString("name");
-String issueStatus = issueJson.getJSONObject("fields").getJSONObject("status").getString("name");
+// Initialize ObjectMapper
+ObjectMapper objectMapper = new ObjectMapper();
 
+// Convert response body to JsonNode
+JsonNode rootNode = objectMapper.readTree(response.getBody());
+
+// Extract issue type and status
+String issueType = rootNode.path("fields").path("issuetype").path("name").asText();
+String issueStatus = rootNode.path("fields").path("status").path("name").asText();
+
+// Replicate ScriptRunner logic
 if ("Planview".equals(issueType) && "Test Plan".equals(issueStatus)) {
     planviewTestPlanEmail(queryParams, body, request, issueKey);
 } else if ("Test Plan".equals(issueType)) {
