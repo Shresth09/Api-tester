@@ -1,3 +1,62 @@
+I am working on a java code
+public class EncDecAES
+
+{
+
+private static final String ALGO="AES";
+
+public static void main(String[] args)
+
+{
+
+String skey="ASDF1234ASDF1234"; // 16 byte or 128 bit value
+
+Key key new SecretKeySpec(skey.getBytes(), ALGO);
+
+}
+
+public static String encrypt(String ct, Key key) throws Exception
+
+{
+
+Cipher c= Cipher.getInstance (ALGO);
+
+c.init(Cipher.ENCRYPT_MODE, key);
+
+T
+
+byte[] encval= c.doFinal(ct.getBytes());
+
+String encString new BASE64Encoder().encode(encval);
+
+return encString;
+
+}
+
+public static String decrypt(String pt, Key key) throws Exception
+
+{
+
+Cipher c= Cipher.getInstance(ALGO);
+
+c.init(Cipher.DECRYPT_MODE, key);
+
+byte[] decodeVal=new BASE64Decoder().decodeBuffer(pt);
+
+byte[] decval= c.doFinal(decodeVal);
+
+String decString= new String(decVal);
+
+
+But in my libraries I don't have Key class
+What are the alternatives I have javax
+
+
+
+
+
+
+
 import java.security.Key;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
