@@ -5,46 +5,50 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
-public class JiraCustomFieldFetcher {
+public class JiraCustomFieldService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final String jiraToken;
     private final String jiraBaseUrl;
 
-    public JiraCustomFieldFetcher(RestTemplate restTemplate, ObjectMapper objectMapper, String jiraToken, String jiraBaseUrl) {
+    public JiraCustomFieldService(RestTemplate restTemplate, ObjectMapper objectMapper, String jiraToken, String jiraBaseUrl) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         this.jiraToken = jiraToken;
         this.jiraBaseUrl = jiraBaseUrl;
     }
 
-    public Map<String, String> storeCustomFieldValues(String issueKey) throws Exception {
+    public Map<String, String> fetchIssueCustomFieldMap(String issueKey) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + jiraToken);
         headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        String urlToSend = jiraBaseUrl + "/rest/api/latest/issue/" + issueKey + "?expand=names";
-        ResponseEntity<String> response = restTemplate.exchange(urlToSend, HttpMethod.GET, entity, String.class);
+        String url = jiraBaseUrl + "/rest/api/latest/issue/" + issueKey + "?expand=names";
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
-        JsonNode root = objectMapper.readTree(response.getBody());
-        JsonNode fieldsNode = root.path("fields");
-        JsonNode namesNode = root.path("names");
+        JsonNode rootNode = objectMapper.readTree(response.getBody());
+        return storeCustomFieldValues(rootNode);
+    }
 
-        // Define lists of custom field names for different types
+    public Map<String, String> storeCustomFieldValues(JsonNode rootNode) {
+        JsonNode fieldsNode = rootNode.path("fields");
+        JsonNode namesNode = rootNode.path("names");
+
+        // These lists contain the human-readable field names as shown in Jira
         List<String> simpleFieldNames = Arrays.asList("Summary", "Description");
         List<String> multiSelectFieldNames = Arrays.asList("Test Type");
         List<String> singleSelectFieldNames = Arrays.asList("Is Automated");
 
-        Map<String, String> simpleFieldMap = getCustomFieldId(namesNode, simpleFieldNames);
-        Map<String, String> multiSelectFieldMap = getCustomFieldId(namesNode, multiSelectFieldNames);
-        Map<String, String> singleSelectFieldMap = getCustomFieldId(namesNode, singleSelectFieldNames);
+        Map<String, String> simpleMap = getCustomFieldId(namesNode, simpleFieldNames);
+        Map<String, String> multiMap = getCustomFieldId(namesNode, multiSelectFieldNames);
+        Map<String, String> singleMap = getCustomFieldId(namesNode, singleSelectFieldNames);
 
         Map<String, String> result = new HashMap<>();
-        result.putAll(fetchSimpleTextFields(fieldsNode, simpleFieldMap));
-        result.putAll(fetchMultiSelectFields(fieldsNode, multiSelectFieldMap));
-        result.putAll(fetchSingleSelectFields(fieldsNode, singleSelectFieldMap));
+        result.putAll(fetchSimpleTextFields(fieldsNode, simpleMap));
+        result.putAll(fetchMultiSelectFields(fieldsNode, multiMap));
+        result.putAll(fetchSingleSelectFields(fieldsNode, singleMap));
 
         return result;
     }
@@ -52,8 +56,9 @@ public class JiraCustomFieldFetcher {
     private Map<String, String> getCustomFieldId(JsonNode namesNode, List<String> fieldNames) {
         Map<String, String> fieldMap = new HashMap<>();
         namesNode.fields().forEachRemaining(entry -> {
-            if (fieldNames.contains(entry.getValue().asText())) {
-                fieldMap.put(entry.getValue().asText(), entry.getKey()); // <Name, ID>
+            String name = entry.getValue().asText();
+            if (fieldNames.contains(name)) {
+                fieldMap.put(name, entry.getKey()); // name -> customfield_xx
             }
         });
         return fieldMap;
@@ -75,7 +80,7 @@ public class JiraCustomFieldFetcher {
             if (arrayNode.isArray()) {
                 List<String> values = new ArrayList<>();
                 for (JsonNode item : arrayNode) {
-                    values.add(item.path("value").asText());
+                    values.add(item.path("value").asText(""));
                 }
                 result.put(name, String.join(" ", values));
             }
@@ -88,7 +93,7 @@ public class JiraCustomFieldFetcher {
         fieldMap.forEach((name, id) -> {
             JsonNode objectNode = fieldsNode.path(id);
             if (objectNode.isObject()) {
-                result.put(name, objectNode.path("value").asText());
+                result.put(name, objectNode.path("value").asText(""));
             }
         });
         return result;
