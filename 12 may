@@ -1,3 +1,56 @@
+Great addition, Shresth. To include the **`fixVersions`** field and capture the `"name"` property from each version, here's what we’ll do:
+
+---
+
+### 🔧 Add this new method:
+
+```java
+private Map<String, String> fetchFixVersionNames(JsonNode fieldsNode) {
+    Map<String, String> result = new HashMap<>();
+    JsonNode versions = fieldsNode.path("fixVersions");
+
+    if (versions.isArray()) {
+        List<String> names = new ArrayList<>();
+        for (JsonNode version : versions) {
+            String versionName = version.path("name").asText(null);
+            if (versionName != null) {
+                names.add(versionName);
+            }
+        }
+        if (!names.isEmpty()) {
+            result.put("Fix Versions", String.join(", ", names));
+        }
+    }
+
+    return result;
+}
+```
+
+---
+
+### ✅ Then, in your `storeCustomFieldValues` method, just add:
+
+```java
+result.putAll(fetchFixVersionNames(fieldsNode));
+```
+
+---
+
+And that’s it — now your map will include:
+
+```java
+"Fix Versions" → "MX.2023.R08 08/18-08/18"
+```
+
+Want to go one step further and include both unreleased and released versions separately? Or only the latest one? I can help tailor that logic too. 
+
+
+
+:=:==:=:=:==:=:=:=:++:'=+' +
+
+
+
+
 private Map<String, String> fetchUserNameWithDomainFields(JsonNode fieldsNode, Map<String, String> fieldMap) {
     Map<String, String> result = new HashMap<>();
     fieldMap.forEach((name, id) -> {
