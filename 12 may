@@ -1,101 +1,70 @@
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.http.*;
-import org.springframework.web.client.RestTemplate;
+Perfect — that’s a great new case to add, Shresth. Let’s introduce this new **Type 4** field: _an array of user objects_, where we extract and join their `emailAddress` values.
 
-import java.util.*;
+---
 
-public class JiraCustomFieldService {
+### 🛠 Step-by-Step Additions
 
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-    private final String jiraToken;
-    private final String jiraBaseUrl;
+1. **Add `approvers` to a new list of user-array fields**
+2. **Extend `storeCustomFieldValues` to handle this type**
+3. **Write a new method to extract emails from user objects**
 
-    public JiraCustomFieldService(RestTemplate restTemplate, ObjectMapper objectMapper, String jiraToken, String jiraBaseUrl) {
-        this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
-        this.jiraToken = jiraToken;
-        this.jiraBaseUrl = jiraBaseUrl;
-    }
+---
 
-    public Map<String, String> fetchIssueCustomFieldMap(String issueKey) throws Exception {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + jiraToken);
-        headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+### ✅ Updated storeCustomFieldValues
 
-        String url = jiraBaseUrl + "/rest/api/latest/issue/" + issueKey + "?expand=names";
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+```java
+public Map<String, String> storeCustomFieldValues(JsonNode rootNode) {
+    JsonNode fieldsNode = rootNode.path("fields");
+    JsonNode namesNode = rootNode.path("names");
 
-        JsonNode rootNode = objectMapper.readTree(response.getBody());
-        return storeCustomFieldValues(rootNode);
-    }
+    List<String> simpleFieldNames = Arrays.asList("Summary", "Description");
+    List<String> multiSelectFieldNames = Arrays.asList("Test Type");
+    List<String> singleSelectFieldNames = Arrays.asList("Is Automated");
+    List<String> userArrayFieldNames = Arrays.asList("Approvers");
 
-    public Map<String, String> storeCustomFieldValues(JsonNode rootNode) {
-        JsonNode fieldsNode = rootNode.path("fields");
-        JsonNode namesNode = rootNode.path("names");
+    Map<String, String> simpleMap = getCustomFieldId(namesNode, simpleFieldNames);
+    Map<String, String> multiMap = getCustomFieldId(namesNode, multiSelectFieldNames);
+    Map<String, String> singleMap = getCustomFieldId(namesNode, singleSelectFieldNames);
+    Map<String, String> userArrayMap = getCustomFieldId(namesNode, userArrayFieldNames);
 
-        // These lists contain the human-readable field names as shown in Jira
-        List<String> simpleFieldNames = Arrays.asList("Summary", "Description");
-        List<String> multiSelectFieldNames = Arrays.asList("Test Type");
-        List<String> singleSelectFieldNames = Arrays.asList("Is Automated");
+    Map<String, String> result = new HashMap<>();
+    result.putAll(fetchSimpleTextFields(fieldsNode, simpleMap));
+    result.putAll(fetchMultiSelectFields(fieldsNode, multiMap));
+    result.putAll(fetchSingleSelectFields(fieldsNode, singleMap));
+    result.putAll(fetchUserEmailArrayFields(fieldsNode, userArrayMap));
 
-        Map<String, String> simpleMap = getCustomFieldId(namesNode, simpleFieldNames);
-        Map<String, String> multiMap = getCustomFieldId(namesNode, multiSelectFieldNames);
-        Map<String, String> singleMap = getCustomFieldId(namesNode, singleSelectFieldNames);
-
-        Map<String, String> result = new HashMap<>();
-        result.putAll(fetchSimpleTextFields(fieldsNode, simpleMap));
-        result.putAll(fetchMultiSelectFields(fieldsNode, multiMap));
-        result.putAll(fetchSingleSelectFields(fieldsNode, singleMap));
-
-        return result;
-    }
-
-    private Map<String, String> getCustomFieldId(JsonNode namesNode, List<String> fieldNames) {
-        Map<String, String> fieldMap = new HashMap<>();
-        namesNode.fields().forEachRemaining(entry -> {
-            String name = entry.getValue().asText();
-            if (fieldNames.contains(name)) {
-                fieldMap.put(name, entry.getKey()); // name -> customfield_xx
-            }
-        });
-        return fieldMap;
-    }
-
-    private Map<String, String> fetchSimpleTextFields(JsonNode fieldsNode, Map<String, String> fieldMap) {
-        Map<String, String> result = new HashMap<>();
-        fieldMap.forEach((name, id) -> {
-            String value = fieldsNode.path(id).asText(null);
-            if (value != null) result.put(name, value);
-        });
-        return result;
-    }
-
-    private Map<String, String> fetchMultiSelectFields(JsonNode fieldsNode, Map<String, String> fieldMap) {
-        Map<String, String> result = new HashMap<>();
-        fieldMap.forEach((name, id) -> {
-            JsonNode arrayNode = fieldsNode.path(id);
-            if (arrayNode.isArray()) {
-                List<String> values = new ArrayList<>();
-                for (JsonNode item : arrayNode) {
-                    values.add(item.path("value").asText(""));
-                }
-                result.put(name, String.join(" ", values));
-            }
-        });
-        return result;
-    }
-
-    private Map<String, String> fetchSingleSelectFields(JsonNode fieldsNode, Map<String, String> fieldMap) {
-        Map<String, String> result = new HashMap<>();
-        fieldMap.forEach((name, id) -> {
-            JsonNode objectNode = fieldsNode.path(id);
-            if (objectNode.isObject()) {
-                result.put(name, objectNode.path("value").asText(""));
-            }
-        });
-        return result;
-    }
+    return result;
 }
+```
+
+---
+
+### 🧩 New Method: fetchUserEmailArrayFields
+
+```java
+private Map<String, String> fetchUserEmailArrayFields(JsonNode fieldsNode, Map<String, String> fieldMap) {
+    Map<String, String> result = new HashMap<>();
+    fieldMap.forEach((name, id) -> {
+        JsonNode arrayNode = fieldsNode.path(id);
+        if (arrayNode.isArray()) {
+            List<String> emails = new ArrayList<>();
+            for (JsonNode user : arrayNode) {
+                String email = user.path("emailAddress").asText(null);
+                if (email != null) emails.add(email);
+            }
+            result.put(name, String.join(", ", emails));
+        }
+    });
+    return result;
+}
+```
+
+---
+
+And just like that, “Approvers” will be represented in your result map as:
+
+```java
+"Approvers" -> "ja77100@citi.com, jg92196@citi.com"
+```
+
+Want to keep this extensible in case more user-type fields show up? I can suggest a dynamic type classifier too. Let me know!
