@@ -1,3 +1,23 @@
+private Map<String, String> fetchUserNameWithDomainFields(JsonNode fieldsNode, Map<String, String> fieldMap) {
+    Map<String, String> result = new HashMap<>();
+    fieldMap.forEach((name, id) -> {
+        JsonNode arrayNode = fieldsNode.path(id);
+        if (arrayNode.isArray()) {
+            List<String> usernames = new ArrayList<>();
+            for (JsonNode user : arrayNode) {
+                String shortName = user.path("name").asText(null);
+                if (shortName != null) {
+                    usernames.add(shortName + "@imcnam.ssmb.com");
+                }
+            }
+            result.put(name, String.join(", ", usernames));
+        }
+    });
+    return result;
+}
+
+
+
 Perfect — that’s a great new case to add, Shresth. Let’s introduce this new **Type 4** field: _an array of user objects_, where we extract and join their `emailAddress` values.
 
 ---
