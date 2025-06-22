@@ -1,17 +1,96 @@
-ScanR: Enhancing Jira Issue Quality for Better Collaboration
-Well-written user stories are the bedrock of efficient software development. They are crucial for clear communication among developers, testers, and stakeholders, minimizing misunderstandings and ensuring everyone is aligned on project goals. However, we've all encountered Jira issues with vague descriptions or incomplete acceptance criteria. These often lead to costly rework, team confusion, and ultimately, missed expectations.
-ScanR is designed to tackle this very problem. It's a Jira plugin built to significantly improve the quality of your issues by analyzing the Description and Acceptance Criteria sections.
-The Problem
-The quality of a Jira issue directly impacts the efficiency and success of a development cycle. When issue descriptions are unclear or acceptance criteria are vague, teams face several challenges:
- * Misinterpretation and Rework: Developers might misinterpret requirements, leading to code that doesn't meet the actual need, necessitating rework.
- * Ineffective Testing: Testers struggle to create comprehensive test cases without clear acceptance criteria, potentially missing critical scenarios.
- * Communication Breakdowns: Ambiguous language fosters a lack of shared understanding, causing constant back-and-forth communication and delays.
- * Missed Expectations: Stakeholders may have different interpretations of what's being built, leading to dissatisfaction upon delivery.
-Our Solution: ScanR
-ScanR provides an immediate solution by integrating directly into your Jira workflow. This plugin evaluates the clarity, completeness, and consistency of the content within the Description and Acceptance Criteria fields. Upon analysis, it returns a quality score and provides suggested improvements right within a pop-up on the issue page.
-By enforcing quality standards directly within Jira, ScanR helps teams:
- * Improve Communication: Foster a culture of clear and concise writing, reducing ambiguity and promoting better understanding across all teams.
- * Increase Efficiency: Minimize rework and accelerate development cycles by providing well-defined requirements from the outset.
- * Enhance Deliverable Quality: Ensure that what's built aligns perfectly with what's needed, leading to higher-quality products and satisfied stakeholders.
- * Maintain Workflow: ScanR operates seamlessly within Jira, providing instant feedback without disrupting your team's established processes.
-ScanR empowers your team to create higher-quality Jira issues, leading to more efficient development, clearer communication, and ultimately, more successful projects.
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.*;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.*;
+
+public class JiraCustomFieldFetcher {
+
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+    private final String jiraToken;
+    private final String jiraBaseUrl;
+
+    public JiraCustomFieldFetcher(RestTemplate restTemplate, ObjectMapper objectMapper, String jiraToken, String jiraBaseUrl) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+        this.jiraToken = jiraToken;
+        this.jiraBaseUrl = jiraBaseUrl;
+    }
+
+    public Map<String, String> storeCustomFieldValues(String issueKey) throws Exception {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + jiraToken);
+        headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        String urlToSend = jiraBaseUrl + "/rest/api/latest/issue/" + issueKey + "?expand=names";
+        ResponseEntity<String> response = restTemplate.exchange(urlToSend, HttpMethod.GET, entity, String.class);
+
+        JsonNode root = objectMapper.readTree(response.getBody());
+        JsonNode fieldsNode = root.path("fields");
+        JsonNode namesNode = root.path("names");
+
+        // Define lists of custom field names for different types
+        List<String> simpleFieldNames = Arrays.asList("Summary", "Description");
+        List<String> multiSelectFieldNames = Arrays.asList("Test Type");
+        List<String> singleSelectFieldNames = Arrays.asList("Is Automated");
+
+        Map<String, String> simpleFieldMap = getCustomFieldId(namesNode, simpleFieldNames);
+        Map<String, String> multiSelectFieldMap = getCustomFieldId(namesNode, multiSelectFieldNames);
+        Map<String, String> singleSelectFieldMap = getCustomFieldId(namesNode, singleSelectFieldNames);
+
+        Map<String, String> result = new HashMap<>();
+        result.putAll(fetchSimpleTextFields(fieldsNode, simpleFieldMap));
+        result.putAll(fetchMultiSelectFields(fieldsNode, multiSelectFieldMap));
+        result.putAll(fetchSingleSelectFields(fieldsNode, singleSelectFieldMap));
+
+        return result;
+    }
+
+    private Map<String, String> getCustomFieldId(JsonNode namesNode, List<String> fieldNames) {
+        Map<String, String> fieldMap = new HashMap<>();
+        namesNode.fields().forEachRemaining(entry -> {
+            if (fieldNames.contains(entry.getValue().asText())) {
+                fieldMap.put(entry.getValue().asText(), entry.getKey()); // <Name, ID>
+            }
+        });
+        return fieldMap;
+    }
+
+    private Map<String, String> fetchSimpleTextFields(JsonNode fieldsNode, Map<String, String> fieldMap) {
+        Map<String, String> result = new HashMap<>();
+        fieldMap.forEach((name, id) -> {
+            String value = fieldsNode.path(id).asText(null);
+            if (value != null) result.put(name, value);
+        });
+        return result;
+    }
+
+    private Map<String, String> fetchMultiSelectFields(JsonNode fieldsNode, Map<String, String> fieldMap) {
+        Map<String, String> result = new HashMap<>();
+        fieldMap.forEach((name, id) -> {
+            JsonNode arrayNode = fieldsNode.path(id);
+            if (arrayNode.isArray()) {
+                List<String> values = new ArrayList<>();
+                for (JsonNode item : arrayNode) {
+                    values.add(item.path("value").asText());
+                }
+                result.put(name, String.join(" ", values));
+            }
+        });
+        return result;
+    }
+
+    private Map<String, String> fetchSingleSelectFields(JsonNode fieldsNode, Map<String, String> fieldMap) {
+        Map<String, String> result = new HashMap<>();
+        fieldMap.forEach((name, id) -> {
+            JsonNode objectNode = fieldsNode.path(id);
+            if (objectNode.isObject()) {
+                result.put(name, objectNode.path("value").asText());
+            }
+        });
+        return result;
+    }
+}
