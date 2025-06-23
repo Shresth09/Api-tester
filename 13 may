@@ -1,3 +1,44 @@
+public Map<String, String> buildFilteredTaMap(Map<String, String> taDataMap) {
+    Map<String, String> refinedMap = new HashMap<>();
+
+    // Only include non-null, non-empty values
+    taDataMap.forEach((key, value) -> {
+        if (value != null && !value.isBlank()) {
+            switch (key) {
+                case "architect_soeid":
+                case "asa_override_appr_soeid":
+                    if (verifyJiraUser(value)) {
+                        refinedMap.put(key, value);
+                    }
+                    break;
+
+                case "asa_architectural_significance":
+                    String lower = value.trim().toLowerCase();
+                    if ("yes".equals(lower)) {
+                        refinedMap.put(key, "Architecturally Significant");
+                    } else if ("no".equals(lower)) {
+                        refinedMap.put(key, "Not Architecturally Significant");
+                    }
+                    break;
+
+                case "asa_status":
+                    refinedMap.put(key, value.replace(" ", "-"));
+                    break;
+
+                default:
+                    refinedMap.put(key, value);
+                    break;
+            }
+        }
+    });
+
+    return refinedMap;
+}
+
+
+
+
+
 Perfect, Shresth. Here's how you can extract those custom field IDs from the `names` object in the JIRA response and return a `Map<String, String>` that maps field names to their corresponding custom field IDs:
 
 ### ✅ Method to Extract Field ID Map
