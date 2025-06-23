@@ -1,122 +1,55 @@
-public Map<String, String> mapToCustomFieldIds(Map<String, String> filteredMap, Map<String, String> customFieldMap) {
-    Map<String, String> result = new HashMap<>();
+public boolean updateJiraIssue(String issueKey,
+                               Map<String, String> valueMap,
+                               Map<String, String> customFieldMap) {
+    ObjectMapper mapper = new ObjectMapper();
 
-    // Mapping from filteredMap key → friendly label in customFieldMap
-    Map<String, String> labelMapping = Map.of(
-        "planviewID", "Planview ID",
-        "asa_approval_date", "ASA: Approval Date",
-        "architect_soeid", "ASA: Architect SOEID",
-        "asa_override_request_date", "ASA: Override Request Date",
-        "asa_override_decision_date", "ASA: Override Decision Date",
-        "asa_override_appr_soeid", "ASA: Override Approver SOEID",
-        "asa_architectural_significance", "ASA: Architectural Significance",
-        "asa_status", "ASA: Status"
-    );
+    // Special fields requiring array/object formatting
+    String archSignificanceId = customFieldMap.get("ASA: Architectural Significance");
+    String statusId = customFieldMap.get("ASA: Status");
 
-    for (Map.Entry<String, String> entry : filteredMap.entrySet()) {
-        String filteredKey = entry.getKey();
+    ObjectNode fieldsNode = mapper.createObjectNode();
+
+    for (Map.Entry<String, String> entry : valueMap.entrySet()) {
+        String fieldId = entry.getKey();
         String value = entry.getValue();
-        String friendlyName = labelMapping.get(filteredKey);
 
-        if (friendlyName != null) {
-            String customFieldId = customFieldMap.get(friendlyName);
-            if (customFieldId != null) {
-                result.put(customFieldId, value);
-            } else {
-                System.out.println("Missing custom field ID for label: " + friendlyName);
-            }
+        if (fieldId.equals(archSignificanceId)) {
+            ObjectNode option = mapper.createObjectNode();
+            option.put("value", value);
+
+            ArrayNode wrappedOption = mapper.createArrayNode();
+            wrappedOption.add(option);
+
+            fieldsNode.set(fieldId, wrappedOption);
+
+        } else if (fieldId.equals(statusId)) {
+            ArrayNode statusArray = mapper.createArrayNode();
+            statusArray.add(value);
+            fieldsNode.set(fieldId, statusArray);
+
+        } else {
+            fieldsNode.put(fieldId, value);
         }
     }
 
-    return result;
-}
+    ObjectNode updatePayload = mapper.createObjectNode();
+    updatePayload.set("fields", fieldsNode);
 
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + JIRA_AUTH_TOKEN); // global variable
+    headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+    headers.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
+    try {
+        HttpEntity<String> requestEntity = new HttpEntity<>(mapper.writeValueAsString(updatePayload), headers);
+        String updateUrl = JIRA_BASE_URL + "/rest/api/latest/issue/" + issueKey;
 
-public Map<String, String> buildFilteredTaMap(Map<String, String> taDataMap) {
-    Map<String, String> refinedMap = new HashMap<>();
+        restTemplate.exchange(updateUrl, HttpMethod.PUT, requestEntity, Void.class);
+        System.out.println("✅ Issue updated: " + issueKey);
+        return true;
 
-    // Only include non-null, non-empty values
-    taDataMap.forEach((key, value) -> {
-        if (value != null && !value.isBlank()) {
-            switch (key) {
-                case "architect_soeid":
-                case "asa_override_appr_soeid":
-                    if (verifyJiraUser(value)) {
-                        refinedMap.put(key, value);
-                    }
-                    break;
-
-                case "asa_architectural_significance":
-                    String lower = value.trim().toLowerCase();
-                    if ("yes".equals(lower)) {
-                        refinedMap.put(key, "Architecturally Significant");
-                    } else if ("no".equals(lower)) {
-                        refinedMap.put(key, "Not Architecturally Significant");
-                    }
-                    break;
-
-                case "asa_status":
-                    refinedMap.put(key, value.replace(" ", "-"));
-                    break;
-
-                default:
-                    refinedMap.put(key, value);
-                    break;
-            }
-        }
-    });
-
-    return refinedMap;
-}
-
-
-
-
-
-Perfect, Shresth. Here's how you can extract those custom field IDs from the `names` object in the JIRA response and return a `Map<String, String>` that maps field names to their corresponding custom field IDs:
-
-### ✅ Method to Extract Field ID Map
-```java
-public Map<String, String> extractCustomFieldIdMap(JsonNode jiraResponse) {
-    Map<String, String> fieldIdMap = new HashMap<>();
-
-    // These are the friendly field names we're looking for
-    Set<String> targetFields = Set.of(
-        "Planview ID",
-        "ASA: Approval Date",
-        "ASA: Architect SOEID",
-        "ASA: Override Request Date",
-        "ASA: Override Decision Date",
-        "ASA: Override Approver SOEID",
-        "ASA: Architectural Significance",
-        "ASA: Status"
-    );
-
-    JsonNode namesNode = jiraResponse.path("names");
-
-    if (!namesNode.isMissingNode()) {
-        Iterator<Map.Entry<String, JsonNode>> fields = namesNode.fields();
-
-        while (fields.hasNext()) {
-            Map.Entry<String, JsonNode> entry = fields.next();
-            String fieldId = entry.getKey(); // e.g., "customfield_12345"
-            String fieldName = entry.getValue().asText(); // e.g., "Planview ID"
-
-            if (targetFields.contains(fieldName)) {
-                fieldIdMap.put(fieldName, fieldId);
-            }
-        }
+    } catch (Exception e) {
+        System.err.println("❌ Failed to update issue " + issueKey + ": " + e.getMessage());
+        return false;
     }
-
-    return fieldIdMap;
 }
-```
-
-### 📌 Usage Example (inside `processTaInput`)
-Once you get the JIRA response:
-```java
-Map<String, String> customFieldMap = extractCustomFieldIdMap(response.getBody());
-```
-
-Let me know if you’d like to log missing fields for diagnostics or reverse-map the `fieldId -> label` instead. We can flex this logic easily depending on how you're consuming it downstream!
