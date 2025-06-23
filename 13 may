@@ -1,3 +1,30 @@
+public void processAndUpdateIssues(JsonNode jqlResponse,
+                                   Map<String, String> filteredMap,
+                                   Map<String, String> customFieldMap) {
+
+    // Step 1: Map filtered data to field IDs
+    Map<String, String> valueMap = mapToCustomFieldIds(filteredMap, customFieldMap);
+
+    JsonNode issues = jqlResponse.path("issues");
+    if (issues.isArray()) {
+        for (JsonNode issueNode : issues) {
+            String issueKey = issueNode.path("key").asText("");
+
+            if (!issueKey.isBlank()) {
+                boolean isSuccess = updateJiraIssue(issueKey, valueMap, customFieldMap);
+                System.out.println(issueKey + " → " + (isSuccess ? "✅ Success" : "❌ Failed"));
+            }
+        }
+    } else {
+        System.err.println("No issues found in JQL response.");
+    }
+}
+
+
+
+
+
+
 public boolean updateJiraIssue(String issueKey,
                                Map<String, String> valueMap,
                                Map<String, String> customFieldMap) {
