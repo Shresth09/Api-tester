@@ -1,48 +1,55 @@
-public void processTaInput(JsonNode requestBody, String jiraToken, String jiraNamBaseUrl) {
-    JsonNode taInputArray = requestBody.path("taInput");
+public void processTaInput(String requestBodyString, String jiraToken, String jiraNamBaseUrl) {
+    ObjectMapper mapper = new ObjectMapper();
 
-    if (taInputArray.isArray()) {
-        for (JsonNode item : taInputArray) {
-            Map<String, String> taDataMap = new HashMap<>();
+    try {
+        JsonNode requestBody = mapper.readTree(requestBodyString);
+        JsonNode taInputArray = requestBody.path("taInput");
 
-            String planviewID = item.path("planviewID").asText("");
-            taDataMap.put("planviewID", planviewID);
-            taDataMap.put("asa_approval_date", item.path("asa_approval_date").asText(""));
-            taDataMap.put("architect_soeid", item.path("architect_soeid").asText(""));
-            taDataMap.put("asa_override_request_date", item.path("asa_override_request_date").asText(""));
-            taDataMap.put("asa_override_decision_date", item.path("asa_override_decision_date").asText(""));
-            taDataMap.put("asa_override_appr_soeid", item.path("asa_override_appr_soeid").asText(""));
-            taDataMap.put("asa_architectural_significance", item.path("asa_architectural_significance").asText(""));
-            taDataMap.put("asa_status", item.path("asa_status").asText(""));
+        if (taInputArray.isArray()) {
+            for (JsonNode item : taInputArray) {
+                Map<String, String> taDataMap = new HashMap<>();
 
-            // JIRA Query using existing logic
-            String jql = "\"Planview ID\" ~ " + planviewID + " and issuetype = Planview";
+                String planviewID = item.path("planviewID").asText("");
+                taDataMap.put("planviewID", planviewID);
+                taDataMap.put("asa_approval_date", item.path("asa_approval_date").asText(""));
+                taDataMap.put("architect_soeid", item.path("architect_soeid").asText(""));
+                taDataMap.put("asa_override_request_date", item.path("asa_override_request_date").asText(""));
+                taDataMap.put("asa_override_decision_date", item.path("asa_override_decision_date").asText(""));
+                taDataMap.put("asa_override_appr_soeid", item.path("asa_override_appr_soeid").asText(""));
+                taDataMap.put("asa_architectural_significance", item.path("asa_architectural_significance").asText(""));
+                taDataMap.put("asa_status", item.path("asa_status").asText(""));
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + jiraToken);
-            headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+                String jql = "\"Planview ID\" ~ " + planviewID + " and issuetype = Planview";
 
-            HttpEntity<String> entity = new HttpEntity<>(headers);
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Authorization", "Bearer " + jiraToken);
+                headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
 
-            String urlToSend = UriComponentsBuilder.fromHttpUrl(jiraNamBaseUrl)
-                .path("/rest/api/latest/search")
-                .queryParam("jql", jql)
-                .queryParam("expand", "names")
-                .build()
-                .toUriString();
+                HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            try {
-                ResponseEntity<JsonNode> response = restTemplate.exchange(
-                    urlToSend, HttpMethod.GET, entity, JsonNode.class);
+                String urlToSend = UriComponentsBuilder.fromHttpUrl(jiraNamBaseUrl)
+                        .path("/rest/api/latest/search")
+                        .queryParam("jql", jql)
+                        .queryParam("expand", "names")
+                        .build()
+                        .toUriString();
 
-                // Call your next method using response body and taDataMap
-                handleJiraResponse(response.getBody(), taDataMap);
+                try {
+                    ResponseEntity<JsonNode> response = restTemplate.exchange(
+                            urlToSend, HttpMethod.GET, entity, JsonNode.class);
 
-            } catch (RestClientException e) {
-                System.err.println("Failed for Planview ID: " + planviewID + " - " + e.getMessage());
+                    // Pass response and taDataMap to next step
+                    handleJiraResponse(response.getBody(), taDataMap);
+
+                } catch (RestClientException e) {
+                    System.err.println("Failed JIRA lookup for Planview ID: " + planviewID + " - " + e.getMessage());
+                }
             }
+        } else {
+            System.err.println("taInput is not an array or is missing.");
         }
-    } else {
-        System.err.println("'taInput' is missing or not an array.");
+
+    } catch (JsonProcessingException e) {
+        System.err.println("Invalid JSON in requestBody: " + e.getMessage());
     }
 }
