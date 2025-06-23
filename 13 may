@@ -1,22 +1,46 @@
-// Initialize ObjectMapper
-ObjectMapper objectMapper = new ObjectMapper();
+public void processTaInput(JiraRequestBody requestBody, String jiraToken, String jiraNamBaseUrl) {
+    List<Map<String, String>> resultList = new ArrayList<>();
 
-// Convert response body to JsonNode
-JsonNode rootNode = objectMapper.readTree(response.getBody());
+    for (TaInput ta : requestBody.getTaInput()) {
+        Map<String, String> taDataMap = new HashMap<>();
+        taDataMap.put("planviewID", ta.getPlanviewID());
+        taDataMap.put("asa_approval_date", ta.getAsaApprovalDate());
+        taDataMap.put("architect_soeid", ta.getArchitectSoeid());
+        taDataMap.put("asa_override_request_date", ta.getAsaOverrideRequestDate());
+        taDataMap.put("asa_override_decision_date", ta.getAsaOverrideDecisionDate());
+        taDataMap.put("asa_override_appr_soeid", ta.getAsaOverrideApprSoeid());
+        taDataMap.put("asa_architectural_significance", ta.getAsaArchitecturalSignificance());
+        taDataMap.put("asa_status", ta.getAsaStatus());
 
-// Extract issue type and status
-String issueType = rootNode.path("fields").path("issuetype").path("name").asText();
-String issueStatus = rootNode.path("fields").path("status").path("name").asText();
+        // Construct JQL query
+        String planviewID = ta.getPlanviewID();
+        String jql = "\"Planview ID\" ~ " + planviewID + " and issuetype = Planview";
 
-// Replicate ScriptRunner logic
-if ("Planview".equals(issueType) && "Test Plan".equals(issueStatus)) {
-    planviewTestPlanEmail(queryParams, body, request, issueKey);
-} else if ("Test Plan".equals(issueType)) {
-    testPlanEmail(queryParams, body, request, issueKey);
-} else if ("Change Request".equals(issueType)) {
-    crEmail(queryParams, body, request, issueKey);
-} else if ("Implementation Approval".equals(issueType)) {
-    icaEmail(queryParams, body, request, issueKey);
-} else if ("Maintenance Request".equals(issueType)) {
-    maintenanceRequestEmail(queryParams, body, request, issueKey);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + jiraToken);
+        headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        String urlToSend = UriComponentsBuilder.fromHttpUrl(jiraNamBaseUrl)
+            .path("/rest/api/latest/search")
+            .queryParam("jql", jql)
+            .queryParam("expand", "names")
+            .build()
+            .toUriString();
+
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                urlToSend, HttpMethod.GET, entity, JsonNode.class);
+
+            // TODO: Pass response and taDataMap to another method
+            handleJiraResponse(response.getBody(), taDataMap);
+
+        } catch (RestClientException e) {
+            // Log or handle error
+            System.err.println("JIRA request failed for planviewID: " + planviewID);
+        }
+
+        resultList.add(taDataMap);
+    }
 }
