@@ -1,55 +1,46 @@
-public void processTaInput(String requestBodyString, String jiraToken, String jiraNamBaseUrl) {
-    ObjectMapper mapper = new ObjectMapper();
+Perfect, Shresth. Here's how you can extract those custom field IDs from the `names` object in the JIRA response and return a `Map<String, String>` that maps field names to their corresponding custom field IDs:
 
-    try {
-        JsonNode requestBody = mapper.readTree(requestBodyString);
-        JsonNode taInputArray = requestBody.path("taInput");
+### ✅ Method to Extract Field ID Map
+```java
+public Map<String, String> extractCustomFieldIdMap(JsonNode jiraResponse) {
+    Map<String, String> fieldIdMap = new HashMap<>();
 
-        if (taInputArray.isArray()) {
-            for (JsonNode item : taInputArray) {
-                Map<String, String> taDataMap = new HashMap<>();
+    // These are the friendly field names we're looking for
+    Set<String> targetFields = Set.of(
+        "Planview ID",
+        "ASA: Approval Date",
+        "ASA: Architect SOEID",
+        "ASA: Override Request Date",
+        "ASA: Override Decision Date",
+        "ASA: Override Approver SOEID",
+        "ASA: Architectural Significance",
+        "ASA: Status"
+    );
 
-                String planviewID = item.path("planviewID").asText("");
-                taDataMap.put("planviewID", planviewID);
-                taDataMap.put("asa_approval_date", item.path("asa_approval_date").asText(""));
-                taDataMap.put("architect_soeid", item.path("architect_soeid").asText(""));
-                taDataMap.put("asa_override_request_date", item.path("asa_override_request_date").asText(""));
-                taDataMap.put("asa_override_decision_date", item.path("asa_override_decision_date").asText(""));
-                taDataMap.put("asa_override_appr_soeid", item.path("asa_override_appr_soeid").asText(""));
-                taDataMap.put("asa_architectural_significance", item.path("asa_architectural_significance").asText(""));
-                taDataMap.put("asa_status", item.path("asa_status").asText(""));
+    JsonNode namesNode = jiraResponse.path("names");
 
-                String jql = "\"Planview ID\" ~ " + planviewID + " and issuetype = Planview";
+    if (!namesNode.isMissingNode()) {
+        Iterator<Map.Entry<String, JsonNode>> fields = namesNode.fields();
 
-                HttpHeaders headers = new HttpHeaders();
-                headers.set("Authorization", "Bearer " + jiraToken);
-                headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> entry = fields.next();
+            String fieldId = entry.getKey(); // e.g., "customfield_12345"
+            String fieldName = entry.getValue().asText(); // e.g., "Planview ID"
 
-                HttpEntity<String> entity = new HttpEntity<>(headers);
-
-                String urlToSend = UriComponentsBuilder.fromHttpUrl(jiraNamBaseUrl)
-                        .path("/rest/api/latest/search")
-                        .queryParam("jql", jql)
-                        .queryParam("expand", "names")
-                        .build()
-                        .toUriString();
-
-                try {
-                    ResponseEntity<JsonNode> response = restTemplate.exchange(
-                            urlToSend, HttpMethod.GET, entity, JsonNode.class);
-
-                    // Pass response and taDataMap to next step
-                    handleJiraResponse(response.getBody(), taDataMap);
-
-                } catch (RestClientException e) {
-                    System.err.println("Failed JIRA lookup for Planview ID: " + planviewID + " - " + e.getMessage());
-                }
+            if (targetFields.contains(fieldName)) {
+                fieldIdMap.put(fieldName, fieldId);
             }
-        } else {
-            System.err.println("taInput is not an array or is missing.");
         }
-
-    } catch (JsonProcessingException e) {
-        System.err.println("Invalid JSON in requestBody: " + e.getMessage());
     }
+
+    return fieldIdMap;
 }
+```
+
+### 📌 Usage Example (inside `processTaInput`)
+Once you get the JIRA response:
+```java
+Map<String, String> customFieldMap = extractCustomFieldIdMap(response.getBody());
+```
+
+Let me know if you’d like to log missing fields for diagnostics or reverse-map the `fieldId -> label` instead. We can flex this logic easily depending on how you're consuming it downstream!
