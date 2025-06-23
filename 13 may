@@ -1,3 +1,38 @@
+public Map<String, String> mapToCustomFieldIds(Map<String, String> filteredMap, Map<String, String> customFieldMap) {
+    Map<String, String> result = new HashMap<>();
+
+    // Mapping from filteredMap key → friendly label in customFieldMap
+    Map<String, String> labelMapping = Map.of(
+        "planviewID", "Planview ID",
+        "asa_approval_date", "ASA: Approval Date",
+        "architect_soeid", "ASA: Architect SOEID",
+        "asa_override_request_date", "ASA: Override Request Date",
+        "asa_override_decision_date", "ASA: Override Decision Date",
+        "asa_override_appr_soeid", "ASA: Override Approver SOEID",
+        "asa_architectural_significance", "ASA: Architectural Significance",
+        "asa_status", "ASA: Status"
+    );
+
+    for (Map.Entry<String, String> entry : filteredMap.entrySet()) {
+        String filteredKey = entry.getKey();
+        String value = entry.getValue();
+        String friendlyName = labelMapping.get(filteredKey);
+
+        if (friendlyName != null) {
+            String customFieldId = customFieldMap.get(friendlyName);
+            if (customFieldId != null) {
+                result.put(customFieldId, value);
+            } else {
+                System.out.println("Missing custom field ID for label: " + friendlyName);
+            }
+        }
+    }
+
+    return result;
+}
+
+
+
 public Map<String, String> buildFilteredTaMap(Map<String, String> taDataMap) {
     Map<String, String> refinedMap = new HashMap<>();
 
