@@ -1,38 +1,32 @@
-public void processAndUpdateIssues(JsonNode jqlResponse,
-                                   Map<String, String> filteredMap,
-                                   Map<String, String> customFieldMap) {
-
-    // Step 1: Map filtered data to field IDs
-    Map<String, String> valueMap = mapToCustomFieldIds(filteredMap, customFieldMap);
-
-    JsonNode issues = jqlResponse.path("issues");
-    if (issues.isArray()) {
-        for (JsonNode issueNode : issues) {
-            String issueKey = issueNode.path("key").asText("");
-
-            if (!issueKey.isBlank()) {
-                boolean isSuccess = updateJiraIssue(issueKey, valueMap, customFieldMap);
-                System.out.println(issueKey + " → " + (isSuccess ? "✅ Success" : "❌ Failed"));
-            }
-        }
-    } else {
-        System.err.println("No issues found in JQL response.");
-    }
-}
-
-
-
-
-
-
 public boolean updateJiraIssue(String issueKey,
                                Map<String, String> valueMap,
                                Map<String, String> customFieldMap) {
     ObjectMapper mapper = new ObjectMapper();
 
-    // Special fields requiring array/object formatting
+    // Define custom field IDs for special treatment
     String archSignificanceId = customFieldMap.get("ASA: Architectural Significance");
     String statusId = customFieldMap.get("ASA: Status");
+
+    // Define which filtered keys represent date fields
+    Set<String> dateFields = Set.of(
+        "asa_approval_date",
+        "asa_override_request_date",
+        "asa_override_decision_date"
+    );
+
+    // For resolving which field is mapped to a date field
+    Map<String, String> reverseMap = new HashMap<>();
+    reverseMap.put("Planview ID", "planviewID");
+    reverseMap.put("ASA: Approval Date", "asa_approval_date");
+    reverseMap.put("ASA: Architect SOEID", "architect_soeid");
+    reverseMap.put("ASA: Override Request Date", "asa_override_request_date");
+    reverseMap.put("ASA: Override Decision Date", "asa_override_decision_date");
+    reverseMap.put("ASA: Override Approver SOEID", "asa_override_appr_soeid");
+    reverseMap.put("ASA: Architectural Significance", "asa_architectural_significance");
+    reverseMap.put("ASA: Status", "asa_status");
+
+    DateTimeFormatter inputFormat = DateTimeFormatter.ofPattern("dd/MMM/yyyy", Locale.ENGLISH);
+    DateTimeFormatter jiraDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     ObjectNode fieldsNode = mapper.createObjectNode();
 
@@ -40,43 +34,53 @@ public boolean updateJiraIssue(String issueKey,
         String fieldId = entry.getKey();
         String value = entry.getValue();
 
-        if (fieldId.equals(archSignificanceId)) {
-            ObjectNode option = mapper.createObjectNode();
-            option.put("value", value);
+        // Resolve original filtered key from custom field ID
+        String originalLabel = customFieldMap.entrySet().stream()
+            .filter(e -> e.getValue().equals(fieldId))
+            .map(Map.Entry::getKey)
+            .findFirst().orElse(null);
 
-            ArrayNode wrappedOption = mapper.createArrayNode();
-            wrappedOption.add(option);
+        String filteredKey = (originalLabel != null) ? reverseMap.get(originalLabel) : "";
 
-            fieldsNode.set(fieldId, wrappedOption);
+        try {
+            if (fieldId.equals(archSignificanceId)) {
+                ObjectNode option = mapper.createObjectNode();
+                option.put("value", value);
+                fieldsNode.set(fieldId, mapper.createArrayNode().add(option));
 
-        } else if (fieldId.equals(statusId)) {
-            ArrayNode statusArray = mapper.createArrayNode();
-            statusArray.add(value);
-            fieldsNode.set(fieldId, statusArray);
+            } else if (fieldId.equals(statusId)) {
+                fieldsNode.set(fieldId, mapper.createArrayNode().add(value));
 
-        } else {
-            fieldsNode.put(fieldId, value);
+            } else if (dateFields.contains(filteredKey)) {
+                // Format date
+                String formattedDate = LocalDate.parse(value, inputFormat).format(jiraDateFormat);
+                fieldsNode.put(fieldId, formattedDate);
+
+            } else {
+                fieldsNode.put(fieldId, value);
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ Failed to process field " + fieldId + " for issue " + issueKey + ": " + e.getMessage());
         }
     }
 
-    ObjectNode updatePayload = mapper.createObjectNode();
-    updatePayload.set("fields", fieldsNode);
+    ObjectNode payload = mapper.createObjectNode().set("fields", fieldsNode);
 
     HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", "Bearer " + JIRA_AUTH_TOKEN); // global variable
+    headers.set("Authorization", "Bearer " + JIRA_AUTH_TOKEN); // from global context
     headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
     headers.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
     try {
-        HttpEntity<String> requestEntity = new HttpEntity<>(mapper.writeValueAsString(updatePayload), headers);
-        String updateUrl = JIRA_BASE_URL + "/rest/api/latest/issue/" + issueKey;
+        HttpEntity<String> request = new HttpEntity<>(mapper.writeValueAsString(payload), headers);
+        String url = JIRA_BASE_URL + "/rest/api/latest/issue/" + issueKey; // from global context
 
-        restTemplate.exchange(updateUrl, HttpMethod.PUT, requestEntity, Void.class);
-        System.out.println("✅ Issue updated: " + issueKey);
+        restTemplate.exchange(url, HttpMethod.PUT, request, Void.class);
+        System.out.println("✅ Successfully updated: " + issueKey);
         return true;
 
     } catch (Exception e) {
-        System.err.println("❌ Failed to update issue " + issueKey + ": " + e.getMessage());
+        System.err.println("❌ Update failed for " + issueKey + ": " + e.getMessage());
         return false;
     }
 }
