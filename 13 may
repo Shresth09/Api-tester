@@ -1,53 +1,112 @@
-Great extension, Shresth. If you’d like to shape the error response in that format—where the key is the error message (e.g. `"Project Not Found"`) and its value is an empty string—you can define and populate it like this:
+Here’s a Swagger-annotated version of your controller endpoint using `@Operation`, `@ApiResponses`, and other OpenAPI annotations. It captures your sample input and output clearly for documentation purposes.
 
 ---
 
-### ✅ Updated Error Response Structure
+### ✅ Add These Imports
+Make sure you’ve added the following imports:
 
 ```java
-List<Map<String, String>> errorResponse = new ArrayList<>();
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody as SwaggerRequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+```
 
-{
-    Map<String, String> errorMap = new LinkedHashMap<>();
-    errorMap.put("Project Not Found", "");
-    errorResponse.add(errorMap);
+---
+
+### ✅ Annotated Controller Method
+
+```java
+@Operation(
+    summary = "Update JIRA issues based on TA input",
+    description = "Accepts TA data, validates and updates JIRA issues accordingly. Returns update status per field."
+)
+@ApiResponses(value = {
+    @ApiResponse(
+        responseCode = "200",
+        description = "JIRA issues processed",
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON_VALUE,
+            examples = @ExampleObject(
+                value = """
+                {
+                  "jiraSuccessResponse": [
+                    {
+                      "ASA: Override Approver SOEID": "No Update",
+                      "ASA: Architect SOEID": "Succesfully Updated",
+                      "Architecturally Significant": "Succesfully Updated",
+                      "ASA approval date": "Succesfully Updated",
+                      "ASA: Status": "Succesfully Updated",
+                      "ASA override decision date": "Succesfully Updated",
+                      "ASA override request date": "Succesfully Updated"
+                    }
+                  ]
+                }
+                """
+            )
+        )
+    ),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Invalid request or project not found",
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON_VALUE,
+            examples = @ExampleObject(
+                value = """
+                {
+                  "jiraErrorResponse": [
+                    {
+                      "Project Not Found": ""
+                    }
+                  ]
+                }
+                """
+            )
+        )
+    )
+})
+@PostMapping(value = "/tapJira", produces = MediaType.APPLICATION_JSON_VALUE)
+public ResponseEntity<ObjectNode> tapJiraCall(
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+        required = true,
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON_VALUE,
+            examples = @ExampleObject(
+                name = "Sample Input",
+                value = """
+                {
+                  "taInput": [
+                    {
+                      "planviewID": "20241100542",
+                      "asa_approval_date": "20/Dec/2024",
+                      "architect_soeid": "JR18676",
+                      "asa_override_request_date": "",
+                      "asa_override_decision_date": "",
+                      "asa_override_appr_soeid": "",
+                      "asa_architectural_significance": "Yes",
+                      "asa_status": "Complete"
+                    }
+                  ]
+                }
+                """
+            )
+        )
+    )
+    @RequestBody String body
+) {
+    // Your business logic here
+    return ResponseEntity.ok().build(); // Replace with real logic
 }
 ```
 
 ---
 
-### 🧾 API Wrapper Response Example
-
-Your final JSON output will look like:
-
-```json
-{
-  "jiraErrorResponse": [
-    {
-      "Project Not Found": ""
-    }
-  ]
-}
-```
-
-To send this in your controller using `ObjectNode`, you’d adapt the response builder like this:
-
-```java
-public ResponseEntity<ObjectNode> buildApiResponse(List<Map<String, String>> finalResponse,
-                                                   List<Map<String, String>> errorResponse) {
-    ObjectMapper mapper = new ObjectMapper();
-    ObjectNode responseNode = mapper.createObjectNode();
-
-    if (finalResponse != null && !finalResponse.isEmpty()) {
-        responseNode.set("jiraSuccessResponse", mapper.valueToTree(finalResponse));
-        return ResponseEntity.ok(responseNode);
-    } else {
-        responseNode.set("jiraErrorResponse", mapper.valueToTree(errorResponse));
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseNode);
-    }
-}
-```
-
-It’s super flexible—feel free to change the error key dynamically depending on the situation (e.g., “Invalid Token”, “Permission Denied”, etc.) and we’ll slot it in the same way.
-
-Want a central utility to generate these error maps for various cases? I can write one that plugs right in.
+Let me know if you'd like to move the examples into external YAML/JSON files, or dynamically generate Swagger schemas based on your model classes. Want me to help hook this into your OpenAPI config next?[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/DTS1234/diet-manager/tree/a9ed9d88f10e8f2055bb59ab763f4342ff11b131/src%2Fmain%2Fjava%2Fuep%2Fdiet%2Fmanager%2Fday%2FDayController.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Alf-Melmac/daa-api/tree/42dd3fbfb927998e7849aa57ee1480776777c437/src%2Fmain%2Fjava%2Fde%2Fwebalf%2Fdaaapi%2Fcontroller%2FServerController.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/mwierzchowski/helios/tree/f50c7552ca545b634304fc9d4fabffc6f7d2cb43/src%2Fmain%2Fjava%2Fcom%2Fgithub%2Fmwierzchowski%2Fhelios%2Fservice%2FTimerService.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
