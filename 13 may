@@ -1,3 +1,11 @@
+List<Map<String, String>> errorResponse = new ArrayList<>();
+
+{
+    Map<String, String> errorMap = new HashMap<>();
+    errorMap.put("jiraErrorResponse", "Project Doesn't Exist");
+    errorResponse.add(errorMap);
+
+
 
 List<Map<String, String>> finalResponse = new ArrayList<>();
 
