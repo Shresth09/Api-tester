@@ -1,42 +1,53 @@
+Great extension, Shresth. If you’d like to shape the error response in that format—where the key is the error message (e.g. `"Project Not Found"`) and its value is an empty string—you can define and populate it like this:
+
+---
+
+### ✅ Updated Error Response Structure
+
+```java
 List<Map<String, String>> errorResponse = new ArrayList<>();
 
 {
-    Map<String, String> errorMap = new HashMap<>();
-    errorMap.put("jiraErrorResponse", "Project Doesn't Exist");
+    Map<String, String> errorMap = new LinkedHashMap<>();
+    errorMap.put("Project Not Found", "");
     errorResponse.add(errorMap);
-
-
-
-List<Map<String, String>> finalResponse = new ArrayList<>();
-
-
-
-
-public void buildFinalResponse(Map<String, String> taInput, boolean updateSuccess) {
-    Map<String, String> responseMap = new LinkedHashMap<>();
-
-    Map<String, String> fieldLabels = Map.of(
-        "planviewID", "Planview ID",
-        "asa_approval_date", "ASA approval date",
-        "architect_soeid", "ASA: Architect SOEID",
-        "asa_override_request_date", "ASA override request date",
-        "asa_override_decision_date", "ASA override decision date",
-        "asa_override_appr_soeid", "ASA: Override Approver SOEID",
-        "asa_architectural_significance", "Architecturally Significant",
-        "asa_status", "ASA: Status"
-    );
-
-    for (Map.Entry<String, String> entry : fieldLabels.entrySet()) {
-        String key = entry.getKey();
-        String label = entry.getValue();
-        String value = taInput.getOrDefault(key, "");
-
-        if (value == null || value.isBlank()) {
-            responseMap.put(label, "No Update");
-        } else {
-            responseMap.put(label, updateSuccess ? "Succesfully Updated" : "Not Succesfully Updated");
-        }
-    }
-
-    finalResponse.add(responseMap);
 }
+```
+
+---
+
+### 🧾 API Wrapper Response Example
+
+Your final JSON output will look like:
+
+```json
+{
+  "jiraErrorResponse": [
+    {
+      "Project Not Found": ""
+    }
+  ]
+}
+```
+
+To send this in your controller using `ObjectNode`, you’d adapt the response builder like this:
+
+```java
+public ResponseEntity<ObjectNode> buildApiResponse(List<Map<String, String>> finalResponse,
+                                                   List<Map<String, String>> errorResponse) {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode responseNode = mapper.createObjectNode();
+
+    if (finalResponse != null && !finalResponse.isEmpty()) {
+        responseNode.set("jiraSuccessResponse", mapper.valueToTree(finalResponse));
+        return ResponseEntity.ok(responseNode);
+    } else {
+        responseNode.set("jiraErrorResponse", mapper.valueToTree(errorResponse));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseNode);
+    }
+}
+```
+
+It’s super flexible—feel free to change the error key dynamically depending on the situation (e.g., “Invalid Token”, “Permission Denied”, etc.) and we’ll slot it in the same way.
+
+Want a central utility to generate these error maps for various cases? I can write one that plugs right in.
