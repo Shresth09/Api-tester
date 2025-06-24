@@ -1,38 +1,18 @@
-Here’s a Swagger-annotated version of your controller endpoint using `@Operation`, `@ApiResponses`, and other OpenAPI annotations. It captures your sample input and output clearly for documentation purposes.
+Absolutely, Shresth. Here's the Swagger-annotated version of your new controller endpoint `/initialTapJira`, complete with sample input/output and OpenAPI documentation:
 
 ---
 
-### ✅ Add These Imports
-Make sure you’ve added the following imports:
-
-```java
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody as SwaggerRequestBody;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-```
-
----
-
-### ✅ Annotated Controller Method
+### ✅ Annotated Controller Method for `/initialTapJira`
 
 ```java
 @Operation(
-    summary = "Update JIRA issues based on TA input",
-    description = "Accepts TA data, validates and updates JIRA issues accordingly. Returns update status per field."
+    summary = "Initial TAP JIRA Update",
+    description = "Receives initial TAP data and updates JIRA issues based on PM SOEID and Submission Date."
 )
 @ApiResponses(value = {
     @ApiResponse(
         responseCode = "200",
-        description = "JIRA issues processed",
+        description = "Successfully processed TAP update",
         content = @Content(
             mediaType = MediaType.APPLICATION_JSON_VALUE,
             examples = @ExampleObject(
@@ -40,13 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
                 {
                   "jiraSuccessResponse": [
                     {
-                      "ASA: Override Approver SOEID": "No Update",
-                      "ASA: Architect SOEID": "Succesfully Updated",
-                      "Architecturally Significant": "Succesfully Updated",
-                      "ASA approval date": "Succesfully Updated",
-                      "ASA: Status": "Succesfully Updated",
-                      "ASA override decision date": "Succesfully Updated",
-                      "ASA override request date": "Succesfully Updated"
+                      "ASA: PM SOEID": "Succesfully Updated",
+                      "ASA: Submission Date": "Succesfully Updated"
                     }
                   ]
                 }
@@ -73,8 +48,8 @@ import org.springframework.web.bind.annotation.RequestBody;
         )
     )
 })
-@PostMapping(value = "/tapJira", produces = MediaType.APPLICATION_JSON_VALUE)
-public ResponseEntity<ObjectNode> tapJiraCall(
+@PostMapping(value = "/initialTapJira", produces = MediaType.APPLICATION_JSON_VALUE)
+public ResponseEntity<ObjectNode> initialTapJiraCall(
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         required = true,
         content = @Content(
@@ -85,14 +60,9 @@ public ResponseEntity<ObjectNode> tapJiraCall(
                 {
                   "taInput": [
                     {
-                      "planviewID": "20241100542",
-                      "asa_approval_date": "20/Dec/2024",
-                      "architect_soeid": "JR18676",
-                      "asa_override_request_date": "",
-                      "asa_override_decision_date": "",
-                      "asa_override_appr_soeid": "",
-                      "asa_architectural_significance": "Yes",
-                      "asa_status": "Complete"
+                      "planviewID": "20250987655",
+                      "pmSOEID": "PM21496",
+                      "asaSubmissionDate": "19/December/2024"
                     }
                   ]
                 }
@@ -102,11 +72,11 @@ public ResponseEntity<ObjectNode> tapJiraCall(
     )
     @RequestBody String body
 ) {
-    // Your business logic here
-    return ResponseEntity.ok().build(); // Replace with real logic
+    // Your logic here
+    return ResponseEntity.ok().build(); // replace with actual implementation
 }
 ```
 
 ---
 
-Let me know if you'd like to move the examples into external YAML/JSON files, or dynamically generate Swagger schemas based on your model classes. Want me to help hook this into your OpenAPI config next?[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/DTS1234/diet-manager/tree/a9ed9d88f10e8f2055bb59ab763f4342ff11b131/src%2Fmain%2Fjava%2Fuep%2Fdiet%2Fmanager%2Fday%2FDayController.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "1")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/Alf-Melmac/daa-api/tree/42dd3fbfb927998e7849aa57ee1480776777c437/src%2Fmain%2Fjava%2Fde%2Fwebalf%2Fdaaapi%2Fcontroller%2FServerController.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "2")[43dcd9a7-70db-4a1f-b0ae-981daa162054](https://github.com/mwierzchowski/helios/tree/f50c7552ca545b634304fc9d4fabffc6f7d2cb43/src%2Fmain%2Fjava%2Fcom%2Fgithub%2Fmwierzchowski%2Fhelios%2Fservice%2FTimerService.java?citationMarker=43dcd9a7-70db-4a1f-b0ae-981daa162054 "3")
+Want to extract shared annotations into reusable components next or refactor both endpoints into grouped Swagger tags for clarity? I can help streamline that too.
