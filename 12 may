@@ -1,143 +1,18 @@
-Great addition, Shresth. To include the **`fixVersions`** field and capture the `"name"` property from each version, here's what we’ll do:
-
----
-
-### 🔧 Add this new method:
-
-```java
-private Map<String, String> fetchFixVersionNames(JsonNode fieldsNode) {
-    Map<String, String> result = new HashMap<>();
-    JsonNode versions = fieldsNode.path("fixVersions");
-
-    if (versions.isArray()) {
-        List<String> names = new ArrayList<>();
-        for (JsonNode version : versions) {
-            String versionName = version.path("name").asText(null);
-            if (versionName != null) {
-                names.add(versionName);
-            }
-        }
-        if (!names.isEmpty()) {
-            result.put("Fix Versions", String.join(", ", names));
-        }
-    }
-
-    return result;
-}
-```
-
----
-
-### ✅ Then, in your `storeCustomFieldValues` method, just add:
-
-```java
-result.putAll(fetchFixVersionNames(fieldsNode));
-```
-
----
-
-And that’s it — now your map will include:
-
-```java
-"Fix Versions" → "MX.2023.R08 08/18-08/18"
-```
-
-Want to go one step further and include both unreleased and released versions separately? Or only the latest one? I can help tailor that logic too. 
-
-
-
-:=:==:=:=:==:=:=:=:++:'=+' +
-
-
-
-
-private Map<String, String> fetchUserNameWithDomainFields(JsonNode fieldsNode, Map<String, String> fieldMap) {
-    Map<String, String> result = new HashMap<>();
-    fieldMap.forEach((name, id) -> {
-        JsonNode arrayNode = fieldsNode.path(id);
-        if (arrayNode.isArray()) {
-            List<String> usernames = new ArrayList<>();
-            for (JsonNode user : arrayNode) {
-                String shortName = user.path("name").asText(null);
-                if (shortName != null) {
-                    usernames.add(shortName + "@imcnam.ssmb.com");
-                }
-            }
-            result.put(name, String.join(", ", usernames));
-        }
-    });
-    return result;
-}
-
-
-
-Perfect — that’s a great new case to add, Shresth. Let’s introduce this new **Type 4** field: _an array of user objects_, where we extract and join their `emailAddress` values.
-
----
-
-### 🛠 Step-by-Step Additions
-
-1. **Add `approvers` to a new list of user-array fields**
-2. **Extend `storeCustomFieldValues` to handle this type**
-3. **Write a new method to extract emails from user objects**
-
----
-
-### ✅ Updated storeCustomFieldValues
-
-```java
-public Map<String, String> storeCustomFieldValues(JsonNode rootNode) {
-    JsonNode fieldsNode = rootNode.path("fields");
-    JsonNode namesNode = rootNode.path("names");
-
-    List<String> simpleFieldNames = Arrays.asList("Summary", "Description");
-    List<String> multiSelectFieldNames = Arrays.asList("Test Type");
-    List<String> singleSelectFieldNames = Arrays.asList("Is Automated");
-    List<String> userArrayFieldNames = Arrays.asList("Approvers");
-
-    Map<String, String> simpleMap = getCustomFieldId(namesNode, simpleFieldNames);
-    Map<String, String> multiMap = getCustomFieldId(namesNode, multiSelectFieldNames);
-    Map<String, String> singleMap = getCustomFieldId(namesNode, singleSelectFieldNames);
-    Map<String, String> userArrayMap = getCustomFieldId(namesNode, userArrayFieldNames);
-
-    Map<String, String> result = new HashMap<>();
-    result.putAll(fetchSimpleTextFields(fieldsNode, simpleMap));
-    result.putAll(fetchMultiSelectFields(fieldsNode, multiMap));
-    result.putAll(fetchSingleSelectFields(fieldsNode, singleMap));
-    result.putAll(fetchUserEmailArrayFields(fieldsNode, userArrayMap));
-
-    return result;
-}
-```
-
----
-
-### 🧩 New Method: fetchUserEmailArrayFields
-
-```java
-private Map<String, String> fetchUserEmailArrayFields(JsonNode fieldsNode, Map<String, String> fieldMap) {
-    Map<String, String> result = new HashMap<>();
-    fieldMap.forEach((name, id) -> {
-        JsonNode arrayNode = fieldsNode.path(id);
-        if (arrayNode.isArray()) {
-            List<String> emails = new ArrayList<>();
-            for (JsonNode user : arrayNode) {
-                String email = user.path("emailAddress").asText(null);
-                if (email != null) emails.add(email);
-            }
-            result.put(name, String.join(", ", emails));
-        }
-    });
-    return result;
-}
-```
-
----
-
-And just like that, “Approvers” will be represented in your result map as:
-
-```java
-"Approvers" -> "ja77100@citi.com, jg92196@citi.com"
-```
-
-Want to keep this extensible in case more user-type fields show up? I can suggest a dynamic type classifier too. Let me know!
+/**
+ * Condition class for controlling the visibility of a Jira UI element (e.g., web panel, menu item)
+ * based on the current issue's project key.
+ *
+ * <p>This condition retrieves a comma-separated list of allowed project keys from global plugin
+ * settings (stored under {@code PLUGIN_STORAGE_KEY + ".selectedProjects"}) and checks whether the
+ * current context's project key is in that list. If so, the UI element should be displayed.</p>
+ *
+ * <p>Use the "projectkey" parameter in the velocity context to match the target project.</p>
+ *
+ * Dependencies:
+ * - {@link PluginSettingsFactory} for accessing stored configuration.
+ *
+ * Example usage in atlassian-plugin.xml:
+ * <condition class="com.assistme.plugins.servlet.ProjectKeyCondition">
+ *   <param name="projectkey">MYPROJECT</param>
+ * </condition>
+ */
