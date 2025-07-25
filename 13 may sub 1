@@ -1,0 +1,343 @@
+Here are 10 questions and answers a new Confluence app user might encounter, formatted for Stack Overflow. I've focused on common initial hurdles and practical solutions.
+Question 1: How do I create my first page in Confluence?
+Tags: confluence, pages, getting-started, new-user
+Question:
+I'm new to Confluence and just got access. I want to start documenting some project notes. How do I create my very first page? I can see a "Create" button but I'm not sure which options to choose.
+Answer:
+Creating your first page in Confluence is straightforward!
+ * Locate the "Create" button: On most Confluence interfaces (Cloud or Data Center), you'll find a blue Create button, usually in the top navigation bar or sidebar.
+ * Choose a template (optional but recommended):
+   * Clicking "Create" will typically open a dialog. Confluence offers various templates (e.g., Meeting notes, Project plan, Blank page).
+   * For your first page, you can select "Blank page" to start fresh, or explore other templates if they fit your immediate need. Templates provide pre-formatted structures that can save you time.
+ * Select a Space:
+   * Every page in Confluence resides within a "Space." If you're part of a team, you'll likely have access to one or more spaces (e.g., "Marketing Team Space," "Development Project X").
+   * In the "Create" dialog, make sure to select the correct space where you want your page to live.
+ * Give your page a Title: This is crucial for discoverability. Choose a clear and concise title.
+ * Start writing! Once you've chosen a template and space, and given it a title, the editor will open, and you can begin adding your content.
+ * Publish: When you're done, click the Publish button (usually in the top right corner) to save your page and make it visible to others in the space (based on permissions).
+Pro-tip: Don't worry about perfection on your first page. Confluence allows for easy editing and versioning, so you can always refine it later!
+Question 2: My Confluence page looks messy! How can I format text and add headings?
+Tags: confluence, formatting, editor, text-styling
+Question:
+I've written some content on my Confluence page, but it's just a wall of text. How do I make it more readable by adding headings, bolding text, and creating lists?
+Answer:
+Confluence has a rich editor that makes formatting easy to improve readability.
+ * Headings:
+   * To add a heading, type /heading and then choose the desired heading level (e.g., Heading 1, Heading 2).
+   * Alternatively, highlight the text you want to make a heading, and then use the "Paragraph styles" dropdown in the editor toolbar (it usually shows "Normal text" by default) to select your heading level.
+ * Bold, Italic, Underline:
+   * Select the text you want to format.
+   * Use the standard toolbar icons: B (bold), I (italic), U (underline). You can also use keyboard shortcuts: Ctrl+B (Windows) or Cmd+B (Mac) for bold, Ctrl+I/Cmd+I for italic, etc.
+ * Lists (Bulleted and Numbered):
+   * To create a bulleted list, type * followed by a space, then your item. Press Enter for the next item.
+   * To create a numbered list, type 1. followed by a space, then your item. Press Enter for the next item.
+   * You can also use the list icons in the editor toolbar.
+ * Other useful formatting:
+   * Code Block: Type /code to insert a code block for displaying code snippets.
+   * Info Panel/Note/Warning: Type /info (or /note, /warning) to add visually distinct panels for important information.
+   * Table: Type /table to insert a table.
+By using these formatting options, you can break up your content and make it much easier for readers to digest.
+Question 3: How do I share a Confluence page with my team members?
+Tags: confluence, sharing, collaboration, permissions
+Question:
+I've created a great page, and now I want my team to see it. What's the best way to share it with them, and how do I ensure they have access?
+Answer:
+There are several ways to share a Confluence page, depending on your needs:
+ * Share Button (Email/Link):
+   * On the top right of your published page, you'll see a Share button.
+   * Clicking it allows you to:
+     * Send via email: Type in names or email addresses, add a message, and send. Confluence will send them a notification with a link to the page.
+     * Copy link: Get a direct URL to the page that you can paste into chat, email, or any other communication channel.
+ * @mentions:
+   * If you want to draw specific attention to your page within another Confluence page, a comment, or a chat, you can type @ followed by a user's name (e.g., @John Doe). They will receive a notification.
+ * Page Permissions:
+   * Default: Pages inherit permissions from the space they are in. If your team already has access to the space, they should be able to view your page.
+   * Specific Page Restrictions: If you need to restrict who can view or edit a specific page (more granular than the space permissions), click the "..." (More actions) menu on the top right of the page and select Restrictions. You can then add or remove users/groups. Be careful with this, as it can inadvertently block access for others.
+ * Link on another page: A common practice is to link new pages from an existing "Index" or "Table of Contents" page within your Confluence space.
+For general team sharing, using the "Share" button or simply providing the direct link is usually sufficient, assuming your team members have the necessary space permissions.
+Question 4: I can't find a page that I know exists. How do I search effectively in Confluence?
+Tags: confluence, search, content-discovery, troubleshooting
+Question:
+My colleague mentioned a Confluence page, but I can't seem to find it by just Browse. What are the best ways to search for content in Confluence?
+Answer:
+Confluence has a powerful search function. Here's how to use it effectively:
+ * Quick Search (Top Navigation Bar):
+   * This is the fastest way to start. Begin typing in the search bar (usually at the top right of your Confluence instance).
+   * As you type, Confluence will suggest matching pages, spaces, and even attachments.
+ * Advanced Search (Full Search Screen):
+   * If the quick search doesn't yield results or you need more control, press Enter after typing your query in the quick search bar, or navigate directly to the "Search" option (often found under the "Confluence" logo or in the left sidebar).
+   * On the full search screen, you can filter by:
+     * Space: Search within specific spaces.
+     * Content Type: Search for pages, blog posts, attachments, comments, etc.
+     * Last Modified: Filter by when the content was last updated.
+     * Author: Search for content created by a specific user.
+     * Labels: If the page has relevant labels, you can search by them.
+ * Using Keywords and Phrases:
+   * Be specific with your keywords.
+   * Use quotes around exact phrases (e.g., "Project Alpha Meeting Minutes") to find exact matches.
+   * Use operators like AND, OR, NOT for more complex queries (e.g., (marketing OR sales) AND "Q3 Report").
+ * Labels: If you know the page might have specific labels (like meeting-notes or project-x), searching by those labels can be very effective.
+If you're still stuck, consider asking your colleague for the exact page title or a direct link. They might have restricted the page permissions, making it invisible to you (see Question 3).
+Question 5: What are "Spaces" in Confluence and why are they important?
+Tags: confluence, spaces, organization, structure
+Question:
+I keep hearing about "spaces" in Confluence. What exactly are they, and why do I need to worry about them?
+Answer:
+"Spaces" are fundamental to how Confluence organizes content. Think of a Confluence space as a dedicated container or a mini-website for a specific team, project, or topic.
+Why are they important?
+ * Organization: They provide a logical structure for your content. Instead of a single, chaotic repository, information is grouped into relevant areas. For example, you might have:
+   * A "Marketing Team Space" for all marketing-related documents.
+   * A "Project X Development Space" for all technical documentation and plans for Project X.
+   * A "Company Handbook Space" for HR policies and general company information.
+ * Permissions: Permissions are primarily managed at the space level. This means you can easily control who can view, edit, or create content within a specific area. This ensures sensitive information is protected and public information is accessible.
+ * Navigation and Discoverability: Spaces make it easier to navigate and find relevant information. When you go to a space, you immediately see content related to that specific topic or team.
+ * Customization: Each space can have its own sidebar, home page, and even custom themes (depending on your Confluence version and admin settings).
+ * Collaboration Context: Spaces provide a clear context for collaboration. When discussing a page, everyone knows which project or team it belongs to.
+In essence, spaces are the backbone of your Confluence site, enabling efficient organization, secure access, and streamlined collaboration.
+Question 6: How can I add an image or a file to my Confluence page?
+Tags: confluence, attachments, images, files
+Question:
+I want to include a screenshot or a PDF document on my Confluence page. How do I upload and embed files and images?
+Answer:
+Adding images and files (attachments) to your Confluence pages is very easy:
+ * Drag and Drop (Easiest Method):
+   * Open your Confluence page in edit mode.
+   * Simply drag the image file or any other document (PDF, Word, Excel, etc.) directly from your computer's file explorer onto the Confluence editor.
+   * Confluence will automatically upload and embed the file.
+ * Insert Files & Images Button:
+   * In the editor toolbar, look for the Insert files and images icon (often a picture frame or paperclip).
+   * Click it to open a dialog box. From here, you can:
+     * Upload files: Browse your computer to select files.
+     * Search for existing files: If you've already uploaded the file to Confluence (even on another page in the same space), you can search for it here.
+     * Link from web: Paste a URL to an image hosted elsewhere (Confluence will embed it).
+ * Embed Options for Images:
+   * Once an image is on your page, click on it to see options. You can resize it, add a border, align it (left, center, right), or add a caption.
+ * Viewing Attachments:
+   * All files attached to a page are also accessible via the "Attachments" section of the page (usually accessible from the "..." More actions menu or at the bottom of the page). Here, you can preview, download, or manage versions of the attachments.
+Remember that attached files contribute to your Confluence storage, so be mindful of the size of large files.
+Question 7: I accidentally deleted some text on a page. Can I revert to an earlier version?
+Tags: confluence, version-history, revert, undo
+Question:
+I was editing a Confluence page and accidentally deleted a significant portion of text. Is there a way to undo this or revert to a previous version of the page?
+Answer:
+Yes, absolutely! Confluence has a robust Version History feature that acts as a safety net.
+ * Access Version History:
+   * While viewing the page (not in edit mode), click on the "..." (More actions) menu in the top right corner of the page.
+   * Select Page History (or "View History" depending on your Confluence version).
+ * Browse Versions:
+   * You'll see a list of all saved versions of the page, along with the editor and the date/time of the save.
+   * Click on a specific version to preview it.
+ * Compare Versions:
+   * You can select two versions and click "Compare selected versions" to see the differences (what was added, removed, or changed). This is incredibly helpful for identifying what you want to restore.
+ * Revert to a Previous Version:
+   * Once you've found the version you want to restore, click the Revert button next to that version.
+   * Confluence will then make that selected version the current version of the page. The old "current" version will still be available in the history as a new historical entry.
+Important Note: While in the editor, you also have a standard "Undo" button (or Ctrl+Z/Cmd+Z) for recent changes. However, for changes you've already published or for longer-term restoration, Page History is your go-to.
+Question 8: How do I link to other Confluence pages or external websites?
+Tags: confluence, linking, hyperlinks, wiki-links
+Question:
+I want to reference another Confluence page within my current page, and also link to an external website. How do I create these links?
+Answer:
+Linking in Confluence is very intuitive and supports both internal Confluence pages and external URLs.
+ * Linking to another Confluence Page (Wiki Links):
+   * Method 1 (Type [): While editing your page, type [ (square bracket). A popup will appear suggesting recently viewed pages or allowing you to search for a page by title. Select the page you want to link to.
+   * Method 2 (Insert Link Button):
+     * Highlight the text you want to turn into a link, or just place your cursor where you want the link to appear.
+     * Click the Link icon (often a chain link symbol) in the editor toolbar.
+     * In the dialog box, search for the Confluence page you want to link to.
+     * You can also specify custom link text if you don't want the page title to be the link text.
+   * Method 3 (Copy Link and Paste): Go to the Confluence page you want to link to, copy its URL from your browser's address bar, then go back to your editing page, highlight text, and paste the URL. Confluence is smart enough to often convert it to a proper Confluence link.
+ * Linking to an External Website:
+   * Method 1 (Paste URL): Simply paste the full URL (e.g., https://www.example.com) directly into the editor. Confluence will often automatically convert it into a clickable link.
+   * Method 2 (Insert Link Button):
+     * Highlight the text you want to turn into a link, or just place your cursor.
+     * Click the Link icon in the editor toolbar.
+     * In the dialog box, select the "Web link" or "External URL" tab.
+     * Paste the URL into the "URL" field and optionally provide "Link text" for what the user will see.
+Using descriptive link text is a good practice for both internal and external links, making your pages more navigable.
+Question 9: What are Confluence "Macros" and how do I use them?
+Tags: confluence, macros, functionality, advanced-editor
+Question:
+I've seen references to "macros" in Confluence documentation. What exactly are they, and how can they help me create richer content?
+Answer:
+Confluence "Macros" are powerful extensions that add dynamic content or advanced functionality to your pages. Think of them as small applications or widgets you can embed to display information in specific ways or interact with other systems.
+How they help:
+ * Dynamic Content: Display lists of pages, recent activity, user profiles, or even content from other systems (like Jira).
+ * Structured Content: Create tables of contents, include other pages, or format specific blocks of information.
+ * Visual Enhancements: Add images, videos, or draw diagrams.
+How to use them:
+ * Type / (Slash Command): This is the most common and easiest way to insert a macro. While editing, type / followed by the name or part of the name of the macro you want to use (e.g., /table of contents, /jira). Confluence will suggest matching macros.
+ * Insert Macro Button: In the editor toolbar, there's typically an Insert More Content or + icon. Clicking this will reveal a "Macro" option, which opens a dialog box where you can browse and search for all available macros.
+Common and useful macros for new users:
+ * Table of Contents: /table of contents - Automatically generates a TOC from your page headings.
+ * Info Panel / Note / Tip / Warning: /info, /note, /tip, /warning - Adds a colored box to highlight important information.
+ * Jira Issue/Filter: /jira - Embeds live Jira issues or filtered lists from Jira. (Requires Jira integration).
+ * Expand: /expand - Hides content until the user clicks to expand it, useful for long sections.
+ * Code Block: /code - Displays code snippets with syntax highlighting.
+ * Page Properties / Page Properties Report: /page properties - Used in conjunction to create structured data and then generate reports across multiple pages.
+Experimenting with macros is key to unlocking Confluence's full potential for dynamic and organized content.
+Question 10: My Confluence page isn't updating after I hit "Publish." What's going on?
+Tags: confluence, publishing, caching, troubleshooting
+Question:
+I've made changes to my Confluence page, clicked the "Publish" button, and saved it. But when I refresh the page or open it in a new tab, I still see the old version. Is there a delay, or am I doing something wrong?
+Answer:
+This is a common experience, especially with Confluence Cloud, and it's usually related to browser caching or a minor delay in content propagation.
+Here's what might be happening and how to resolve it:
+ * Browser Cache: Your web browser might be displaying a cached (old) version of the page.
+   * Solution: Perform a hard refresh of your browser.
+     * Windows: Ctrl + F5 or Ctrl + Shift + R
+     * Mac: Cmd + Shift + R
+     * Alternatively, clear your browser's cache for the Confluence site.
+ * Confluence Caching/Indexing Delay: While Confluence generally updates instantly, sometimes there can be a very brief delay in the content being fully indexed and served, especially in large instances or during peak times.
+   * Solution: Wait a few seconds to a minute and then try refreshing the page again. This usually resolves itself quickly.
+ * Did you actually "Publish"?
+   * Check: Ensure you clicked the blue Publish button (or Update if it's an existing page). If you navigate away without publishing, your changes will be lost.
+   * Drafts: If you closed the editor without publishing, your changes might be saved as a draft. Look for a "Draft" indicator on the page or check your personal "Drafts" section (often accessible from your user profile menu).
+ * Version History Check:
+   * If you're still seeing the old content, go to the Page History (as described in Question 7). Check if your latest changes are actually recorded as a new version. If they are, it confirms the content was saved by Confluence.
+In the vast majority of cases, a simple hard refresh of your browser will resolve this issue. If it persists beyond a few minutes, and you've confirmed your changes are in the Page History, it might be an isolated technical glitch, and contacting your Confluence administrator would be the next step.
+
+
+
+
+
+
+
+
+
+
+*:*-*:*-*. *:*:*:*::*:*::*:*:**-*-*--*-*-*-**-
+
+
+
+
+Here are 10 questions and answers related to Jira plugin development, targeting common issues and concepts a new developer might encounter. These are suitable for a Stack Overflow-style post.
+Jira Plugin Development: Common Questions for New Developers
+Developing your first Jira plugin can be an exciting journey, but it often comes with a unique set of challenges. Here are 10 common questions and their answers to help new developers navigate the landscape of Jira plugin development.
+Q1: How do I set up my development environment for Jira plugin development?
+A1: The most straightforward way to set up your environment is by using the Atlassian Plugin SDK.
+ * Install the SDK: Download and install the Atlassian Plugin SDK from the Atlassian Developer documentation. This includes Maven, Java, and necessary Atlassian tools.
+ * Create a Project: Use atlas-create-jira-plugin to generate a new Jira plugin project.
+ * Run Jira: Use atlas-run from your project directory to start a local Jira instance with your plugin installed. This is crucial for rapid iteration and testing.
+ * IDE Setup: Configure your IDE (IntelliJ IDEA is highly recommended) to work with the Maven project generated by the SDK. Import the project as a Maven project.
+Q2: My plugin isn't appearing in Jira after atlas-run. What could be wrong?
+A2: There are a few common reasons for this:
+ * Compilation Errors: Check your console output for any compilation errors during atlas-run. If the plugin doesn't compile, it won't be installed.
+ * Plugin XML (atlassian-plugin.xml) Issues:
+   * Incorrect Key: Ensure your plugin key in atlassian-plugin.xml is unique and follows the correct naming conventions.
+   * Module Declarations: Verify that your plugin modules (e.g., web sections, servlets, custom fields) are correctly declared with their respective keys and classes.
+   * Syntax Errors: Even a small XML syntax error can prevent the plugin from loading.
+ * Jira Logs: Check the atlassian-jira.log file in your Jira home directory (target/jira/home/log if using atlas-run). Look for INFO or ERROR messages related to your plugin's installation or startup.
+ * Plugin Caching: Sometimes Jira's plugin cache can get corrupted. Try stopping Jira (atlas-debug and then Ctrl+C), deleting the .bundled-plugins and .osgi-plugins directories in your local Jira home, and then restarting.
+Q3: How do I debug my Jira plugin code?
+A3: Debugging is essential for plugin development.
+ * Remote Debugging: When you run atlas-debug, the local Jira instance starts with a debugger listener on a specific port (usually 5005). You can then attach your IDE's remote debugger to this port.
+   * In IntelliJ IDEA, go to Run -> Edit Configurations..., add a new "Remote JVM Debug" configuration, set the host to localhost and the port to 5005.
+ * Logging: Use Jira's logging framework (SLF4J/Log4j) within your code.
+   import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class MyPluginComponent {
+    private static final Logger log = LoggerFactory.getLogger(MyPluginComponent.class);
+
+    public void doSomething() {
+        log.info("My plugin component is doing something!");
+        // ... more code
+        log.debug("Debug message with some variable: {}", myVariable);
+    }
+}
+
+   You can then monitor these logs in atlassian-jira.log.
+Q4: I'm getting a NoClassDefFoundError or ClassNotFoundException. What does this mean?
+A4: This error typically indicates a problem with your plugin's dependencies or class loading.
+ * Missing Dependency: You might be trying to use a class that isn't included as a dependency in your pom.xml. Ensure all necessary Atlassian and third-party libraries are declared in the <dependencies> section with the correct scope (usually provided for Atlassian APIs).
+ * Conflicting Dependencies: Sometimes, different plugins or Jira itself might have different versions of the same library, leading to conflicts. The Atlassian SDK tries to manage this, but it can still occur. Check atlas-debug logs for OSGi bundle resolution errors.
+ * Incorrect Import-Package / Export-Package: In pom.xml, the atlassian-plugin-jira-plugin or atlassian-spring-scanner-maven-plugin configuration handles OSGi package imports/exports. If you're using classes from an Atlassian API, ensure they are correctly imported. If you're providing services, ensure your packages are exported.
+Q5: How do I access Jira services (e.g., IssueManager, UserManager) from my plugin?
+A5: You should use dependency injection, typically with Spring, to get instances of Jira's core services.
+ * Spring Components: Most Jira services are exposed as Spring components. Declare your plugin component as a Spring component and inject the desired service using constructor injection.
+   import com.atlassian.jira.issue.IssueManager;
+import com.atlassian.jira.user.util.UserManager;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
+import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Named;
+
+@Scanned
+@Named("myCustomService") // Optional: give it a specific name for injection elsewhere
+public class MyCustomServiceImpl implements MyCustomService {
+
+    @ComponentImport
+    private final IssueManager issueManager;
+    @ComponentImport
+    private final UserManager userManager;
+
+    @Autowired
+    public MyCustomServiceImpl(IssueManager issueManager, UserManager userManager) {
+        this.issueManager = issueManager;
+        this.userManager = userManager;
+    }
+
+    public void someMethod() {
+        // Use issueManager and userManager here
+    }
+}
+
+ * @ComponentImport: This annotation from atlassian-spring-scanner is crucial for importing services provided by Jira or other plugins.
+Q6: My web panel/web item isn't showing up on the Jira page. What should I check?
+A6: Web panel and web item visibility depends on several factors:
+ * Location: Ensure the location attribute in your atlassian-plugin.xml for the web panel/item is correct and corresponds to an existing web UI location in Jira. Refer to the Atlassian developer documentation for common Jira web locations.
+ * Conditions: If you've defined any <conditions> within your web panel/item, make sure they evaluate to true for the current context. For example, a condition checking for a specific project type or user permission.
+ * Plugin Module Enabled: Verify that the specific web panel/item module is enabled in Jira's "Manage Apps" section (Cog icon > Apps > Manage apps).
+ * Context: Some web locations are only available in specific contexts (e.g., issue view, project settings). Ensure you are on the correct page when checking.
+Q7: How can I store custom data persistently in Jira?
+A7: For persistent storage, you have a few options:
+ * Entity Properties/Attachment Properties: For data tied to specific Jira entities (issues, projects, users, comments), entity properties (or attachment properties) are a good choice. They are essentially key-value pairs stored with the entity.
+   import com.atlassian.jira.entity.property.EntityPropertyServiceFactory;
+import com.atlassian.jira.issue.Issue;
+// ... inject EntityPropertyServiceFactory
+
+// To set a property on an issue
+entityPropertyServiceFactory.for<Issue|Project|User>().set(issue.getId(), "myPluginKey", "myPropertyKey", "{\"data\":\"value\"}");
+
+// To get a property
+String jsonValue = entityPropertyServiceFactory.for<Issue|Project|User>().get(issue.getId(), "myPluginKey", "myPropertyKey").getJson();
+
+   Note: Data is stored as JSON strings.
+ * Active Objects (AO): For more complex relational data, Active Objects is the recommended approach. It's an ORM (Object-Relational Mapping) framework that allows you to define database tables and interact with them using Java interfaces.
+   * Define an interface for your AO entity.
+   * Use the ao-transform goal in your pom.xml to generate the database schema.
+   * Inject ActiveObjects service and use it to create, retrieve, update, and delete your AO entities.
+ * Plugin Settings: For simple, global plugin settings, you can use PluginSettingsFactory and PluginSettings.
+Q8: What's the difference between Jira Server/Data Center and Jira Cloud plugin development?
+A8: This is a crucial distinction.
+ * Jira Server/Data Center (On-premise):
+   * Technology: Java-based, runs within the Jira JVM.
+   * SDK: Atlassian Plugin SDK (atlas- commands).
+   * Access: Direct access to Jira's Java APIs and database.
+   * Deployment: JAR files installed directly into Jira.
+   * Control: Full control over the environment.
+ * Jira Cloud:
+   * Technology: Atlassian Connect (your app runs remotely and interacts with Jira Cloud via REST APIs and webhooks) or Atlassian Forge (serverless platform hosted by Atlassian).
+   * SDK: Different SDKs for Connect and Forge.
+   * Access: No direct database or JVM access. All interactions are via secure APIs.
+   * Deployment: Apps are registered with Atlassian Marketplace and installed via Jira Cloud UI.
+   * Control: Less control over the underlying infrastructure; focus on application logic.
+Recommendation for New Developers: Start with Jira Server/Data Center development if you have a need for deep integration and are comfortable with Java. If you're targeting cloud-first and prefer a more abstract, platform-managed approach, look into Atlassian Forge.
+Q9: My plugin's resources (JS, CSS, images) aren't loading. What am I missing?
+A9: This typically indicates an issue with your web-resource module declaration in atlassian-plugin.xml.
+ * web-resource Module: Ensure you have a <web-resource> module defined in your atlassian-plugin.xml file.
+ * Location: The location attribute within your <resource> tags should correctly point to the path of your static assets within your plugin JAR (e.g., js/my-script.js, css/my-style.css).
+ * Contexts: Make sure the contexts attribute of your <web-resource> module specifies where these resources should be loaded (e.g., jira.general, jira.view.issue).
+ * Dependencies: If your JS/CSS depends on other web resources provided by Jira or other plugins, use <dependency> tags within your <web-resource> to declare them (e.g., <dependency>com.atlassian.auiplugin:ajs</dependency>).
+ * Caching: Browser and Jira caches can sometimes cause issues. Try clearing your browser cache or performing a full Jira restart after deploying changes.
+Q10: How do I test my Jira plugin?
+A10: Testing is crucial for robust plugin development.
+ * Unit Tests: Write standard JUnit tests for your individual Java classes and business logic.
+ * Integration Tests: The Atlassian Plugin SDK provides tools for integration testing.
+   * atlas-integration-test: Runs integration tests that start a temporary Jira instance and interact with your plugin.
+   * Atlassian TestKit: A powerful framework for writing integration tests that simulate user interactions and assert plugin behavior within a running Jira instance.
+   * Page Objects: For UI-heavy tests, consider using Page Objects to abstract away the details of the web page.
+ * Manual Testing: Always perform manual testing on your local atlas-run instance to ensure functionality and user experience are as expected.
+ * Staging/QA Environment: Before deploying to production, thoroughly test your plugin in a dedicated staging or QA environment that closely mirrors your production Jira instance.
