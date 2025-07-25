@@ -1,0 +1,249 @@
+Here are 10 questions and answers related to Jira plugin development, focusing on unique problems a new developer might encounter and their less obvious solutions.
+Jira Plugin Development Questions and Answers
+Q1: My Jira plugin builds successfully, but when I install it, I get a UnsatisfiableDependenciesException or NoClassDefFoundError at runtime, even though the class definitely exists in a bundled JAR. What's wrong with my pom.xml or atlassian-plugin.xml?
+Problem: The plugin compiles and packages, but fails to load or run due to missing dependencies at runtime, despite the classes being present in the plugin's lib directory. This often points to OSGi dependency resolution issues.
+Solution:
+This usually indicates an OSGi bundle wiring problem. Even if a JAR is in your plugin's lib directory, Jira's OSGi container might not be exposing its classes or might be trying to load a different version of the same dependency.
+ * Check atlassian-plugin.xml (especially <bundle-instructions>):
+   * Import-Package: Ensure you are explicitly importing all necessary packages that your plugin depends on, especially from Jira's core or other Atlassian plugins. For example:
+     <Import-Package>
+    com.atlassian.jira.issue.fields.layout.column,*
+    com.atlassian.jira.issue.customfields.manager,*
+    com.atlassian.jira.user.util,*
+    org.springframework.beans.factory.annotation,*
+    *;resolution:=optional
+</Import-Package>
+
+     The *;resolution:=optional is crucial. It allows the OSGi container to start your bundle even if some non-critical imports aren't satisfied, which can help pinpoint the actual missing dependency rather than failing on the first one.
+   * Spring-Context: If you are using Spring components, ensure your atlassian-plugin.xml has:
+     <Spring-Context>*</Spring-Context>
+
+     This tells Spring to scan your plugin for beans.
+ * Verify Maven Dependencies (pom.xml):
+   * provided scope: For dependencies provided by Jira (e.g., Jira Core, Spring, Atlassian SDK libraries), ensure their scope is provided. This prevents them from being bundled into your plugin JAR unnecessarily, which can cause version conflicts.
+   * compile scope (for truly bundled libraries): For third-party libraries that Jira doesn't provide, ensure their scope is compile. These will then be correctly bundled into your plugin's lib directory and should be picked up.
+   * Transitive Dependencies: Sometimes a dependency you declared implicitly pulls in another conflicting version. Use mvn dependency:tree to inspect your full dependency tree and identify potential conflicts.
+ * Check Jira Logs: The atlassian-jira.log (and sometimes catalina.out) will provide more detailed OSGi errors, often indicating which specific package or class failed to resolve and why. Look for "Unresolved constraint," "BundleException," or "Cannot start plugin" messages.
+Q2: I'm developing a custom field type, and it renders correctly, but when I try to save the issue, the value doesn't persist, or I get a DataAccessException. What's the common pitfall here?
+Problem: The custom field's UI works, but its value isn't saved to Jira's database.
+Solution:
+This often happens because you haven't correctly implemented the data storage and retrieval for your custom field type.
+ * CustomFieldType Implementation:
+   * getDbValueFromObject(Object customFieldObject): This method is crucial. It converts your custom field's Java object representation into a format that can be stored in the database. Ensure it returns a String, Long, Double, or Date as appropriate for your custom field's storage type (defined in atlassian-plugin.xml for customfield-type).
+   * getObjectFromDbValue(Object databaseValue): This converts the database value back into your custom field's Java object.
+   * getSingularObject(Map parameters) or getValueFromWebContext(CustomField field, Map parameters, Action action): These methods are responsible for extracting the value from the web request (e.g., from the form submission) and converting it into your custom field's Java object. Make sure you're correctly parsing the parameters map (which contains form field values).
+ * atlassian-plugin.xml (customfield-type module):
+   * value-type attribute: Double-check that the value-type attribute of your <customfield-type> module matches what your getDbValueFromObject and getObjectFromDbValue methods are handling (e.g., string, long, double, date). If you're storing complex data, you might store it as a JSON string in a string field.
+   * velocity-template references: Ensure your edit and view Velocity templates correctly use the custom field's ID and name when generating input fields and displaying values.
+ * Database Column Size (less common but possible): If you're storing a large string in a string custom field, Jira's default column size for that field type might be too small, leading to data truncation or errors. While you can't easily change the column type in a plugin, be aware if you're attempting to store excessive data. Consider storing a reference or using a dedicated TextCFType for large text.
+Q3: I'm trying to inject a Jira component (e.g., IssueManager, UserManager) into my plugin class using @ComponentImport or Spring XML, but it's always null or throws an UnsatisfiedDependencyException. What's the correct way to get Jira's core services?
+Problem: Jira's core services are not being successfully injected into your plugin's components.
+Solution:
+This is a fundamental aspect of OSGi and Spring within Jira.
+ * @ComponentImport (Recommended for P2 plugins):
+   * For most common Jira services, the com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport annotation is the simplest and most robust way.
+   * Ensure the correct interface: You must import the interface, not the implementation class. For example, com.atlassian.jira.issue.IssueManager, not com.atlassian.jira.issue.managers.DefaultIssueManager.
+   * Add to constructor: Inject it via the constructor.
+     <!-- end list -->
+   import com.atlassian.jira.issue.IssueManager;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MyPluginComponent {
+
+    private final IssueManager issueManager;
+
+    @Autowired
+    public MyPluginComponent(@ComponentImport IssueManager issueManager) {
+        this.issueManager = issueManager;
+    }
+
+    // ... use issueManager
+}
+
+ * Spring XML (Legacy / Specific Cases):
+   * If you're using Spring XML configuration, you'd define the component import in your atlassian-plugin.xml like this:
+     <!-- end list -->
+   <component key="myPluginComponent" class="com.example.plugin.MyPluginComponent">
+    <property name="issueManager" ref="com.atlassian.jira.issue.IssueManager"/>
+</component>
+
+   * And in your class, use a setter or constructor for injection.
+ * Check atlassian-plugin.xml's Import-Package: Even with @ComponentImport, the underlying OSGi bundle must correctly import the package where the interface resides. The Spring Scanner usually handles this for common Jira packages, but if you're importing something obscure, you might need to manually add it to Import-Package.
+ * Jira Version Compatibility: Ensure the Jira API version you're compiling against in your pom.xml (jira.version property) matches the target Jira instance, as interfaces and their package locations can sometimes change between major Jira versions.
+Q4: I'm trying to add a new custom workflow post-function, but it doesn't appear in the "Add Post Function" dialog in Jira's workflow editor, or it shows up but throws an error when I try to configure it.
+Problem: The custom post-function isn't correctly registered or its configuration screen is failing.
+Solution:
+This involves checking the module definition and its associated web resources.
+ * atlassian-plugin.xml (workflow-function module):
+   * Correct Module Type: Ensure you're using <workflow-function> (for Server/Data Center) or <jira:workflowPostFunction> (for Forge/Cloud) with the correct type attribute. For Server/Data Center, it's usually Java.
+   * Class Path: Double-check the class attribute points to your post-function's implementation class.
+   * Configuration URLs: This is a common pitfall. You must define add-url, edit-url, and view-url attributes for your workflow-function module. These URLs point to your Velocity templates (or JSP/Soy templates) that provide the configuration UI.
+     <workflow-function key="myCustomPostFunction" name="My Custom Post Function" class="com.example.plugin.workflow.MyCustomPostFunction" type="java">
+    <description>Adds a specific comment to the issue.</description>
+    <orderable>true</orderable>
+    <resource type="velocity" name="view" location="templates/my-post-function-view.vm"/>
+    <resource type="velocity" name="input" location="templates/my-post-function-input.vm"/>
+    <resource type="velocity" name="edit" location="templates/my-post-function-edit.vm"/>
+    <add-url>my-post-function.jira?step=add</add-url>
+    <edit-url>my-post-function.jira?step=edit</edit-url>
+    <view-url>my-post-function.jira?step=view</view-url>
+</workflow-function>
+
+ * Velocity Templates:
+   * Location: Ensure the location attributes in your resource tags correctly point to your Velocity templates (e.g., src/main/resources/templates/my-post-function-input.vm).
+   * Form Structure: Your input.vm and edit.vm must contain a <form> and a hidden input field named jira.field.plugin.workflow.params (or similar depending on SDK version) that will hold your custom configuration data, typically as a JSON string.
+   * JavaScript: The configuration dialogs require specific JavaScript functions (e.g., WorkflowConfiguration.onSave) to be called when the form is submitted to save the configuration back to Jira. Refer to Atlassian's documentation for the exact JavaScript snippet.
+ * WorkflowPluginFactory: Your post-function class usually needs to implement WorkflowPluginFactory and WorkflowPostFunction (or WorkflowFunction). Ensure get   Descriptor() and other required methods are correctly implemented.
+ * Error Logging: Check the Jira logs (atlassian-jira.log) when you attempt to add or configure the post-function. Errors in the Velocity rendering or in your Java code will be logged there.
+Q5: I'm developing a Jira Web Panel using web-panel module, and it appears on the issue view, but my JavaScript isn't executing, or my REST API calls from the panel are failing with CORS errors or 401 Unauthorized.
+Problem: JavaScript in the web panel isn't interactive, or API calls from it are blocked.
+Solution:
+Web panels are rendered on the server side, but any interactive elements require client-side JavaScript. CORS and authentication are common challenges.
+ * JavaScript Context:
+   * Inlining vs. Separate File: It's best practice to put your JavaScript in a separate .js file and include it using a web-resource module.
+   * web-resource module:
+     <web-resource key="my-web-panel-resources" name="My Web Panel Resources">
+    <dependency>com.atlassian.auiplugin:aui-soy</dependency>
+    <resource type="download" name="my-panel-script.js" location="js/my-panel-script.js"/>
+    <context>jira.issue.view</context> </web-resource>
+
+   * In your web-panel module: Reference this web-resource using a <dependency> tag or ensuring its context matches the web-panel's context.
+   * DOM Ready: Ensure your JavaScript waits for the DOM to be ready before trying to manipulate elements (e.g., AJS.$(function() { /* your code */ });).
+ * REST API Calls from Client-Side (CORS/Authentication):
+   * Same Origin Policy: Browsers enforce a Same Origin Policy. If your Jira is jira.example.com and your REST endpoint is api.example.com, you'll face CORS issues.
+   * Jira's REST API: The best approach for making REST calls from a Jira plugin's web panel is to call Jira's internal REST API. Your plugin itself can expose a REST endpoint, and calls to jira.example.com/rest/myplugin/... will typically work without CORS issues as they are same-origin.
+   * Authentication:
+     * Standard Jira User Context: Calls made from a web panel within Jira automatically inherit the logged-in user's session and permissions. You don't usually need to pass explicit credentials for calls to Jira's own REST API or your plugin's REST endpoints.
+     * XSFR Protection: Jira has XSRF protection. For POST, PUT, DELETE requests, you need to include the atl_token in your request data or headers. You can get this from AJS.Meta.get('atl-token').
+     * AP.request (for Cloud/Connect): If you're developing for Jira Cloud/Connect, you must use AP.request from the Atlassian Connect JavaScript API to make authenticated cross-origin requests to your Connect app's backend or Jira's REST API. This handles CORS and authentication for you.
+ * Debugging: Use your browser's developer tools (Console and Network tabs) to check for JavaScript errors and network request failures (e.g., 401, 403, CORS preflight errors).
+Q6: My Jira plugin works fine on a development instance (Data Center/Server), but when deployed to a Production Data Center cluster, I see inconsistent behavior, ConcurrentModificationExceptions, or data not being synchronized across nodes.
+Problem: Issues arising from the distributed nature of Jira Data Center.
+Solution:
+Developing for Data Center requires awareness of its clustered environment.
+ * Shared Home Directory: Data Center instances share a common shared home directory. Avoid writing files directly to the local Jira installation directory if those files need to be accessible or consistent across all nodes. Use the shared home for any plugin-specific persistent data that isn't stored in the database.
+ * Database as Source of Truth: The database is the only truly synchronized and consistent data store across all nodes. All plugin data that needs to be persisted and shared should be stored in the database (e.g., via Active Objects or direct JDBC).
+ * Concurrency Management:
+   * Stateless Services: Design your plugin components to be largely stateless. If a component holds state, ensure that state is not node-specific and is properly synchronized.
+   * Locking: If you are modifying shared resources (e.g., custom properties, settings that aren't managed by Jira's internal clustering), you must implement robust locking mechanisms to prevent ConcurrentModificationExceptions. Jira provides a ReentrantLockService for distributed locking in Data Center.
+   * Avoid in-memory caches without synchronization: If you use in-memory caches, they will be node-specific. Either refresh them frequently, invalidate them across the cluster (requires dedicated mechanisms, potentially using Atlassian's ClusterMessage API or a distributed cache like Hazelcast if you have direct access), or avoid them for critical data.
+ * Cluster Aware Event Listeners: If your plugin listens to Jira events (e.g., IssueEvent), ensure your listeners are designed to handle events potentially being triggered on any node.
+ * Re-indexing: When a change occurs on one node that affects search indexes, ensure your plugin triggers a re-index if necessary. This often means relying on Jira's standard APIs that handle re-indexing automatically after data changes.
+ * Data Center Compatibility Kit: Atlassian provides a "Data Center compatibility kit" and guidelines. Review these for specific recommendations and APIs for cluster-safe development.
+Q7: I'm developing a Jira Event Listener, and it works, but I'm concerned about its performance impact on a busy Jira instance, especially if it performs heavy operations (e.g., remote API calls). How can I optimize it?
+Problem: Event listeners can easily become performance bottlenecks if not optimized.
+Solution:
+Event listeners execute synchronously in the thread that processes the event, meaning they can block Jira.
+ * Keep it Fast: The golden rule for event listeners is: do as little work as possible synchronously.
+ * Asynchronous Processing:
+   * Jira's EventQueue / EventPublisher (internal): For simple asynchronous tasks, you can publish a custom event to Jira's internal EventPublisher (which has an asynchronous queue). Your actual work is done in a separate listener that processes your custom event.
+   * Dedicated Thread Pool: For more complex or long-running tasks, use a dedicated thread pool. This allows your listener to quickly return, while the heavy work is processed in the background. Be mindful of thread pool management (creating, shutting down) within an OSGi environment. Spring's TaskExecutor can be useful here.
+   * Atlassian SDK Async annotation (if applicable): Some SDK versions or specific modules might offer asynchronous annotations or utilities.
+ * Minimize Database/API Calls:
+   * Batching: If you need to update multiple issues or make multiple remote API calls, try to batch them.
+   * Caching: Cache frequently accessed, relatively static data (e.g., project names, custom field IDs) to avoid repeated lookups.
+ * Filter Events Judiciously:
+   * Specific Events: Only subscribe to the exact IssueEvent types you need (e.g., IssueCreatedEvent, IssueUpdatedEvent).
+   * Contextual Checks: Immediately perform lightweight checks within your listener (e.g., if (event.getIssue().getIssueType().getName().equals("Bug"))) to quickly exit if the event is not relevant to your logic.
+ * Logging: Use logging judiciously. Excessive logging can itself impact performance. Log only what's necessary for debugging.
+Q8: I've created a custom JQL function using the jql-function module, and it works locally, but on a production instance, it's either slow, throws out-of-memory errors, or doesn't return correct results for large datasets.
+Problem: JQL functions must be highly performant and handle large data sets efficiently.
+Solution:
+JQL functions are evaluated frequently, and performance is critical.
+ * Implement is">indexable() (if applicable):
+   * If your JQL function relies on indexed data (e.g., standard custom fields that are indexed by Jira), implement the isIndexed() method and potentially get />SupportedIndexes() to allow Jira to optimize queries.
+   * If it performs complex, non-indexed lookups, it will be very slow for large datasets.
+ * Avoid Full Scans:
+   * Don't iterate over all issues: Never fetch all issues in Jira and then filter them in your JQL function. This is a common performance killer.
+   * Leverage Jira's Search API: Use Jira's SearchService and JqlClauseBuilder to construct efficient internal queries that leverage Jira's index.
+   * Example (Conceptual): If your JQL function myFunction(status, project) needs to find issues in a specific project with a specific status, instead of iterating, you'd construct a JQL string like status = "My Status" AND project = "My Project" and use SearchService to get the matching issue IDs.
+ * Optimize Database Access: If your JQL function needs to query your plugin's custom database tables (via Active Objects or direct JDBC), ensure your queries are highly optimized with appropriate indexing.
+ * Caching (Carefully): For results of expensive lookups that don't change frequently, consider caching. However, ensure your cache invalidation strategy is robust, especially in Data Center.
+ * atlassian-plugin.xml considerations:
+   * evalfuction attribute: Set this to true if your function truly operates on specific values or arguments, and can be optimized.
+   * operand or operator: Make sure you've correctly defined whether your JQL function acts as an operand (returns values) or an operator (compares values).
+Q9: I want to allow Jira administrators to configure my plugin's settings via a dedicated administration screen, but I'm struggling with the UI framework (Velocity, Soy, Web Resources) and persisting the configuration.
+Problem: Creating a functional admin configuration screen for your plugin.
+Solution:
+This involves a web-item, web-panel (or a servlet), web-resources, and PluginSettingsFactory.
+ * atlassian-plugin.xml (Admin UI Modules):
+   * web-section and web-item: First, define a web-section in the Jira Administration sidebar (e.g., under "Add-ons") and a web-item within that section that points to your plugin's admin page.
+     <web-section key="my-plugin-admin-section" name="My Plugin Settings" location="system.admin/addons" weight="100"/>
+<web-item key="my-plugin-admin-item" name="My Plugin Config" section="system.admin/my-plugin-admin-section" weight="10">
+    <link linkId="my-plugin-config-link">/secure/MyPluginConfigAction.jspa</link>
+</web-item>
+
+   * servlet or webwork module: The link in the web-item points to a Servlet or a WebWork action that renders your configuration page.
+     * servlet (simpler for basic pages):
+       <servlet key="my-config-servlet" name="My Plugin Config Servlet" class="com.example.plugin.admin.MyPluginConfigServlet">
+    <url-pattern>/secure/MyPluginConfigAction.jspa</url-pattern>
+</servlet>
+
+     * webwork (more powerful for complex forms/actions):
+       <webwork1 key="myConfigWebwork">
+    <actions>
+        <action name="com.example.plugin.admin.MyPluginConfigAction" alias="MyPluginConfigAction">
+            <view name="success">/templates/admin/my-plugin-config.vm</view>
+        </action>
+    </actions>
+</webwork1>
+
+ * PluginSettingsFactory for Persistence:
+   * Inject com.atlassian.sal.api.pluginsettings.PluginSettingsFactory into your Servlet or WebWork action.
+   * Use getPluginSettings() (for global settings) or getPluginSettings("com.example.myplugin") (for plugin-specific settings) to get a PluginSettings object.
+   * PluginSettings provides put(key, value) and get(key) methods to store and retrieve simple key-value pairs. This data is stored in Jira's database and is persistent across restarts and Data Center nodes.
+     <!-- end list -->
+   // Example in a Servlet or WebWork Action
+@ComponentImport
+private final PluginSettingsFactory pluginSettingsFactory;
+
+// ... in constructor or setter
+
+// To save
+PluginSettings settings = pluginSettingsFactory.createSettingsForKey("com.example.myplugin");
+settings.put("my.config.setting.enabled", "true");
+settings.put("my.config.setting.value", "SomeValue");
+
+// To retrieve
+String enabled = (String) settings.get("my.config.setting.enabled");
+String value = (String) settings.get("my.config.setting.value");
+
+ * UI Rendering (Velocity/Soy/AUI):
+   * Use Velocity templates (.vm) or Soy templates (.soy) for your HTML UI.
+   * Leverage Atlassian User Interface (AUI) components for a consistent look and feel. Include AUI web resources in your template or via web-resource module.
+   * Use standard HTML forms for user input.
+Q10: I'm making REST API calls from my plugin's backend Java code to an external service, and I'm getting SSL/TLS handshake errors or connection timeouts, even though the external service is reachable from the Jira server.
+Problem: Issues with outbound HTTP/S connections from the Jira plugin to external services.
+Solution:
+This often relates to Java's trust stores, proxy settings, or network configurations.
+ * Jira's JVM Trust Store:
+   * If the external service uses a self-signed certificate or a certificate from a private Certificate Authority (CA), Jira's JVM (Java Virtual Machine) might not trust it.
+   * Solution: You need to import the external service's certificate into Jira's JVM trust store (cacerts).
+     * Locate your Jira's Java installation (usually JIRA_INSTALLATION_DIR/jre/lib/security/cacerts).
+     * Use the keytool utility to import the certificate:
+       keytool -import -trustcacerts -file your_service_cert.cer -alias yourservice -keystore JRE_HOME/lib/security/cacerts
+
+       (The default password for cacerts is usually changeit).
+     * Restart Jira after importing.
+ * Proxy Settings:
+   * If Jira is behind an outbound proxy, your plugin's HTTP client needs to be configured to use it.
+   * Check Jira's proxy settings: Jira administrators can configure outbound proxy settings in Jira Administration > System > General Configuration > Outgoing Mail (or similar section for general HTTP requests).
+   * System Properties: Jira usually sets JVM system properties for the proxy (http.proxyHost, http.proxyPort, https.proxyHost, https.proxyPort, http.nonProxyHosts). Most standard HTTP client libraries in Java (like java.net.HttpURLConnection or Apache HttpClient) will pick these up automatically.
+   * Explicit Configuration: If you're using a custom HTTP client library that doesn't respect system properties, you might need to explicitly configure the proxy for that client.
+ * Connection Timeouts:
+   * Default connection timeouts for HTTP clients can be too short for slow external services.
+   * Solution: Configure reasonable connection and read timeouts for your HTTP client.
+   * Example (Apache HttpClient):
+     RequestConfig config = RequestConfig.custom()
+    .setConnectTimeout(5000) // 5 seconds
+    .setSocketTimeout(30000) // 30 seconds
+    .build();
+CloseableHttpClient httpClient = HttpClientBuilder.create()
+    .setDefaultRequestConfig(config)
+    .build();
+
+ * Firewall/Network Issues: Even if curl works from the server, the JVM might have different network restrictions. Verify that the Jira server's firewall and network security groups allow outbound connections on the required port to the external service.
+ * Logging: Enable detailed logging for your HTTP client (e.g., for Apache HttpClient, configure DEBUG level for org.apache.http.wire and org.apache.http.headers) to see the full request/response and SSL handshake details.
