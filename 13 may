@@ -1,128 +1,93 @@
 <style type="text/css">
-/* container */
-.boxes {
-  width: 96px;               /* 32px * 3 */
-  height: 64px;              /* 32px * 2 */
-  position: relative;
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
-  transform-origin: 50% 50%;
-  margin-top: -48px;         /* -1.5 * 32px */
-  transform: rotateX(60deg) rotateZ(45deg);
-  -webkit-transform: rotateX(60deg) rotateZ(45deg);
-}
-
-/* each cube */
-.boxes .box {
-  width: 32px;
-  height: 32px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
-}
-
-/* starting positions + infinite animation */
-.boxes .box:nth-child(1) {
-  transform: translate(100%, 0);
-  -webkit-transform: translate(100%, 0);
-  animation: box1 800ms linear infinite;
-  -webkit-animation: box1 800ms linear infinite;
-}
-.boxes .box:nth-child(2) {
-  transform: translate(0, 100%);
-  -webkit-transform: translate(0, 100%);
-  animation: box2 800ms linear infinite;
-  -webkit-animation: box2 800ms linear infinite;
-}
-.boxes .box:nth-child(3) {
-  transform: translate(100%, 100%);
-  -webkit-transform: translate(100%, 100%);
-  animation: box3 800ms linear infinite;
-  -webkit-animation: box3 800ms linear infinite;
-}
-.boxes .box:nth-child(4) {
-  transform: translate(200%, 0);
-  -webkit-transform: translate(200%, 0);
-  animation: box4 800ms linear infinite;
-  -webkit-animation: box4 800ms linear infinite;
-}
-
-/* cube faces */
-.boxes .box > div {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: #5C8DF6;
-  /* push face out 16px (half of 32px) */
-  transform: translateZ(16px);
-  -webkit-transform: translateZ(16px);
-}
-.boxes .box > div:nth-child(1) {
-  top: 0; left: 0;
-}
-.boxes .box > div:nth-child(2) {
-  background: #145AF2;
-  right: 0;
-  transform: rotateY(90deg) translateZ(16px);
-  -webkit-transform: rotateY(90deg) translateZ(16px);
-}
-.boxes .box > div:nth-child(3) {
-  background: #0052CC;
-  transform: rotateX(-90deg) translateZ(16px);
-  -webkit-transform: rotateX(-90deg) translateZ(16px);
-}
-.boxes .box > div:nth-child(4) {
-  background: #DBE3F4;
-  top: 0; left: 0;
-  /* back face: pull it 96px in negative Z */
-  transform: translateZ(-96px);
-  -webkit-transform: translateZ(-96px);
-}
-
-/* keyframes with webkit prefix */
-@-webkit-keyframes box1 {
-  0%, 50%  { -webkit-transform: translate(100%, 0); transform: translate(100%, 0); }
-  100%     { -webkit-transform: translate(200%, 0); transform: translate(200%, 0); }
-}
-@keyframes box1 {
-  0%, 50%  { transform: translate(100%, 0); }
-  100%     { transform: translate(200%, 0); }
-}
-
-@-webkit-keyframes box2 {
-  0%       { -webkit-transform: translate(0, 100%); transform: translate(0, 100%); }
-  50%      { -webkit-transform: translate(0, 0);     transform: translate(0, 0); }
-  100%     { -webkit-transform: translate(100%, 0);   transform: translate(100%, 0); }
-}
-@keyframes box2 {
-  0%       { transform: translate(0, 100%); }
-  50%      { transform: translate(0, 0);     }
-  100%     { transform: translate(100%, 0);   }
-}
-
-@-webkit-keyframes box3 {
-  0%, 50%  { -webkit-transform: translate(100%, 100%); transform: translate(100%, 100%); }
-  100%     { -webkit-transform: translate(0, 100%);   transform: translate(0, 100%); }
-}
-@keyframes box3 {
-  0%, 50%  { transform: translate(100%, 100%); }
-  100%     { transform: translate(0, 100%);   }
-}
-
-@-webkit-keyframes box4 {
-  0%       { -webkit-transform: translate(200%, 0);    transform: translate(200%, 0); }
-  50%      { -webkit-transform: translate(200%, 100%);  transform: translate(200%, 100%); }
-  100%     { -webkit-transform: translate(100%, 100%);  transform: translate(100%, 100%); }
-}
-@keyframes box4 {
-  0%       { transform: translate(200%, 0);    }
-  50%      { transform: translate(200%, 100%);}
-  100%     { transform: translate(100%, 100%);}
-}
+  /* container perspective & cube faces (static) */
+  .boxes {
+    width: 96px;              /* 3 × 32px */
+    height: 64px;             /* 2 × 32px */
+    position: relative;
+    perspective: 200px;
+    transform: rotateX(60deg) rotateZ(45deg);
+    transform-style: preserve-3d;
+  }
+  .boxes .box {
+    width: 32px;
+    height: 32px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-style: preserve-3d;
+  }
+  .boxes .box div {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #5C8DF6;
+    /* push face out half-depth */
+    transform: translateZ(16px);
+  }
+  .boxes .box div:nth-child(2) {
+    background: #145AF2;
+    right: 0;
+    transform: rotateY(90deg) translateZ(16px);
+  }
+  .boxes .box div:nth-child(3) {
+    background: #0052CC;
+    transform: rotateX(-90deg) translateZ(16px);
+  }
+  .boxes .box div:nth-child(4) {
+    background: #DBE3F4;
+    /* back face: pull 96px */
+    transform: translateZ(-96px);
+  }
 </style>
 
+<script type="text/javascript">
+  AJS.$(function($){
+    var size = 32;
+    var stepTime = 200;     // ms per side, so 4×200=800ms per loop
+    var paths = [
+      // box1: right → down → left → up
+      [{ left: size,  top: 0         },
+       { left: size,  top: size      },
+       { left: size*0,top: size      },
+       { left: size*0,top: 0         }],
+      // box2: down → right → up → left
+      [{ left: 0,     top: size      },
+       { left: size,  top: size      },
+       { left: size,  top: 0         },
+       { left: 0,     top: 0         }],
+      // box3: diagonal start at (32,32), then right, up, left, down
+      [{ left: size,  top: size      },
+       { left: size*2,top: size      },
+       { left: size*2,top: 0         },
+       { left: size,  top: 0         }],
+      // box4: start at (64,0) → down → left → up → right
+      [{ left: size*2,top: 0         },
+       { left: size*2,top: size      },
+       { left: size,  top: size      },
+       { left: size,  top: 0         }]
+    ];
+
+    $('.boxes .box').each(function(i){
+      var $box = $(this);
+      // kick off its recursive animation loop
+      animatePath($box, paths[i], 0);
+    });
+
+    // recursive animator
+    function animatePath($el, path, idx){
+      $el.animate(
+        path[idx % 4],
+        stepTime,
+        'linear',
+        function(){
+          animatePath($el, path, idx + 1);
+        }
+      );
+    }
+  });
+</script>
+
+<!-- your existing HTML -->
 <div class="boxes">
   <div class="box">
     <div></div><div></div><div></div><div></div>
