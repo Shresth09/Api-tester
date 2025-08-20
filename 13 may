@@ -1,132 +1,110 @@
-<style>
-  :root {
-    --size: 32px;
-    --duration: 800ms;
-  }
+<style type="text/css">
+/* container */
+.boxes {
+  width: 96px;               /* 32px * 3 */
+  height: 64px;              /* 32px * 2 */
+  position: relative;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+  margin-top: -48px;         /* -1.5 * 32px */
+  transform: rotateX(60deg) rotateZ(45deg);
+  -webkit-transform: rotateX(60deg) rotateZ(45deg);
+}
 
-  .boxes {
-    width: calc(var(--size) * 3);
-    height: calc(var(--size) * 2);
-    position: relative;
-    transform-style: preserve-3d;
-    transform-origin: 50% 50%;
-    margin-top: calc(var(--size) * -1.5);
-    transform: rotateX(60deg) rotateZ(45deg);
-  }
+/* each cube */
+.boxes .box {
+  width: 32px;
+  height: 32px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
 
-  .boxes .box {
-    width: var(--size);
-    height: var(--size);
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform-style: preserve-3d;
-  }
+/* starting positions + infinite animation */
+.boxes .box:nth-child(1) {
+  transform: translate(100%, 0);
+  -webkit-transform: translate(100%, 0);
+  animation: box1 800ms linear infinite;
+  -webkit-animation: box1 800ms linear infinite;
+}
+.boxes .box:nth-child(2) {
+  transform: translate(0, 100%);
+  -webkit-transform: translate(0, 100%);
+  animation: box2 800ms linear infinite;
+  -webkit-animation: box2 800ms linear infinite;
+}
+.boxes .box:nth-child(3) {
+  transform: translate(100%, 100%);
+  -webkit-transform: translate(100%, 100%);
+  animation: box3 800ms linear infinite;
+  -webkit-animation: box3 800ms linear infinite;
+}
+.boxes .box:nth-child(4) {
+  transform: translate(200%, 0);
+  -webkit-transform: translate(200%, 0);
+  animation: box4 800ms linear infinite;
+  -webkit-animation: box4 800ms linear infinite;
+}
 
-  .boxes .box:nth-child(1) {
-    transform: translate(100%, 0);
-    animation: box1 var(--duration) linear infinite;
-  }
+/* cube faces */
+.boxes .box > div {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #5C8DF6;
+  /* push face out 16px (half of 32px) */
+  transform: translateZ(16px);
+  -webkit-transform: translateZ(16px);
+}
+.boxes .box > div:nth-child(1) {
+  top: 0; left: 0;
+}
+.boxes .box > div:nth-child(2) {
+  background: #145AF2;
+  right: 0;
+  transform: rotateY(90deg) translateZ(16px);
+  -webkit-transform: rotateY(90deg) translateZ(16px);
+}
+.boxes .box > div:nth-child(3) {
+  background: #0052CC;
+  transform: rotateX(-90deg) translateZ(16px);
+  -webkit-transform: rotateX(-90deg) translateZ(16px);
+}
+.boxes .box > div:nth-child(4) {
+  background: #DBE3F4;
+  top: 0; left: 0;
+  /* back face: pull it 96px in negative Z */
+  transform: translateZ(-96px);
+  -webkit-transform: translateZ(-96px);
+}
 
-  .boxes .box:nth-child(2) {
-    transform: translate(0, 100%);
-    animation: box2 var(--duration) linear infinite;
-  }
+/* keyframes with webkit prefix */
+@-webkit-keyframes box1 {
+  0%, 50%  { -webkit-transform: translate(100%, 0); transform: translate(100%, 0); }
+  100%     { -webkit-transform: translate(200%, 0); transform: translate(200%, 0); }
+}
+@keyframes box1 {
+  0%, 50%  { transform: translate(100%, 0); }
+  100%     { transform: translate(200%, 0); }
+}
 
-  .boxes .box:nth-child(3) {
-    transform: translate(100%, 100%);
-    animation: box3 var(--duration) linear infinite;
-  }
+@-webkit-keyframes box2 {
+  0%       { -webkit-transform: translate(0, 100%); transform: translate(0, 100%); }
+  50%      { -webkit-transform: translate(0, 0);     transform: translate(0, 0); }
+  100%     { -webkit-transform: translate(100%, 0);   transform: translate(100%, 0); }
+}
+@keyframes box2 {
+  0%       { transform: translate(0, 100%); }
+  50%      { transform: translate(0, 0);     }
+  100%     { transform: translate(100%, 0);   }
+}
 
-  .boxes .box:nth-child(4) {
-    transform: translate(200%, 0);
-    animation: box4 var(--duration) linear infinite;
-  }
-
-  .boxes .box > div {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: var(--background, #5C8DF6);
-    top: var(--top, auto);
-    right: var(--right, auto);
-    bottom: var(--bottom, auto);
-    left: var(--left, auto);
-    transform: 
-      rotateY(var(--rotateY, 0deg)) 
-      rotateX(var(--rotateX, 0deg)) 
-      translateZ(var(--translateZ, calc(var(--size) / 2)));
-  }
-
-  .boxes .box > div:nth-child(1) {
-    --top: 0;
-    --left: 0;
-  }
-
-  .boxes .box > div:nth-child(2) {
-    --background: #145af2;
-    --right: 0;
-    --rotateY: 90deg;
-  }
-
-  .boxes .box > div:nth-child(3) {
-    --background: #0052CC;
-    --rotateX: -90deg;
-  }
-
-  .boxes .box > div:nth-child(4) {
-    --background: #DBE3F4;
-    --top: 0;
-    --left: 0;
-    --translateZ: calc(var(--size) * -3);
-  }
-
-  @keyframes box1 {
-    0%, 50%   { transform: translate(100%, 0); }
-    100%      { transform: translate(200%, 0); }
-  }
-
-  @keyframes box2 {
-    0%        { transform: translate(0, 100%); }
-    50%       { transform: translate(0, 0); }
-    100%      { transform: translate(100%, 0); }
-  }
-
-  @keyframes box3 {
-    0%, 50%   { transform: translate(100%, 100%); }
-    100%      { transform: translate(0, 100%); }
-  }
-
-  @keyframes box4 {
-    0%        { transform: translate(200%, 0); }
-    50%       { transform: translate(200%, 100%); }
-    100%      { transform: translate(100%, 100%); }
-  }
-</style>
-
-<div class="boxes">
-  <div class="box">
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>
-  <div class="box">
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>
-  <div class="box">
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>
-  <div class="box">
-    <div></div>
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>
-</div>
+@-webkit-keyframes box3 {
+  0%, 50%  { -webkit-transform: translate(100%, 100%); transform: translate(100%, 100%); }
+  100%     { -webkit-transform: translate(0, 100%);   transform: translate(0, 100%); }
+}
+@keyframes box3 {
+  0%, 50
