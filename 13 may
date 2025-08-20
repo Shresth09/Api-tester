@@ -1,339 +1,122 @@
-Here are 10 questions and answers each for Jira and Confluence, focusing on unique problems and less common solutions.
-Jira Questions and Answers
-Q1: How can I dynamically set a Jira issue's assignee based on a custom field value (e.g., a "Team Lead" user picker field) using Jira Automation, even if the "Team Lead" field isn't directly the assignee field?
-Problem: You have a custom user picker field, "Team Lead," on an issue, and you want the issue to be automatically assigned to this "Team Lead" when a certain condition is met in your workflow, rather than relying on a hardcoded assignee or a project role.
-Solution:
-This requires a combination of a trigger, condition, and smart values in Jira Automation.
- * Trigger: Issue transitioned (select the relevant transition, e.g., "Ready for Review").
- * Condition: Issue fields condition. Check if your "Team Lead" custom field is not empty.
- * Action: Assign issue.
-   * For the assignee, use a smart value to pull the user from your custom field: {{issue.Team Lead}} (replace Team Lead with the exact ID or name of your custom field).
-This automation rule will ensure that whenever an issue transitions to "Ready for Review" (or your chosen trigger), and a "Team Lead" is specified, the issue is automatically assigned to that user.
-Q2: We have a complex Jira workflow with multiple "In Progress" statuses (e.g., "In Development," "In Testing"). How can I ensure that only one of these "In Progress" statuses is visible to a user at any given time, preventing mis-transitions or confusion?
-Problem: Users are transitioning issues into the wrong "In Progress" status, leading to inaccurate reporting and workflow state. You want to enforce that only contextually relevant "In Progress" transitions are available.
-Solution:
-This can be achieved using "Conditions" on your workflow transitions.
- * Workflow Editor: Go to your project's workflow.
- * Edit Transition Properties: For each transition entering an "In Progress" status, add a "Condition."
-   * Example: For the "Start Development" transition (moving to "In Development" status):
-     * Add a condition: User Is In Any Project Role (select roles like "Developer").
-     * AND/OR Field Value Condition: Check a custom field (e.g., "Development Ready" checkbox) equals "Yes".
-   * For the "Start Testing" transition (moving to "In Testing" status):
-     * Add a condition: Field Value Condition: Check a custom field (e.g., "Tested By Dev" checkbox) equals "Yes".
-By carefully crafting these conditions, you can ensure that only the correct "In Progress" transitions appear for the user based on their role or specific field values on the issue, guiding them to the right state.
-Q3: How do I create a Jira filter that finds issues where a specific custom date field is older than X days from today, but only if another custom single-select field has a particular value?
-Problem: You need to identify stale issues based on a custom date and a specific status in another custom field, which can be tricky with standard JQL.
-Solution:
-You'll use JQL (Jira Query Language) with the BEFORE operator and a custom field clause.
-"My Custom Date Field" <= "-Xd" AND "My Single Select Field" = "Stale Status" ORDER BY "My Custom Date Field" ASC
-
- * Replace "My Custom Date Field" with the exact name of your custom date field.
- * Replace X with the number of days (e.g., "-30d" for 30 days ago).
- * Replace "My Single Select Field" and "Stale Status" with your custom field and its specific value.
-This JQL query will return issues where "My Custom Date Field" is on or before X days ago, AND "My Single Select Field" has the value "Stale Status".
-Q4: Our Jira instance is experiencing slow performance when Browse boards or opening issues. How can I start troubleshooting this without immediate access to server logs or a Jira admin?
-Problem: Users are complaining about general slowness, but you're not an admin and can't access deep diagnostics.
-Solution:
-While full server diagnostics require admin access, you can gather initial clues and report them effectively:
- * Note Specifics:
-   * When does it happen? Is it always slow, or at specific times (e.g., end of day, during backups)?
-   * What actions are slow? Opening issues, loading boards, running filters, searching?
-   * Which projects/boards are affected? Is it widespread or specific to certain complex ones?
-   * Are other Atlassian applications slow too (Confluence)?
- * Check Browser Performance: Open your browser's developer tools (usually F12), go to the "Network" tab, and observe the loading times of various requests when you perform a slow action. Look for requests that take an unusually long time (several seconds).
- * Simplify Boards/Filters: If a specific board is slow, try simplifying its filter. Boards with very complex JQL or large numbers of issues can be performance drains.
- * Clear Browser Cache: Sometimes local caching issues can cause perceived slowness.
- * Report Detailed Observations: Provide your Jira administrator with all the specific details you've gathered. This will significantly help them pinpoint the root cause (e.g., database performance, plugin issues, network latency, resource constraints on the Jira server).
-Q5: We need to automatically create a set of linked sub-tasks with specific field values whenever a new "User Story" is created in Jira. How can this be done efficiently, especially if the sub-tasks have different types and values?
-Problem: Manually creating and linking multiple sub-tasks for every new parent issue is time-consuming and prone to errors.
-Solution:
-Jira Automation is the ideal solution for this.
- * Trigger: Issue created.
-   * Issue Type: User Story (or your relevant parent issue type).
- * Actions (one for each sub-task): Create sub-tasks.
-   * For each sub-task:
-     * Summary: "Develop Feature X for {{issue.key}}"
-     * Issue Type: "Sub-task" (or a custom sub-task type)
-     * Assignee: You can assign to a specific user, or use smart values like {{issue.assignee}} to inherit the parent's assignee, or {{issue.reporter}}.
-     * Reporter: {{issue.reporter}}
-     * Parent issue: {{issue.key}} (automatically linked)
-     * Set custom fields: If your sub-tasks need specific values, use the "More options" to set custom fields for each sub-task individually. For example, if "Develop Feature X" always needs a "Component" set to "Backend", define that here.
-You would add a separate "Create sub-task" action for each distinct sub-task you need to generate.
-Q6: How can I prevent users from editing the "Description" field of a Jira issue once it has reached a specific status, say "Done" or "Closed," while allowing other fields to be edited?
-Problem: Users are inadvertently or intentionally modifying the description of completed issues, leading to historical inaccuracies.
-Solution:
-This requires a Field Configuration Scheme and a workflow validator or condition.
- * Create a new Field Configuration:
-   * Go to Jira Settings > Issues > Field Configurations.
-   * Copy your existing field configuration or create a new one.
-   * In the new field configuration, find the "Description" field and click "Edit."
-   * Set it to "Hidden" (or "Read-only" if using a plugin that offers this).
- * Associate with Workflow Status:
-   * Go to Jira Settings > Issues > Workflows.
-   * Edit the workflow(s) applied to the relevant issue types.
-   * For the "Done" and "Closed" statuses:
-     * Add a Post Function to the transition entering "Done" or "Closed": Update Issue Field (from a plugin like Jira Suite Utilities if available) or a custom script post-function that switches the field configuration scheme.
-     * Alternatively, and more commonly for read-only fields: Apply a Field Configuration Scheme to your workflow step. This means you would define a different field configuration for the "Done" status, where the "Description" field is read-only. This is the cleaner approach.
-     * Go to the specific workflow status (e.g., "Done"). Click "Edit" for the status.
-     * Under "Properties" (or similar, depending on Jira version), you might be able to associate a specific Field Configuration to that status, where "Description" is hidden/read-only.
-This way, when an issue enters "Done," the description field becomes uneditable.
-Q7: We have a Jira Service Management project, and we want to automatically transition a request type to a "Waiting for Customer" status if a specific question in the request form is answered "No."
-Problem: Manual follow-up on specific customer answers in Service Management is inefficient.
-Solution:
-Jira Automation combined with JSM forms/custom fields.
- * Ensure Field is Available: Make sure the question on your JSM request form is mapped to a custom field (e.g., a "Single Choice" or "Radio Button" field named "Additional Info Needed?").
- * Create Automation Rule:
-   * Trigger: Issue created (or Field value changed if the answer can be updated later).
-     * Project: Your JSM project.
-     * Issue Type: Select the specific request type.
-   * Condition: Issue fields condition.
-     * Field: "Additional Info Needed?" (your custom field).
-     * Condition: equals.
-     * Value: No (or the specific answer you're looking for).
-   * Action: Transition issue.
-     * Destination status: "Waiting for Customer" (or your desired status).
-This rule will automatically move the ticket to "Waiting for Customer" if the user selects "No" for the "Additional Info Needed?" question upon creation.
-Q8: How can I create a dashboard gadget in Jira that shows the count of issues assigned to each team member, grouped by a custom "Sprint Goal" field?
-Problem: Standard "Assigned to Me" or "Two Dimensional Filter Statistics" gadgets don't easily allow grouping by an arbitrary custom field like "Sprint Goal" while also showing individual assignee counts.
-Solution:
-This often requires a combination of a powerful JQL filter and the "Two Dimensional Filter Statistics" gadget, or a marketplace app. Assuming no marketplace app:
- * Create a JQL Filter:
-   project = "Your Project" AND status not in (Done, Closed) AND "Sprint Goal" is not EMPTY ORDER BY "Sprint Goal" ASC, assignee ASC
-
-   (Adjust project, statuses, and field name as needed). Save this filter.
- * Add "Two Dimensional Filter Statistics" Gadget to Dashboard:
-   * Filter: Select the filter you just created.
-   * X-Axis: Assignee
-   * Y-Axis: Sprint Goal (your custom field)
-   * Display Options: Choose "Table" or "Bar Chart" for visualization.
-This gadget will provide a matrix where you can see the count of issues for each assignee, broken down by their respective "Sprint Goals."
-Q9: We need to ensure that when a Jira issue is marked "Done," all its linked issues (specifically, those linked with "relates to" or "blocks") are automatically transitioned to "Closed" or a specific "Linked Issue Review" status.
-Problem: Linked issues are often left open or in an incorrect state after a primary issue is completed.
-Solution:
-Jira Automation can manage this cross-issue transition.
- * Trigger: Issue transitioned.
-   * From: Any status.
-   * To: Done.
- * Condition (Optional but recommended): Issue fields condition on the Issue Type to ensure it only runs for relevant issue types.
- * Branch Rule / Related Issues:
-   * Select Branch rule / related issues.
-   * Type of related issues: Linked issues.
-   * Link type: Select relates to and blocks (or any other relevant link types).
-   * Inner Actions (within the branch):
-     * Condition (for linked issues): Issue fields condition. Ensure Status not in (Closed, Done). This prevents endless loops or re-closing already closed issues.
-     * Action: Transition issue.
-       * Destination status: "Closed" or "Linked Issue Review".
-       * Optional: Add a comment: Commenting on linked issue {{issue.key}}: Parent issue {{triggerIssue.key}} has been marked as Done.
-This automation will iterate through linked issues of the specified types and transition them to the desired status, ensuring interconnected work is updated.
-Q10: How can I enforce a naming convention for new Jira issues (e.g., "PROJECT-TASK-Description") upon creation, preventing users from submitting issues with non-compliant summaries?
-Problem: Inconsistent issue summaries make it difficult to quickly identify or search for issues.
-Solution:
-This requires a workflow Validator, often found via a marketplace app like "Jira Suite Utilities" or by writing a custom script validator if you have ScriptRunner.
-Using Jira Suite Utilities (example):
- * Workflow Editor: Go to your project's workflow.
- * Transition: Select the "Create" transition (or any transition where you want to apply this validation).
- * Add Validator: Choose "Add validator."
- * Select Validator Type: Look for a validator like "Regular Expression Checker" or "Field Value Regular Expression Validator" (names may vary by plugin).
- * Configure:
-   * Field: Summary.
-   * Regular Expression: ^[A-Z]{2,}-\d+-.+$ (This is a basic example for "PROJECT-NUMBER-Description")
-     * ^: Start of the string.
-     * [A-Z]{2,}: Two or more uppercase letters (for project key).
-     * -: Literal hyphen.
-     * \d+: One or more digits (for task number).
-     * -: Literal hyphen.
-     * .+: One or more of any character (for description).
-     * $: End of the string.
-   * Error Message: "Summary must follow the format: PROJECT-NUMBER-Description."
-This validator will prevent the issue from being created (or transitioning) if the summary does not match the specified regular expression, providing an immediate error message to the user.
-Confluence Questions and Answers
-Q1: Our Confluence instance is cluttered with old, unmaintained pages. How can we identify and archive or delete stale content efficiently, especially across multiple spaces?
-Problem: Information overload and difficulty finding current documentation due to an abundance of outdated pages.
-Solution:
-This requires a combination of search, labels, and potentially administrative tools.
- * Search by Last Modified Date:
-   * Use the Confluence advanced search.
-   * lastModified <= "yyyy/mm/dd" (e.g., lastModified <= "2024/01/01" for pages not modified since Jan 1, 2024).
-   * Refine by space if you want to target specific spaces.
- * Utilize the "Orphaned Pages" Report (if available via admin/plugin): Some Confluence plugins or custom reports can identify pages that are not linked from any other page within a space, often indicating they are orphaned or forgotten.
- * Leverage Labels for Lifecycle Management:
-   * Encourage teams to use labels like stale-review, archive-candidate, or deprecated.
-   * Create a regular process (e.g., monthly) to search for these labels and initiate review/archive/deletion.
- * Content Reviews/Audits:
-   * Assign "Content Owners" for spaces.
-   * Schedule regular content review meetings where teams go through pages and decide on their fate.
-   * Confluence comes with "Page Properties Report" and "Table of Contents" macros which can help in getting an overview of pages in a space.
- * Archiving vs. Deleting:
-   * Archiving: Move old pages to an "Archive" space or an "Archive" section within the existing space. This retains history but removes them from primary search results.
-   * Deleting: Permanently remove content that is no longer needed. Ensure backups or historical records are not critical.
-Q2: We need to create a Confluence blueprint that automatically adds specific labels and a predefined set of page properties whenever a new page is created from it. How can we ensure these are applied consistently?
-Problem: Manual addition of labels and page properties to new pages is inconsistent and time-consuming.
-Solution:
-When creating a custom blueprint, you can define default labels and page properties directly in the blueprint template.
- * Access Global Templates (Admin): Confluence Administration > Configuration > Global Templates.
- * Create New Blueprint (or edit existing):
-   * Give it a name and description.
-   * For Labels: Add the desired labels directly to the blueprint's content. When a page is created from the blueprint, these labels will be automatically applied.
-   * For Page Properties: Use the Page Properties macro within your blueprint.
-     * Insert a Page Properties macro.
-     * Inside the macro, insert a Page Properties Report macro (optional, if you want a report).
-     * Define the table structure for your properties inside the Page Properties macro, with placeholder values. For example:
-       {page-properties:
-|Key|Value|
-|Status|Draft|
-|Owner|@creator|
-|Review Date|2025-XX-XX|
+:root {
+  --size: 32px;
+  --duration: 800ms;
 }
 
-       When a user creates a page from this blueprint, this table will be present, and they can fill in the values. The @creator smart value will automatically populate the creator's name.
-This ensures consistency and reduces manual effort.
-Q3: How can I display content from a Jira filter on a Confluence page, but only show specific columns relevant to the Confluence audience, and allow sorting directly on the Confluence page?
-Problem: The standard Jira Issues macro in Confluence often displays too much information or doesn't allow flexible column selection and dynamic sorting.
-Solution:
-The Jira Issues macro does allow column selection and basic sorting, but for dynamic sorting, users need to interact with the macro.
- * Insert Jira Issues Macro: On your Confluence page, type /Jira Issues and select the macro.
- * Select Filter or JQL: Choose an existing Jira filter or paste your JQL.
- * Column Selection:
-   * In the macro editor, locate the "Columns to display" section.
-   * Click "Add column" and type the names of the fields you want to display (e.g., Key, Summary, Assignee, Status, Due Date, your custom fields).
-   * Remove unnecessary default columns.
- * Sorting:
-   * In the macro editor, use the "Order by" dropdown to set a default sort order.
-   * For dynamic sorting on the page: The Jira Issues macro, by default, allows users viewing the page to click on column headers to sort the table. This is built-in functionality.
-If you need more advanced interactive filtering/sorting beyond what the default macro offers, you might need to explore marketplace apps that provide enhanced Jira integration features for Confluence.
-Q4: We are trying to migrate a large amount of legacy documentation into Confluence. What's the most effective strategy to import existing Word documents and maintain their formatting and embedded images?
-Problem: Manual copy-pasting from Word to Confluence often results in lost formatting, broken images, and a time-consuming process.
-Solution:
-Confluence has a built-in "Import Word Document" feature that is generally the most effective.
- * Prepare Word Documents:
-   * Clean up: Remove unnecessary content, track changes, or excessive formatting.
-   * Images: Ensure images are embedded directly within the Word document, not linked external files.
-   * Headings: Use Word's built-in heading styles (Heading 1, Heading 2, etc.) consistently. Confluence will use these to create a page hierarchy.
-   * Table of Contents: If your Word document has a Table of Contents, Confluence will attempt to convert it into a Confluence Table of Contents macro.
- * Import to Confluence:
-   * Go to the Confluence space where you want to import the document.
-   * From the "Create" menu (usually ... or + in the header), select "Import Word Document."
-   * Browse and select your .docx file.
-   * Options:
-     * Import as single page: All content goes into one Confluence page.
-     * Import as multiple pages: Confluence will split the Word document into multiple pages based on your heading structure. This is usually preferred for large documents. You can define which heading level should start a new page.
-     * Parent Page: Choose an existing Confluence page to be the parent of the newly imported pages.
-     * Labels: Add labels to the imported pages.
- * Review and Refine: After import, immediately review the imported pages. You'll likely need to:
-   * Adjust some formatting (especially complex tables or custom styles).
-   * Re-insert or re-link a few images that might not have come across perfectly.
-   * Add Confluence macros for enhanced functionality (e.g., expand macros, info panels).
-For very large or complex migrations, consider using third-party migration tools if you have many documents or specific requirements that the native import doesn't fully cover.
-Q5: How can I set up Confluence space permissions so that a specific external team (who are not licensed Confluence users) can view content, but not edit or comment, while internal users have full access?
-Problem: Sharing read-only content with external stakeholders without requiring them to consume a Confluence license.
-Solution:
-This requires leveraging Confluence's anonymous access and specific space permissions.
- * Enable Anonymous Access (Global Admin):
-   * Confluence Administration > General Configuration > Global Permissions.
-   * Ensure "Anonymous Access" is enabled for "Use Confluence" and "View" global permissions. Be cautious with this; it means anyone can view publicly accessible spaces.
- * Configure Space Permissions:
-   * Go to the specific Confluence space.
-   * Space Tools (bottom left) > Permissions.
-   * For Internal Users: Grant appropriate "View," "Add Pages," "Edit Pages," "Add Comments," etc., permissions to your internal user groups (e.g., confluence-users, jira-software-users).
-   * For External Access (Anonymous):
-     * Find the "Anonymous Access" section.
-     * Grant only "View" permission. Do NOT grant "Add," "Edit," or "Comment" permissions.
-     * Ensure that any sensitive spaces do not have anonymous view access.
- * Page Restrictions: For very sensitive content within an otherwise anonymous-accessible space, use Page Restrictions on individual pages or branches of pages to explicitly block anonymous access.
-This setup allows external, unlicensed users to view content in the specified spaces without being able to modify it, while internal users retain their full capabilities. Remember that truly sensitive content should never be in a space with anonymous access.
-Q6: We use Confluence for technical documentation, and we frequently need to refer to specific versions of our product or API. How can we manage versioned documentation effectively without creating duplicate pages for each version?
-Problem: Maintaining documentation for multiple product versions (e.g., Product v1.0, v1.1, v2.0) without copy-pasting entire spaces or pages.
-Solution:
-While Confluence itself doesn't have native "versioning" of spaces or branches of pages like some dedicated documentation tools, you can manage this using a combination of strategies:
- * Space per Major Version:
-   * For major product versions (e.g., "Product X v1.0 Documentation," "Product X v2.0 Documentation"), create a separate Confluence space. This provides clear segregation.
-   * When a new major version is released, export the old space and import it into a new space for the new version, then update the new space.
- * "Current" and "Archive" Sections within a Space:
-   * Within a single space, create top-level pages like "Current Documentation" and "Archived Documentation."
-   * As new versions come out, move older version documentation pages into the "Archived" section.
- * Page Properties for Version Tagging:
-   * Use a "Page Properties" macro on each documentation page.
-   * Include a property like "Version" (e.g., 1.0, 1.1, All).
-   * Then, use a "Page Properties Report" macro to generate dynamic tables of content filtered by version. This allows users to easily find documentation for a specific version.
- * Macros for Conditional Content (less ideal for large changes):
-   * For minor version differences on the same page, you can use macros like "Info," "Panel," or even custom macros (if developed) to show/hide content based on the current version being discussed. This can quickly become unmanageable for significant changes.
- * Marketplace Apps: Search the Atlassian Marketplace for "versioning" or "documentation management" apps. These often provide more robust solutions for true content versioning, conditional content display, and publishing workflows that cater to multi-version documentation.
-The best approach depends on the scale and complexity of your versioning needs. For significant changes, separate spaces are often the cleanest.
-Q7: We want to use Confluence to build a knowledge base, and we need a way for users to easily submit new articles or suggest edits to existing ones without needing full edit permissions.
-Problem: Democratizing knowledge contribution while maintaining quality control.
-Solution:
-Combine the "Create from Template" macro, comments, and review processes.
- * "Suggest New Article" Blueprint/Template:
-   * Create a new blueprint or global template called "Knowledge Base Article Suggestion."
-   * Include fields for:
-     * Suggested Title:
-     * Category: (e.g., using a dropdown with specific categories)
-     * Proposed Content: (a large text area)
-     * Reason for new article:
-     * Suggested Reviewer: (user picker)
-   * Add a default label like kb-suggestion.
- * "Create from Template" Macro:
-   * On your Knowledge Base home page, insert the "Create from Template" macro.
-   * Configure it to link to your "Knowledge Base Article Suggestion" blueprint.
-   * Customize the button text, e.g., "Suggest a New KB Article."
- * Suggesting Edits:
-   * Comments: Encourage users to use page comments to suggest minor edits directly on the page.
-   * "Suggest an Edit" Template: Similar to "Suggest New Article," create a blueprint for "KB Edit Suggestion" with fields for:
-     * Page to Edit: (link to existing page)
-     * Proposed Changes: (describe what should change)
-     * Reason for Change:
-   * Use the "Create from Template" macro to link to this from relevant pages.
- * Review Process:
-   * Establish a team responsible for reviewing kb-suggestion pages.
-   * Use Jira Service Management (if integrated) to manage these suggestions as requests, or simply use a Confluence page properties report filtering by the kb-suggestion label.
-   * Once reviewed, the content can be moved/copied to a formal KB page by a content owner.
-This allows contributions from anyone with "Add Page" permissions in the suggestion space, without granting full editing rights to the main KB.
-Q8: Our Confluence search results are often overwhelming and irrelevant. How can we improve the accuracy and relevance of search for our users?
-Problem: Users can't find what they're looking for, leading to frustration and duplicated content.
-Solution:
-Improving Confluence search involves a multi-faceted approach.
- * Consistent Labeling:
-   * Encourage teams to use relevant and consistent labels on all pages. Labels are highly searchable.
-   * Establish a set of core labels for categories, topics, or product areas.
- * Effective Page Titles:
-   * Make page titles clear, concise, and descriptive. Avoid jargon where possible.
-   * The title is a major factor in search relevance.
- * Table of Contents Macro:
-   * For longer pages, use the "Table of Contents" macro. This not only improves navigation but also provides a structured outline that search engines can interpret.
- * Use of Headings:
-   * Properly use H1, H2, H3 headings. They help Confluence understand the page structure and prioritize content in search.
- * Page Properties Macro (for metadata):
-   * Use the "Page Properties" macro to add metadata like "Audience," "Product Version," "Status" (Draft, Published, Archived). This metadata can be leveraged in advanced searches.
- * Archiving/Deleting Stale Content: As mentioned in Q1, removing old, irrelevant pages significantly reduces search noise.
- * Search Macros on Dashboards:
-   * Use the "Content by Label" or "Page Tree" macros on space homepages or team dashboards to provide quick access to commonly sought-after content, reducing reliance on raw search.
- * Training Users: Educate users on how to use Confluence's advanced search features, including JQL-like syntax for Confluence (e.g., label:my-label, space:my-space-key).
- * Keyword Management (if using a plugin): Some marketplace apps offer features for managing keywords or synonyms, further enhancing search.
-Q9: We want to restrict certain Confluence pages from being copied or exported to PDF, even by space administrators, due to sensitive content. Is there a way to enforce this?
-Problem: Preventing unauthorized dissemination of highly sensitive information stored in Confluence.
-Solution:
-Confluence's built-in permissions and restrictions don't directly prevent copying or PDF export for users with view access. If a user can view a page, they can typically copy/paste its content or use their browser's print-to-PDF function.
-Direct Prevention (Limited options without plugins):
- * Strictest Approach: No View Access: The only truly foolproof way to prevent copying/exporting is to prevent viewing in the first place. Restrict the page to only the absolute minimum required users. If they can't see it, they can't copy it.
- * "Confidential" Space: Create a separate Confluence space with extremely tight permissions for highly confidential information. Do not allow export from this space at the global level if possible (this is an admin setting and might affect all spaces).
- * Discouragement (not prevention):
-   * Add a clear disclaimer at the top of the page: "CONFIDENTIAL: Do Not Copy or Distribute."
-   * Use the "Panel" macro with a distinct color to highlight the sensitive nature.
-Marketplace Apps / Custom Solutions (More robust):
- * Content Security Plugins: Search the Atlassian Marketplace for apps that offer enhanced content security, watermarking on PDFs, or features to disable copy/paste for specific content. These are often required for true content protection.
- * Customization: For on-premise deployments (Server/Data Center), it might be possible to implement custom JavaScript that attempts to disable right-click or copy events, but this is easily circumvented by tech-savvy users.
-Important Note: Confluence is primarily a collaboration tool. For truly classified or legally sensitive documents requiring robust DRM-like protection, a dedicated document management system or a combination with enterprise content security solutions might be more appropriate.
-Q10: How can I embed a dynamic table of contents on a Confluence page that only includes specific heading levels (e.g., H2 and H3) and excludes certain sections or pages from the hierarchy?
-Problem: The default "Table of Contents" macro includes all headings, making it too long for some pages, and doesn't easily allow excluding specific content.
-Solution:
-The "Table of Contents" macro offers configuration options to refine its output.
- * Insert Table of Contents Macro: Type /Table of Contents on your Confluence page.
- * Macro Editor Settings:
-   * Show headings from level: Set this to 2 (to include H2, H3, H4, etc.).
-   * To level: Set this to 3 (to only include up to H3). This creates a TOC with only H2 and H3.
-   * Exclude heading regex: This is powerful for excluding specific headings.
-     * Example: (Deprecated|Internal Use Only) would exclude any heading containing "Deprecated" or "Internal Use Only".
-   * Exclude pages: If your TOC is generated from a page tree (which it generally is for standard TOCs), you can use the "Page Tree" macro in conjunction with the TOC and explicitly exclude pages in the Page Tree macro.
-     * Alternatively, for excluding sections within a single page, the Exclude heading regex is your best bet.
-   * {noformat} macro: If you have content within a page that looks like a heading but you don't want it in the TOC, place it inside a {noformat} macro. This prevents Confluence from recognizing it as a heading for TOC purposes.
-By leveraging these options in the "Table of Contents" macro's settings, you can create a much more targeted and useful navigation experience.
+.boxes {
+  height: calc(var(--size) * 2);
+  width: calc(var(--size) * 3);
+  position: relative;
+  transform-style: preserve-3d;
+  transform-origin: center;
+  margin-top: calc(var(--size) * -1.5);
+  transform: rotateX(60deg) rotateZ(45deg);
+}
+
+.boxes .box {
+  width: var(--size);
+  height: var(--size);
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-style: preserve-3d;
+}
+
+.boxes .box:nth-child(1) {
+  transform: translate(100%, 0);
+  animation: box1 var(--duration) linear infinite;
+}
+
+.boxes .box:nth-child(2) {
+  transform: translate(0, 100%);
+  animation: box2 var(--duration) linear infinite;
+}
+
+.boxes .box:nth-child(3) {
+  transform: translate(100%, 100%);
+  animation: box3 var(--duration) linear infinite;
+}
+
+.boxes .box:nth-child(4) {
+  transform: translate(200%, 0);
+  animation: box4 var(--duration) linear infinite;
+}
+
+.boxes .box > div {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: var(--background, #5C8DF6);
+  top: var(--top, auto);
+  right: var(--right, auto);
+  bottom: var(--bottom, auto);
+  left: var(--left, auto);
+  transform: rotateY(var(--rotateY, 0deg)) rotateX(var(--rotateX, 0deg)) translateZ(var(--translateZ, calc(var(--size) / 2)));
+}
+
+/* Face definitions */
+.boxes .box > div:nth-child(1) {
+  --top: 0;
+  --left: 0;
+}
+
+.boxes .box > div:nth-child(2) {
+  --background: #145af2;
+  --right: 0;
+  --rotateY: 90deg;
+}
+
+.boxes .box > div:nth-child(3) {
+  --background: #0052CC;
+  --rotateX: -90deg;
+}
+
+.boxes .box > div:nth-child(4) {
+  --background: #DBE3F4;
+  --top: 0;
+  --left: 0;
+  --translateZ: calc(var(--size) * -3);
+}
+
+/* Animations */
+@keyframes box1 {
+  0%, 50% {
+    transform: translate(100%, 0);
+  }
+  100% {
+    transform: translate(200%, 0);
+  }
+}
+
+@keyframes box2 {
+  0% {
+    transform: translate(0, 100%);
+  }
+  50% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(100%, 0);
+  }
+}
+
+@keyframes box3 {
+  0%, 50% {
+    transform: translate(100%, 100%);
+  }
+  100% {
+    transform: translate(0, 100%);
+  }
+}
+
+@keyframes box4 {
+  0% {
+    transform: translate(200%, 0);
+  }
+  50% {
+    transform: translate(200%, 100%);
+  }
+  100% {
+    transform: translate(100%, 100%);
+  }
+}
