@@ -107,4 +107,33 @@
   100%     { -webkit-transform: translate(0, 100%);   transform: translate(0, 100%); }
 }
 @keyframes box3 {
-  0%, 50
+  0%, 50%  { transform: translate(100%, 100%); }
+  100%     { transform: translate(0, 100%);   }
+}
+
+@-webkit-keyframes box4 {
+  0%       { -webkit-transform: translate(200%, 0);    transform: translate(200%, 0); }
+  50%      { -webkit-transform: translate(200%, 100%);  transform: translate(200%, 100%); }
+  100%     { -webkit-transform: translate(100%, 100%);  transform: translate(100%, 100%); }
+}
+@keyframes box4 {
+  0%       { transform: translate(200%, 0);    }
+  50%      { transform: translate(200%, 100%);}
+  100%     { transform: translate(100%, 100%);}
+}
+</style>
+
+<div class="boxes">
+  <div class="box">
+    <div></div><div></div><div></div><div></div>
+  </div>
+  <div class="box">
+    <div></div><div></div><div></div><div></div>
+  </div>
+  <div class="box">
+    <div></div><div></div><div></div><div></div>
+  </div>
+  <div class="box">
+    <div></div><div></div><div></div><div></div>
+  </div>
+</div>
