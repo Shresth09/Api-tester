@@ -61,6 +61,7 @@
   right: var(--right);
   bottom: var(--bottom);
   left: var(--left);
+  /* Corrected line: removed space between function and parentheses */
   transform: rotatey(var(--rotateY)) rotateX(var(--rotateX)) translatez(var(--translatez));
 }
 
