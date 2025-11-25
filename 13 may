@@ -1,3 +1,73 @@
+
+package com.immersivelabs.forum.utils;
+
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+// Removed unused import: import jakarta.servlet.http.Cookie;
+import com.immersivelabs.forum.model.User;
+// Removed unused import: import com.immersivelabs.forum.repository.UserRepository;
+
+public class UserUtils {
+
+    /**
+     * Retrieves the logged-in User object from the server-side session.
+     * @param req The current HttpServletRequest.
+     * @return The logged-in User object, or null if not logged in.
+     */
+    public static User getUser (HttpServletRequest req) {
+        // TODO: Get the user object from the "user" attribute in the session
+        HttpSession session = req.getSession(false); // Do not create a new session if one doesn't exist
+        if (session != null) {
+            return (User) session.getAttribute("user");
+        }
+        return null;
+    }
+
+    /**
+     * Logs in a user by invalidating any existing session and storing the User object securely in a new session.
+     * @param req The current HttpServletRequest.
+     * @param resp The current HttpServletResponse (unused for session-based login, but kept for method signature).
+     * @param user The User object to log in.
+     */
+    public static void login(HttpServletRequest req, HttpServletResponse resp, User user) {
+        HttpSession session = req.getSession(false); // Get existing session if one exists
+        
+        // Security best practice: Invalidate old session on successful login to prevent Session Fixation.
+        if (session != null) {
+            session.invalidate();
+        }
+
+        session = req.getSession(true); // Create a new, secure session
+        
+        // TODO: Add the user to the session under the "user" attribute
+        session.setAttribute("user", user);
+    }
+
+    /**
+     * Logs out the current user by invalidating their server-side session.
+     * @param req The current HttpServletRequest.
+     * @param resp The current HttpServletResponse (unused, but kept for method signature).
+     */
+    public static void logout(HttpServletRequest req, HttpServletResponse resp) {
+        HttpSession session = req.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+    }
+    
+    /*
+    // VULNERABLE CODE DELETED: lines 33-77 that saved user ID to a client-side cookie.
+    */
+}
+
+
+
+
+
+
+
+
 This is a great exercise in identifying and mitigating a common security vulnerability. I can help you with the analysis and the defensive code rewrite, focusing on secure practices and education.
 1. 🔍 Identifying the Command Injection Vulnerability
 The command injection vulnerability exists within the getCurrentDate method in SettingsServlet.java:
